@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { db } = require('../config');
 const { Puzzle } = require('../lib/puz-parser');
 
@@ -13,16 +14,16 @@ function underscoreToPascal(str) {
   return str.split('_').map((subStr, idx) => (idx < 1 ? subStr : capitalize(subStr))).join('');
 }
 
-const CLUE_COLUMNS = [
+const CLUES_COLUMNS = [
   'text',
   'answer',
   'direction',
   'grid_index',
   'grid_number',
-  'puzzle_id'
+  'puzzle_id',
 ];
 
-const PUZZLE_COLUMNS = [
+const PUZZLES_COLUMNS = [
   'version',
   'width',
   'height',
@@ -33,12 +34,21 @@ const PUZZLE_COLUMNS = [
   'copyright',
   'notes',
   'date',
-  'nyt_id'
+  'nyt_id',
 ];
 
-function buildQuery(tableName, columns, obj) {
+const CROSSES_COLUMNS = [
+  'clue1_id',
+  'clue2_id',
+]
+
+function buildQuery(tableName, columns, obj, returning) {
   return {
-    sql: `INSERT INTO ${tableName}(${columns.join(', ')}) VALUES(${columns.map((col, idx) => `$${idx + 1}`).join(', ')})`,
+    sql: `
+INSERT INTO ${tableName}(${columns.join(', ')})
+VALUES(${columns.map((col, idx) => `$${idx + 1}`).join(', ')})
+${returning ? `RETURNING ${returning}` : ''}
+    `,
     values: columns.map((key) => obj[underscoreToPascal(key)])
   };
 }
@@ -46,15 +56,24 @@ function buildQuery(tableName, columns, obj) {
 async function ingestPuzzle(puzzle) {
   console.log(`ingesting ${puzzle.title}...`);
   try {
-    const puzzleQuery = buildQuery('puzzles', PUZZLE_COLUMNS, puzzle);
-    const puzzleQueryRes = await db.query(puzzleQuery.sql + ' RETURNING id', puzzleQuery.values);
+    const puzzleQuery = buildQuery('puzzles', PUZZLES_COLUMNS, puzzle, 'id');
+    const puzzleQueryRes = await db.query(puzzleQuery.sql, puzzleQuery.values);
     const puzzleId = puzzleQueryRes.rows[0].id;
 
     for (const clue of puzzle.clues) {
-      const clueQuery = buildQuery('clues', CLUE_COLUMNS, clue);
+      const clueQuery = buildQuery('clues', CLUES_COLUMNS, clue, 'id');
       clueQuery.values[5] = puzzleId;
       const clueQueryRes = await db.query(clueQuery.sql, clueQuery.values);
+      clue._id = clueQueryRes.rows[0].id;
     }
+
+    for (const clue1 of puzzle.clues) {
+      for (const clue2 of clue1.crosses) {
+        const crossQuery = buildQuery('crosses', CROSSES_COLUMNS, { clue1Id: clue1._id, clue2Id: clue2._id });
+        await db.query(crossQuery.sql, crossQuery.values);
+      }
+    }
+    console.log(`...finished ${puzzle.title}`);
   } catch (e) {
     console.log(e);
   }
@@ -78,4 +97,9 @@ function ingestPuzzleFile(path) {
 
 const PUZ_DIR = process.argv[2];
 const puzPaths = fs.readdirSync(PUZ_DIR);
-puzPaths.forEach((path) => ingestPuzzleFile(PUZ_DIR + path));
+(async () => {
+  for (let i = 0; i < puzPaths.length; i++) {
+    await ingestPuzzleFile(path.resolve(PUZ_DIR, puzPaths[i]));
+  }
+  db.end();
+})();

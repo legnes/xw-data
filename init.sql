@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE puzzles (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4() NOT NULL,
     version character varying,
     width smallint,
     height smallint,
@@ -13,24 +13,21 @@ CREATE TABLE puzzles (
     copyright text,
     notes text,
     date date,
-    nyt_id text
+    nyt_id text UNIQUE
 );
--- ALTER TABLE puzzles OWNER TO me;
-ALTER TABLE ONLY puzzles
-    ADD CONSTRAINT puzzles_pkey PRIMARY KEY (id);
 
 CREATE TABLE clues (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4() NOT NULL,
     text text,
     answer text,
     direction character varying,
     grid_index smallint,
     grid_number smallint,
-    puzzle_id uuid
+    puzzle_id uuid REFERENCES puzzles(id) ON DELETE CASCADE
 );
--- ALTER TABLE clues OWNER TO me;
-ALTER TABLE ONLY clues
-    ADD CONSTRAINT clues_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY clues
-    ADD CONSTRAINT fk_puzzleid FOREIGN KEY (puzzle_id) REFERENCES puzzles(id);
+CREATE TABLE crosses (
+    clue1_id uuid REFERENCES clues(id) ON DELETE CASCADE NOT NULL,
+    clue2_id uuid REFERENCES clues(id) ON DELETE CASCADE NOT NULL,
+    CONSTRAINT crosses_pkey PRIMARY KEY (clue1_id, clue2_id)
+);
