@@ -76,9 +76,9 @@ async function ingestPuzzle(puzzle) {
     const puzzleId = puzzleQueryRes.rows[0].id;
     puzzle.clues.forEach(clue => { clue.puzzleId = puzzleId; });
 
-    const cluesQuery = buildRawInsert('clues', CLUES_COLUMNS, puzzle.clues, 'id, answer');
+    const cluesQuery = buildRawInsert('clues', CLUES_COLUMNS, puzzle.clues, 'id');
     const cluesQueryRes = await db.query(cluesQuery);
-    puzzle.clues.forEach((clue, idx) => { if (clue.answer !== cluesQueryRes.rows[idx].answer) throw new Error('clue mismatch'); clue._id = cluesQueryRes.rows[idx].id });
+    puzzle.clues.forEach((clue, idx) => { clue._id = cluesQueryRes.rows[idx].id });
 
     const crosses = puzzle.clues.reduce((xs, clue) => {
       Array.prototype.push.apply(xs, clue.crosses.map(cross => ({

@@ -1,5 +1,6 @@
 const puzzles = require('./controllers/puzzles');
 const clues = require('./controllers/clues');
+const crosses = require('./controllers/crosses');
 
 const apiRoutes = [
   {
@@ -16,6 +17,26 @@ const apiRoutes = [
     path: 'clues/:answer',
     controller: clues.get,
     description: 'list all clues with a given answer'
+  },
+  {
+    path: 'stats/clues/top',
+    controller: clues.listTopInstances,
+    description: 'list top used answers'
+  },
+  {
+    path: 'stats/clues/direction',
+    controller: clues.listTopDirectionRatio,
+    description: 'list answers that are more across or down'
+  },
+  {
+    path: 'stats/clues/location',
+    controller: clues.listTopLocationBias,
+    description: 'list answers that are more likely to be found in a given quadrant'
+  },
+  {
+    path: 'stats/crosses/top',
+    controller: crosses.listTopInstances,
+    description: 'list most common crosses'
   },
 ];
 
