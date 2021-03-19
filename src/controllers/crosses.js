@@ -2,7 +2,7 @@ const { db } = require('../../config');
 
 const crosses = {};
 
-crosses.listTopInstances = (req, res, next) => {
+crosses.listTopCrosses = (req, res, next) => {
   db.query(`
 SELECT
   c1.answer AS answer1,

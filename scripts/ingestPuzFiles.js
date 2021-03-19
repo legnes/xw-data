@@ -40,7 +40,14 @@ const PUZZLES_COLUMNS = [
 const CROSSES_COLUMNS = [
   'clue1_id',
   'clue2_id',
-]
+];
+
+const CLUE_WORDS_COLUMNS = [
+  'clue_id',
+  'answer',
+  'clue_word',
+  'text_index',
+];
 
 function buildRawInsert(tableName, columns, objs, returning) {
   if (!Array.isArray(objs)) objs = [objs];
@@ -79,6 +86,18 @@ async function ingestPuzzle(puzzle) {
     const cluesQuery = buildRawInsert('clues', CLUES_COLUMNS, puzzle.clues, 'id');
     const cluesQueryRes = await db.query(cluesQuery);
     puzzle.clues.forEach((clue, idx) => { clue._id = cluesQueryRes.rows[idx].id });
+
+    const clueWords = puzzle.clues.reduce((words, clue) => {
+      Array.prototype.push.apply(words, clue.text.split(' ').map((clueWord, idx) => ({
+        clueId: clue._id,
+        answer: clue.answer,
+        clue_word: clueWord.toUpperCase().replace(/[!?",\.\*]/g, ''),
+        textIndex: idx
+      })));
+      return words;
+    }. []);
+    const clueWordsQuery = buildRawInsert('clue_words', CLUE_WORDS_COLUMNS, clueWords);
+    await db.query(clueWordsQuery);
 
     const crosses = puzzle.clues.reduce((xs, clue) => {
       Array.prototype.push.apply(xs, clue.crosses.map(cross => ({
