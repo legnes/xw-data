@@ -20,8 +20,10 @@
 
     <p>Ever wonder when a certain word first showed up as an answer in the NYT crossword puzzle? Try out the interactive graph below! Click the "load data" button to load in the graph, and then input your own list of words to look up. The list should be comma separated, like <em>one,two,three</em>. You can include <em>*</em> in a word to create a pattern -- <em>d*wn</em> will get both <em>down</em> and <em>dawn</em>. Give it a shot!</p>
 
-    <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime?search=sdi%2Cdsl">
-      <graph-query-param-input data-query-param="search" data-label="search terms"></graph-query-param-input>
+    <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime">
+      <form is="query-param-form">
+        <label>search terms <input is="query-param-input" data-query-param="search" type="text" value="sdi,dsl"></label>
+      </form>
     </graph-loader>
 
     <p>Crossword puzzles are sort of a rat maze for language, in more ways than one. They look maze-y. They make your brain work. And just like a maze in a lab, crosswords are a totally contrived structured spatial environment. They're great for watching how words behave. Here's an example. Because crosswords will sometimes try to trick you, they can be useful for studying how language conveys meaning. Check out <a href="https://scholarship.tricolib.brynmawr.edu/bitstream/handle/10066/15350/Adams_thesis_2015.pdf">this thesis</a> on crossword puzzle difficulty and the Gricean Maxims (Jocelyn Adams, Swarthmore '15), or <a href="https://asistdl.onlinelibrary.wiley.com/doi/10.1002/meet.1450440213">this paper</a> on the informational content of answer/clue pairs (Miles Efron, Proceedings of the American Society for Information Science and Technology, 2008). Because crosswords have such strict rules, they force language to work differently. That's why we sometimes talk about <a href="https://en.wikipedia.org/wiki/Crosswordese">"crosswordese"</a>, the set of words that are more likely to show up in puzzles because of how "useful" they are. We can also learn from the ways that croswords do and don't change to reflect our society. Here's <a href="https://pudding.cool/2020/11/crossword/">a great read</a> from The Pudding on writing more equitable puzzles.</p>
@@ -353,8 +355,10 @@
 
     <p>Another bulk statistical analysis we can run is called "keyness". Unlike the language laws, there's no model for how keyness works, but it's perhaps the most pertinent measure for differentiating "crosswordese" from English. Keyness is a measure of, or a statistical test for, how different a frequency feature is between two collections. In simpler terms: which words show up a lot more or less often in our crossword answers than we'd expect them to when compared to an English corpus. On the face of it, this should be pretty easy. You'd think we could get a sense of this just by comparng the difference in relative frequencies, so we could get the keyness of the word "EONS" by comparing the number of times "EONS" is a crossword answer, divided by the total number of crossword answers, with the number of times "EONS" shows up in our wikipedia articles, divided by the total number of word (tokens) in that corpus. Here's the highest/lowest relative frequency difference words:</p>
 
-    <table-loader data-id="relativeFrequencyDifference" data-src="api/figures/relativeFrequencyDifference?positive=false">
-      <table-query-param-input data-query-param="positive" data-label="only positive values"></table-query-param-input>
+    <table-loader data-id="relativeFrequencyDifference" data-src="api/figures/relativeFrequencyDifference">
+      <form is="query-param-form">
+        <label>only positive values <input is="query-param-input" data-query-param="positive" type="checkbox"></label>
+      </form>
     </table-loader>
 
     <p>As we'd expect, a bunch of short words and grammar words show up first. But we also see only negative relative frequencies. These are the words that showed up less often in our corpus than we'd expect from the english corpus. This is probably because of just how common the most common words in English are -- see Zipf's Law section. Even our most common words in crosswordese aren't all that common from a corpus ling perspective, so they don't show up in our list. You can look at the words with the highest positive relative frequency by checking the checkbox or whatever. Suddenly we start to see our group of likely crosswordese suspects. All those three-to-four-letter, vowel-heavy (especially first and last letter) words pop right up.</p>
@@ -365,8 +369,10 @@
 
     <p>Okay all of this is a lot to consider, so what do we do? Well, we can use a statistical metric to threshold our results, and then compare the statistically significant results based on an effect-size metric. Here's an example of that:</p>
 
-    <table-loader data-id="keyness" data-src="api/figures/keyness?enThresh=0">
-      <table-query-param-input data-query-param="enThresh" data-label="frequency threshold for english corpus"></table-query-param-input>
+    <table-loader data-id="keyness" data-src="api/figures/keyness">
+      <form is="query-param-form">
+        <label>frequency threshold for english corpus <input is="query-param-input" data-query-param="enThresh" type="number" min="1" value="1"></label>
+      </form>
     </table-loader>
 
     <p>A word on interpretation. "Log ratio" and "difference coefficient" are our effect-size metrics. The log ratio is, as you'd guess, the log (base 2) of the relative frequencies. For every point of log ratio, a word appears twice as many times in one corpus or the other (relative to corpus size). A log ratio of 14 means a word showed up about 16,000 times as often. "Difference coefficient" is the difference over the sum of normalized frequencies. It ranges from -1 to 1, where the extremes mean a word only showed up in one corpus or another, and 0 means the relative frequencies are the same. Our many values of -1 and 1 are rounding errors for very very high differences. "Log likelihood G2" and "Bayes factor" are statistical metrics. A strong G<sup>2</sup> value is around 19, overwhelming around 23. A string BIC or Bayes factor is around 6, overwhelming around 10. Methodologically, these data filter out any values with a bayesFactor <= 2. There's also an input for filtering out words that occurred below a certain threshold number of times in the english corpus. This can be a helpful knob to tweak if you're looking for keyness of words that are definitely used, not just e.g. concatenated phrases.</p>
@@ -375,8 +381,10 @@
 
     <p>If you play with the threshold input, you'll start to see more and more words that are at least kind of normal english. At threshold 1, brands like ELAL and EDYS start showing up. French words like ETES and ETRE, proper nouns like OHARE or RELEE (oof), phrases like IBET, and double whammies like borrowed phrase ELNINO. Abbreviations like RTES. Bullshit jargon like ALIENEE. Oof. Weird uses of affixes like RETAG, ACMES, YIPE, or ANEAR. Then go and check out some of the clues for these. ELEE is almost entirely "waiting for the ___" or "gen. robt. ___". ALIENEE is almost always identical.</p>
 
-    <table-loader data-id="answerClues" data-src="api/figures/answerClues?search=ALIENEE">
-      <table-query-param-input data-query-param="search" data-label="answer"></table-query-param-input>
+    <table-loader data-id="answerClues" data-src="api/figures/answerClues">
+      <form is="query-param-form">
+        <label>answer <input is="query-param-input" data-query-param="search" type="text" value="alienee"></label>
+      </form>
     </table-loader>
 
     <p>I can't figure it out. In theory, part of what makes a crossword puzzle fun is that it's trivia. There should be weird answers that you don't always come across. But they shouldn't be so weird that you've, you know, never heard of them. They should have clues that reward you if you know the answer. But the clues should also reward you if you've just seen this combination of words a hundred times, and some neuron fires. That's what's fun about guessing in Jeopardy. It's got all the stuff you'd expect to like in trivia, and yet I know that to me, when I'm solving a crossword, this is feel-bad city. Unoriginal clues, whacky answers. Yuck.</p>
@@ -425,8 +433,10 @@
 
     <p>Intuitively, we can come up with a few other metrics by which we might want to analyze language chage. For example, we can look at recent word births, the first instance of a word that would go on to be used some threshold number of times (in this case, twice):</p>
 
-    <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords?thresh=3">
-      <table-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></table-query-param-input>
+    <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords">
+      <form is="query-param-form">
+        <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+      </form>
     </table-loader>
 
     <p>We can also look at the "top" (most overall occurrences) words introduced each year:</p>
@@ -435,18 +445,22 @@
 
     <p>Similarly we can look at deaths. Here are the oldest words to die that had a certain threshold lifetime use:</p>
 
-    <table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords?thresh=3">
-      <table-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></table-query-param-input>
+    <table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords">
+      <form is="query-param-form">
+        <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+      </form>
     </table-loader>
 
     <p>I really don't know what to make of these. The most identifiable are probably uncomfortable words like RAPE, MASSA, and KKK. But the rest seem...like fine answers? There are older words in there like SPAKE, outdated things like WEEWILLIEWINKIE, but that should be fine for a puzzle. Some of them, like OSCEOLA, even seem useful! (Those are all I think at thresh 5, but words like ORALE and SHANA too). Even neologisms like IAMA, which "died out" in 2013. Around thresh 20 you start getting some bs words though like LVI, IFA, and OTE. We can see a few culture deaths though. ALAR hasn't been since 2018, and has been going down steadily over time. A few other examples of cultural ghosts: ORT, SDI, GSA. Although weirdly, GSA came up 9 times in 2015, and I checked and it's not because it suddenly means Gay-straight Alliance.</p>
 
     <p>Here's a slightly more statistical overview: births and deaths over time:</p>
 
-    <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime?timescale=month&thresh=1">
+    <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
       <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
-      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
-      <graph-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></graph-query-param-input>
+      <form is="query-param-form">
+        <label>years (instead of months) <input is="query-param-input" data-query-param="timescaleYears" type="checkbox"></label>
+        <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+      </form>
     </graph-loader>
 
     <p>This is pretty unsatisfactory. Our births and deaths, because they're just first/last instances of words, shape themselves to the data. So-called births slow down roughly according to Herdan's/Heaps' law, diminishing types for increasing tokens, and it's pretty clear a similar thing is going on with deaths. Our time scale is too showrt, however, and our data too patchy, to look expect e.g. dwindling usage as a fraction of median lifetime usage. We can't really expect to see long-term artifacts on the scale of Ngrams. So we need to figure out a couple things: 1. a better metric to describe birth/death, and 2. what our data is actually useful for. Idea for 1: threshold years, threshold lifetime usage. Idea for 2: neologisms?</p>
@@ -455,14 +469,19 @@
 
     <p>Perhaps one thing we could do would be to fit a power function to both the birth and death curves, and then measure deviation from the fit.</p>
 
-    <graph-loader data-id="countBirthsDeathsOverTimeErrors" data-src="api/figures/countBirthsDeathsOverTimeErrors?timescale=month&thresh=1">
-      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
+    <graph-loader data-id="countBirthsDeathsOverTimeErrors" data-src="api/figures/countBirthsDeathsOverTimeErrors">
+      <form is="query-param-form">
+        <label>years (instead of months) <input is="query-param-input" data-query-param="timescaleYears" type="checkbox"></label>
+        <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+      </form>
     </graph-loader>
 
     <p>Another thing we might look at is dictionary size over time, i.e. how many word types are used in a given time span. This should tell us if the vocabulary is increasing or decreasing over time.</p>
 
-    <graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime?timescale=month">
-      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
+    <graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime">
+      <form is="query-param-form">
+        <label>years (instead of months) <input is="query-param-input" data-query-param="timescaleYears" type="checkbox"></label>
+      </form>
     </graph-loader>
 
     <p>Seems like it's about steady, which likely points to word birth and death balancing out. The yearly aggregate indicates more varition, with a peak around 2012-13. Perhps this is really more just a function of word repetition though, i.e. a given month/year's vocab size is just related to how often words were repeated in a given year.</p>
@@ -501,8 +520,10 @@
 
     <p>The article above tracks some info based on word lifespan, so I'm going to start quantifying that. Here's a histogram of word lifespans with lifetime usage over a certain threshold:</p>
 
-    <graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity?thresh=1">
-      <graph-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></graph-query-param-input>
+    <graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity">
+      <form is="query-param-form">
+        <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+      </form>
     </graph-loader>
 
     <p>One thing we can notice is that there are a few extremely peaky words, i.e. what are the words that have >= 10 uses in 4-5 years?</p>
@@ -595,7 +616,7 @@
   <script src="js/graph-loader.js"></script>
   <script src="js/table-loader.js"></script>
   <script src="js/graph-log-axis-checkbox.js"></script>
-  <script src="js/graph-query-param-input.js"></script>
-  <script src="js/table-query-param-input.js"></script>
+  <script src="js/query-param-input.js"></script>
+  <script src="js/query-param-form.js"></script>
 </body>
 </html>

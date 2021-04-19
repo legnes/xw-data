@@ -36,11 +36,6 @@ class TableLoader extends HTMLElement {
     const spinner = document.createElement('div');
     spinner.className = 'loading-spinner';
 
-    // graph container
-    // const graphContainer = document.createElement('div');
-    // graphContainer.className = 'graph-container';
-    // graphContainer.id = this.getAttribute('data-id');
-
     // table container
     const tableContainer = document.createElement('div');
     tableContainer.className = 'table-container';
@@ -57,13 +52,13 @@ class TableLoader extends HTMLElement {
       loaderContainer.appendChild(spinner);
       const figure = await this.loadTable();
       shadow.removeChild(loaderContainer);
-      this.buildTable(figure);
+      this.renderData(figure);
       shadow.appendChild(tableContainer);
     }
     button.addEventListener('click', handleButton);
   }
 
-  buildTable(figure) {
+  renderData(figure) {
     this.table.innerHTML = '';
     const headerRow = document.createElement('tr');
     for (const column of figure.columns) {
@@ -92,44 +87,8 @@ class TableLoader extends HTMLElement {
     return data;
   }
 
-  // static get observedAttributes() { return ['data-src']; }
-  // connectedCallback() { console.log('connected'); }
-  // attachedCallback() { console.log('attached'); }
-  // attributeChangedCallback(name, oldValue, newValue) { console.log('attribute changed', name, oldValue, newValue); }
-
   static get width() { return 800; }
   static get height() { return 400; }
-
-//   static get layout() {
-//     return {
-//       autosize: false,
-//       width: TableLoader.width,
-//       height: TableLoader.height,
-//       margin: {
-//         l: 40,
-//         r: 10,
-//         b: 40,
-//         t: 10,
-//         pad: 4
-//       },
-//       // paper_bgcolor: '#7f7f7f',
-//       // plot_bgcolor: '#c7c7c7',
-//       // xaxis: {
-//       //   type: 'log',
-//       //   autorange: true
-//       // },
-//       // yaxis: {
-//       //   type: 'log',
-//       //   autorange: true
-//       // }
-//     };
-//   }
-
-//   static get config() {
-//     return {
-//       // responsive: true
-//     };
-//   }
 
   static get style() { return `
 .loader-container {

@@ -18,8 +18,10 @@
   <p>block square heat map</p>
   <graph-loader data-id="blockSquaresHeatMap" data-src="api/figures/blockSquaresHeatMap"></graph-loader>
   <p>multi answer frequency over year</p>
-  <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime?search=ip*d%2Cimac%2Cios">
-    <graph-query-param-input data-query-param="search" data-label="search terms"></graph-query-param-input>
+  <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime?search=">
+    <form is="query-param-form">
+      <label>search terms <input is="query-param-input" data-query-param="search" type="text" value="ip*d,imac,ios"></label>
+    </form>
   </graph-loader>
   <p>cumulative puzzles by authors</p>
   <graph-loader data-id="authorCounts" data-src="api/figures/authorCounts">
@@ -61,6 +63,7 @@
   <script src="js/graph-loader.js"></script>
   <script src="js/table-loader.js"></script>
   <script src="js/graph-log-axis-checkbox.js"></script>
-  <script src="js/graph-query-param-input.js"></script>
+  <script src="js/query-param-input.js"></script>
+  <script src="js/query-param-form.js"></script>
 </body>
 </html>

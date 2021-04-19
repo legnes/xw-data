@@ -14,7 +14,6 @@ const { english: { WIKI_CORPUS }} = require('../constants/corpora');
 
 const figures = {};
 
-
 figures.mostFrequentLongAnswers = (req, res, next) => {
   db.query(`
 SELECT
@@ -1199,7 +1198,7 @@ ORDER BY year_introduced DESC, occurrences DESC, answer;
 };
 
 figures.countBirthsDeathsOverTime = (req, res, next) => {
-  const timeBin = (req.query.timescale === 'year') ? 'year' : 'month';
+  const timeBin = (req.query.timescaleYears === 'true') ? 'year' : 'month';
   const lifetimeUsageThreshold = cleanNumber(req.query.thresh, 1);
 
   const queries = [
@@ -1252,7 +1251,7 @@ ORDER BY time_bin;
 };
 
 figures.countBirthsDeathsOverTimeErrors = (req, res, next) => {
-  const timeBin = (req.query.timescale === 'year') ? 'year' : 'month';
+  const timeBin = (req.query.timescaleYears === 'true') ? 'year' : 'month';
   const lifetimeUsageThreshold = cleanNumber(req.query.thresh, 1);
 
   const queries = [
@@ -1319,7 +1318,7 @@ ORDER BY time_bin;
 };
 
 figures.dictionarySizeOverTime = (req, res, next) => {
-  const timeBin = (req.query.timescale === 'year') ? 'year' : 'month';
+  const timeBin = (req.query.timescaleYears === 'true') ? 'year' : 'month';
   db.query(`
 SELECT
   DATE_TRUNC('${timeBin}', p.date) AS time_bin,

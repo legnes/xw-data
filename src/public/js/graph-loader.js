@@ -9,9 +9,6 @@ class GraphLoader extends HTMLElement {
   constructor() {
     super();
 
-    // Attributes
-    // const dataSrc = this.getAttribute('data-src');
-
     // Content
     const shadowContainer = document.createElement('div');
     this.prepend(shadowContainer);
@@ -41,13 +38,20 @@ class GraphLoader extends HTMLElement {
     graphContainer.className = 'graph-container';
     graphContainer.id = this.getAttribute('data-id');
 
+    // variables for reloading
+    this.target = graphContainer
+    this.layout = { ...GraphLoader.layout };
+    this.config = { ...GraphLoader.config };
+
     // button click
     const handleButton = async () => {
       button.removeEventListener('click', handleButton);
       loaderContainer.removeChild(button);
       loaderContainer.appendChild(spinner);
       const figure = await this.loadFigure();
-      Plotly.react(graphContainer, figure.data, {...GraphLoader.layout, ...(figure.layout || {})}, GraphLoader.config);
+      if (figure.layout) Object.assign(this.layout, figure.layout);
+      if (figure.config) Object.assign(this.config, figure.config);
+      this.renderData(figure);
       this.parentNode.insertBefore(graphContainer, this);
       // this.parentNode.removeChild(this);
       shadow.removeChild(loaderContainer);
@@ -63,10 +67,20 @@ class GraphLoader extends HTMLElement {
     return data;
   }
 
-  // static get observedAttributes() { return ['data-src']; }
-  // connectedCallback() { console.log('connected'); }
-  // attachedCallback() { console.log('attached'); }
-  // attributeChangedCallback(name, oldValue, newValue) { console.log('attribute changed', name, oldValue, newValue); }
+  renderData(figure) {
+    Plotly.react(this.target, figure.data, this.layout, this.config);
+  }
+
+  setLayout(layout) {
+    for (const [key, val] of Object.entries(layout)) {
+      this.layout[key] = Object.assign(this.layout[key] || {}, val);
+    }
+  }
+
+  renderLayout(layout) {
+    this.setLayout(layout);
+    Plotly.relayout(this.target, this.layout);
+  }
 
   static get width() { return 800; }
   static get height() { return 400; }
