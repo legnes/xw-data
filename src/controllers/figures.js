@@ -14,6 +14,7 @@ const { english: { WIKI_CORPUS }} = require('../constants/corpora');
 
 const figures = {};
 
+
 figures.mostFrequentLongAnswers = (req, res, next) => {
   db.query(`
 SELECT
