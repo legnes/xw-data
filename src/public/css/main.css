@@ -1,0 +1,7 @@
+graph-loader {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+graph-loader:not(:defined) {
+  opacity: 0;
+}

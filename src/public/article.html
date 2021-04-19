@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Crossword Corpus</title>
+  <!-- <meta name="description" content="Free Web tutorials"> -->
+  <!-- <meta name="keywords" content="HTML, CSS, JavaScript"> -->
+  <meta name="author" content="Sam Engel">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <header>
+    <h1>Crossword Data</h1>
+  </header>
+  <section>
+    <h2>About Crosswords and This Article</h2>
+
+    <!-- <p>Random thought/note: Can we say that crossword answers don't have grammar? Does semantics not really matter in it? Are they a language at all???</p> -->
+    <!-- <p>One broad thing I'd like to highligh/explore is: what are crossword puzzles? What kind of puzzles? They seem to have different factors: trivia, brain teasers, cryptograms, etc. Which of those are emphasized in a linguistic analysis?</p> -->
+
+    <p>Ever wonder when a certain word first showed up as an answer in the NYT crossword puzzle? Try out the interactive graph below! Click the "load data" button to load in the graph, and then input your own list of words to look up. The list should be comma separated, like <em>one,two,three</em>. You can include <em>*</em> in a word to create a pattern -- <em>d*wn</em> will get both <em>down</em> and <em>dawn</em>. Give it a shot!</p>
+
+    <graph-loader data-id="frequencyOverTime" data-src="api/stats/answers/frequencyOverTime?search=sdi%2Cdsl">
+      <graph-query-param-input data-query-param="search" data-label="search terms"></graph-query-param-input>
+    </graph-loader>
+
+    <p>Crossword puzzles are sort of a rat maze for language, in more ways than one. They look maze-y. They make your brain work. And just like a maze in a lab, crosswords are a totally contrived structured spatial environment. They're great for watching how words behave. Here's an example. Because crosswords will sometimes try to trick you, they can be useful for studying how language conveys meaning. Check out <a href="https://scholarship.tricolib.brynmawr.edu/bitstream/handle/10066/15350/Adams_thesis_2015.pdf">this thesis</a> on crossword puzzle difficulty and the Gricean Maxims (Jocelyn Adams, Swarthmore '15), or <a href="https://asistdl.onlinelibrary.wiley.com/doi/10.1002/meet.1450440213">this paper</a> on the informational content of answer/clue pairs (Miles Efron, Proceedings of the American Society for Information Science and Technology, 2008). Because crosswords have such strict rules, they force language to work differently. That's why we sometimes talk about <a href="https://en.wikipedia.org/wiki/Crosswordese">"crosswordese"</a>, the set of words that are more likely to show up in puzzles because of how "useful" they are. We can also learn from the ways that croswords do and don't change to reflect our society. Here's <a href="https://pudding.cool/2020/11/crossword/">a great read</a> from The Pudding on writing more equitable puzzles.</p>
+
+    <p>This is an article about crossword puzzles and language. I'm not at all an expert in either of those things, but hopefully some of this will be interesting. A quick heads up: there will be lot of graphs and charts, so to save data they're not preloaded. Just like in the graph above, you'll have to click to load in the data as you read.</p>
+
+    <p>Before we get started, I wanted to mention a few other resources. For more frequency-over-time data (like the graph above), check out Google Books's <a href="https://books.google.com/ngrams">n-gram viewer</a>. For a <em>ton</em> of great crossword-specific history, stats, and content, check out <a href="https://www.xwordinfo.com/">xwordinfo.com</a>. They also have a trove of crossword data from different puzzle types and including NYT crossword data from before 1993 (the "pre-Shortz era"), all the way back to 1942. There's also <a href="https://xd.saul.pw/">xd.saul.pw</a> by Saul Pwanson, where you can find three decades and counting of crossword data spanning something like 25 different publishers.</p>
+
+    <p>With all that out of the way, let's get on to some analysis!</p>
+  </section>
+  <section>
+    <h2>How similar are crosswords to English?</h2>
+
+    <h3>Linguistic Laws</h3>
+
+    <p>Most of what we'll be doing here falls under the field of Corpus Linguistics. Rather than going into a lab or out into the field and recording specific examples of language use, corpus linguists compile vast collections of real-world language data for analysis. The field gained major traction in the (50s and) 60s with a few landmark articles as well as the creation of the Brown Corpus of American English. Closely related, Quantitative Linguistics tries to model and explain the various phenomena observed in language corpi. Some of these models apply across a surprising range of corpi and contexts, like the concept that the longer a sentence of word is, the shorter its constituent words or syllables will be. If you spend even a little time reading about corpus and quantitaive linguistics, you'll probably come across a few of these models -- things like the Brevity Law, Zipf's Law, and Heaps' Law. One thing we can do to find out if crosswords are "like normal language" is to check whether they line up with the models.</p>
+
+    <!-- <p>The usage of language, both in its written and oral expressions (texts and speech), follows very strong statistical regularities. One of the goals of quantitative linguistics is to unveil, analyze, explain, and exploit those linguistic statistical laws. - https://www.mdpi.com/1099-4300/22/2/224/htm</p> -->
+
+    <!-- <p>The so-called linguistic laws—statistical regularities emerging across different linguistic scales (i.e. phonemes, syllables, words or sentences) that can be formulated mathematically [1]—have been postulated and studied quantitatively over the last century [1–5]. Notable patterns which are nowadays widely recognized include Zipf’s Law which addresses the rank-frequency plot of linguistic units, Herdan’s Law (also called Heaps’ Law) on the sublinear vocabulary growth in a text, the Brevity Law which highlights the tendency of more abundant linguistic units to be shorter, or the so-called Menzerath–Altmann Law (MAL) which points to a negative correlation between the size of a construct and the size of its constituents. - https://royalsocietypublishing.org/doi/10.1098/rsos.191023</p> -->
+
+    <h4>Brevity Law</h4>
+
+    <p>The brevity law advises (qualitatively) that common words tend to be shorter. (Aside: a lot of corpus/ql laws relate to word _frequency_, presumably because coming up with ways to quantify the intricate profundities of language is harder than counting stuff, but probably for other reasons too that I'd like to know. People have written whole books about word frequency! <a href="https://books.google.com/books/about/Word_Frequency_Studies.html?id=OkDy0RJOwiAC">Word frequency studies</a> <a href="https://www.springer.com/gp/book/9780792370178">Word frequency distributions</a>). One way to think about this: remember there are <em>26<sup>3</sup> = 17,576</em> possible words of length 3 (because 26 letters of the alphabet) and <em>26<sup>6</sup> = 308,915,776</em> possible six-letter words. So even if it's just as likely to have a three-letter word as a six-letter word, you're choosing your three-letter words from a smaller pool, so each word has a tendency to show up more times.</p>
+
+    <p>But we have to be careful! It's possible that we see the brevity law showing up across corpi because of random luck-of-the-draw statistics. But it's far more likely that there are other factors at play -- maybe over time people shorten the words they use a lot so that they're easier to say or write. And in the case of crosswords, answer length makes a huge difference! In fact we can see that there's nowhere near the same number of three-letter and six-letter answers. Here's a graph of answer lengths vs. number of answers</p>
+
+    <!-- <p>TODO: figure out how to make this a bar chart with multiple y axes? maybe. doesnt' seem to work</p> -->
+    <!-- <p>NOTE: I kind of like it as not</p> -->
+    <graph-loader data-id="lengthTypesAndTokens" data-src="api/stats/answers/lengthTypesAndTokens">
+      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+      <!-- <graph-log-axis-checkbox data-axes="y+y2"></graph-log-axis-checkbox> -->
+    </graph-loader>
+
+    <p>Ok so when we say "number of answers" that's actually sort of complicated. You can count answers two different ways -- either the <em>total</em> number of answers with length, say, 4, OR the number of different <em>distinct words</em> with length 4 that show up as answers. So it comes down to whether you count e.g. the word <em>oleo</em> 245 times or just once. You'll hear a range of terms for these concepts, like word "occurrences" (total) vs. "dictionary" words (distinct), or "tokens" (total) vs. "types" (distinct).</p>
+
+    <p>The graph above (try zooming in by clicking and dragging) shows both, and it's pretty interesting! One way to read it would be to say that there are the most 4-letter answers, but that there's the most variety in 7-letter words. Or, put another way, the bigger the gap between the two lines, the more times some answer of that length has been repeated. It doesn't tell us about the distribution -- <em>era</em> could have shown up hundreds of thousands of times and all other three-letter answers just once -- but it's a start! In fact, there's a linguistic observation related to it. According to some papers (https://academic.oup.com/biomet/article-abstract/45/1-2/222/264683?redirectedFrom=fulltext) (sort of https://royalsocietypublishing.org/doi/10.1098/rsos.191023) the lines should fit a lognormal distribution (although this is sort of contested here https://www.mdpi.com/1099-4300/22/2/224/htm). ______ TODO: fit lognormal if I can. A qualitative check shows real similarity to English. <a href="https://pdf.sciencedirectassets.com/273276/1-s2.0-S0019995800X01489/1-s2.0-S0019995858902298/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEAoaCXVzLWVhc3QtMSJIMEYCIQC%2Fu%2FyHNBkGyCKTSr2mYtpKPK2Nb6st8GDzWDRQZXWrjAIhAISa2kXtuPY7zAbPtknAoXMthfCPQMqOFzwMDJ1awLmjKrQDCGMQAxoMMDU5MDAzNTQ2ODY1Igx4cJtfsUuOnXpJOZMqkQOX1C18rwVYqb%2FLKU2zph56orQ36tpPH6oHGxRnVTxVLcUlJZY47CnYOK7KxtOE6zZD5jAPXXkZEX0o6eiNL5e1yot%2FjRSpw1zsILM9s5M6YUy2HbtDSCqFq%2BUs9SlainrpjXL1l229AZiPODmw1zMuEgjQ8SFMu6TuSLfSXtAMtrbA5xWhgCX6qusRh7mO3qjQ5latEjFKL%2B496j9hEnO%2F9f81NNUWVz2vU58BQ4T7tQNRnMWuqMbnbOUqdX19mOCZuFsI7V6Lev3pBQLuPXPcbPndYruRyLG9c%2FYJak48P0s%2BA4A9DggZ1GCuFUdUDqFfoqNr2OEKUWqndY%2FjeQhCFJNYV670VK4p7PetIurJMfafZwxTfr3qE6%2FGTyUn08x%2BW7LUj%2Fv2XRiWCCgN6E9yhFvfrLUsK1txSOPV%2BrNDLd6JCdMAfE7Pz02KCtG2kb%2BAp6WQ8%2F%2BmbrzgVoc50RnaeW86pXpmpbWOPktwVocYTrtLv1s5N3PUI4x8plonDyxsVuGqPjueflOV6jCgdF7R0jDKh72DBjrqAWJPdAcdTnx1yHfZk95R3ICL%2BPEAAd7NiswMS26tvqyS%2FmrBSbRuSHrkSU7ohL4KTndZ7mmexH97StjG5NvJbYYUeEacvoYp7l8KBCtrmzXnOMHM%2FIZttaPI913aUmNlmLldLDnnpRf0iAqfJDbX5N5Xs%2BHBVAkENXJoZawgIuDuqULYX2K9d4ViKdRDx26P1auq7NbdBLRxoYxLkbPZwQFfd26%2BZzGHe774EeAdm01aXxJyIPb4KIW5425i2A6P5e%2FUefGaYdQQylUOWRryFhJjs0AdyN3W3vsS4B%2F8dPEgPfkJ3BNFPEYWHQ%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20210408T192223Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTY724M4UNW%2F20210408%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=a4a67df5e717b946b83711428446a41cfe4abb84d79c0259bf5787e1827d6cf9&hash=090b538b315b4fc24b3b6918e357a5aaa08220b0b44185c163564906a295f2b5&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S0019995858902298&tid=spdf-a8fea549-22d6-4ad3-be1b-bf5aabbbb695&sid=a37d73ee14a2834064496cb2274a19074f96gxrqa&type=client">Here's an old paper analyzing similar data</a> (and here? https://arxiv.org/pdf/1207.2334.pdf;). We can also plot the data ourselves.</p>
+
+    <!-- <graph-loader data-id="lengthTypesAndTokensEnglish" data-src="api/stats/answers/lengthTypesAndTokensEnglish">
+      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+    </graph-loader> -->
+
+    <graph-loader data-id="lengthTypesAndTokensCombined" data-src="api/stats/answers/lengthTypesAndTokensCombined">
+      <graph-log-axis-checkbox data-axes="y+y2"></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>Choosing a reference corpus is a delicate business! I'm using a <a href="https://github.com/IlyaSemenov/wikipedia-word-frequency">frequency list of english wikipedia words gathered in 2019</a> to represent written english, but there are <a href="https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists">a ton of other great resources</a>. If anyone wants to buy me a COCA license, be my guest!</p>
+
+    <!-- <p>TODO: USE ANC???? http://www.anc.org/</p> -->
+
+    <p>As for the data, they line up pretty well! You can select just tokens or just types by clicking the series names in the chart legend. Our types line up very well, with a primary peak around 7 letters. By and large, words longer than seven letters are underrepresented in the crossword corpus, which makes sense, since they can be harder to fit into a grid. There are also relatively more types of short length, which might reflect that crosswords tend to use abbreviations more than a normal corpus. Our tokens also look fairly similar, but the crossword peak is shifted toward more letters, and then the curve falls off more rapidly. Again, we might guess that the grid helps explain this observation -- long words can be tough to cross, but a phrase comprising short, vowel-filled words is a lot easier. Maybe longer clues tend to use phrases and therefore repeat a lot less?</p>
+
+    <p>Despite some similarities to normal english, we can recognize some characteristically "crossword-y" things too. Our tokens distribution is shifted because crosswords generelaly don't have 1-2 letter words, which are some of the most frequently repeated in the english language. There are noticeable spikes at 15, the width/height of a normal weekday puzzle, and 21, the width/height of a sunday puzzle. There are also smaller spikes at 23 and 25, two other semi-common sizes. As you'd imagine, this is because puzzle creators like to use answers as wide/tall as the grid itself -- check out <a href="https://www.xwordinfo.com/Stacks">this page</a> for some impressive 15-letter-loving puzzles! If you zoom into the long-answer end of the graph, you may notice that the two lines don't perfectly line up, which means some really long answers have actually showed up more than once! Here's a list of the most repeated long answers:</p>
+
+    <table-loader data-id="mostFrequentLongAnswers" data-src="api/stats/answers/mostFrequentLongAnswers"></table-loader>
+
+    <p>Perhaps as we'd expect, almost all of these are phrases or proper nouns. It would seem that constructors, just like the rest of us, love Leonardo Da Vinci, Arturo Toscanini, and, of course, Grover Cleveland.</p>
+
+    <p>Actually, we need to talk about what a "word" is. In general many of these linguistic laws apply to other linguistic units than words, and the bias towards words in the literature is maybe even a problem. Also, as we just saw, a lot of crossword answers aren't "words". They're often multiword phrases, sub-word affixes/morphemes, or who knows what -- abbreviations, words/phrases from other languages, etc. Nonetheless, I'd argue you can treat the crossword answers as a corpus of words -- we will be comparing it to english but mainly through its bulk properties.</p>
+
+    <p>Ok, back to brevity. A common way to quantify brevity is using a correlation test. First, we plot every distinct answer's length vs its frequency, like this:</p>
+
+    <graph-loader data-id="lengthFrequency" data-src="api/stats/answers/lengthFrequency"></graph-loader>
+
+    <p>Right away we can intuitively see we're on to something. As frequency goes down, the most common word length at that frequency looks like it's tending to go up. But to be more rigorous, we can run a statistical test to see how monotonic (Spearman) or linearly related (Pearson) the data are -- in other words, how reliably does the graph point roughly down and to the right?</p>
+    <!-- <p>Finally, the brevity law [14] can be summarized as corr(ℓ,n)<0, where corr(ℓ,n) is a correlation measure between ℓ and n, as, for instance, Pearson correlation, Spearman correlation, or Kendall correlation. - https://www.mdpi.com/1099-4300/22/2/224/htm (where l is length and n is tokens of type)</p> -->
+
+    <table-loader data-id="lengthFrequencyCorrelations" data-src="api/stats/answers/lengthFrequencyCorrelations"></table-loader>
+
+    <p>Just like in normal english, both the Pearson and Spearman tests show a significant negative correlation between length and frequency! The Pearson score ranges from -1 to 1 and says roughly how good a line the data form, with points docked for high standard deviation in either dimension. A score of 0 means the data aren't linearly related at all, whereas our high negative score indicates some negative correlation -- exactly what we're looking for. The Spearman score is a Pearson score on <em>rank</em> data, so it also goes from -1 to 1, and tells us how monotonically our values increase/decrease. Again, we see it's strongly negative. The large z-values tell us that there's pretty much no chance we're seeing this correlation accidentally, e.g. as a result of sampling error.</p>
+
+    <p>Let's just double check the theory on that by runnin the same numbers on our english (wikipedia) corpus:</p>
+
+    <graph-loader data-id="lengthFrequencyEn" data-src="api/stats/answers/lengthFrequencyEn"></graph-loader>
+    <table-loader data-id="lengthFrequencyCorrelationsEn" data-src="api/stats/answers/lengthFrequencyCorrelationsEn"></table-loader>
+
+    <p>It looks like the correlation is a little weaker, but it's definitely there! You may be wondering why we're testing correlation when our english corpus has only a weak (though statistically significant) correlation score. Great question! There are of course other ways to quantify the brevity law, but they're all a little more complicated. <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">Here's a paper</a> with what seems to me like a pretty sophisticated analysis that culminates in a formulation of the law in terms of "conditional" distributions of the probability mass function of length and type. Probability mass is just the probability of choosing a word from our corpus with length <em>l</em> and frequency <em>n</em>. The histograms above essentially show a binned PMF. The paper looks at a few features of the PMF. First, its two marginal distributions, which are the sum probability for each length:</p>
+
+    <graph-loader data-id="lengthFrequencyPmfLengthMarginal" data-src="api/stats/answers/lengthFrequencyPmfLengthMarginal">
+      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>...and the sum probability for each frequency:</p>
+
+    <graph-loader data-id="lengthFrequencyPmfFrequencyMarginal" data-src="api/stats/answers/lengthFrequencyPmfFrequencyMarginal">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>For the first, we'd expect a unimodal curve with its peak at 7 that fits a gamma distribution (possibly lognormal), plotted on a semilog on y. This is basically the same as the length vs types graph. For the second, we'd expect a log plot to look like two linear phases. This is pretty similar to zipf's law, as we'll see later. The frequency marginal is telling us that half of all words only show up once, and that it's relatively rare for words to have a high frequency.</p>
+
+    <p>The paper then looks at <em>conditional</em> distributions, which means a graph for each length, plotting frequency against probability of that frequency of that length.</p>
+
+    <graph-loader data-id="lengthFrequencyPmfLengthConditionals" data-src="api/stats/answers/lengthFrequencyPmfLengthConditionals">
+      <!-- <p>TODO: pass in autochecked</p> -->
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>We'd expect all of these to have basically the same shape as the frequency marginal (two phase linear), but scaled differently. The paper defines a <em>scaling paramter</em> to relate these shapes to one another, and then defines the brevity law according to that sacling factor: "the characteristic scale of the distribution of n conditioned to the value of ℓ decays with increasing ℓ as 1/ℓδ; i.e., the larger ℓ, the shorter the conditional distribution f(n|ℓ), quantified by the exponent δ". Here our results vary pretty significantly from the paper, and I haven't actually finished their analysis. At some point I'd like to, but from visual inspection, there are some differences. It looks like we sort of have two separate domains. Our plots for length 6-14 look sort of reasonable compared to the paper, and it's possible the scaling parameter would work for them to form a brevity law. But but our plots for length 3-7 tell a totally different story. It's not totally clear that they scale at all -- shorter words tend to start lower on the y axis and stretch further on the x, with a later falloff. What does this tell us? As we go from length 6 to 14, there are fewer fewer distinct answers (types, not tokens!), and each one is less and less likely to be repeated. That corroborates the brevity law on both counts -- there are fewer unique long words, and they come up fewer times. Answers of length 15, as we've already talked about, are an exception -- there are about as many distinct 15-letter words as 10- or 11-letter words, and they're repeated about as often too. The other domain is 3-7 letter words. As we've seen, they <em>increase</em> in unique answers, but they still tend to be repeated less often. The result is that for the entire range (across both domains), graphs tend to fall off more steeply as word length increases. The x-intercept uniformly decreases, but that the y-intercept, the number of unrepeated words of each length, is non-uniform. Actually, because the length-type distribution in the paper (i.e. length marginal) looks a lot like ours, I'd expect to see the same patterns. However the paper conveniently omits len=7 from its graph, so it's hard to say. TODO I think I need to come up with better than "likely to be repeated"</p>
+
+    <p>We can double check with our english corpus though.</p>
+
+    <graph-loader data-id="lengthFrequencyPmfLengthConditionalsEn" data-src="api/stats/answers/lengthFrequencyPmfLengthConditionalsEn">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>Again, the 7-14 range holds up really well, and probably agrees with the paper's scaling law. The 3-7 range remains problematic, although in a slightly different way than our puzzle. For length 3-7 words, they are increasingly likely to be repeated, whereas for us the shorter words were repeated more often.</p>
+
+    <p>TODO Probably owe some more analysis here!</p>
+
+    <p>At the end of the day, it's clear the brevity law holds for our crossword corpus. It has a stronger correlation than standard english, but perhaps doesn't behave quite the same way mathematically-speaking under close scrutiny.</p>
+
+    <!-- <p>_____ (that brevity logic doesn't apply), & analyze why we see certain lengths. Then we check out this paper https://www.mdpi.com/1099-4300/22/2/224/htm . By contrast, the graph of answer length vs answer <em>types</em>, i.e. how many <em>unique</em> answers there are of each length (so this graph doesn't count duplicates), looks like this:</p> -->
+
+    <!-- <graph-loader data-id="lengthTypes" data-src="api/stats/answers/lengthTypes">
+      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+    </graph-loader> -->
+
+    <!-- <p>In fact, a QL postulate sometimes called the law of word length tells us that this graph should follow a lognormal or possibly a gamma distribution (https://www.mdpi.com/1099-4300/22/2/224/htm) (or possibly a lognormal for tokens and gamma for types?)</p> -->
+
+    <!-- <p>On the other hand, the law of word lengths [12] proposes a lognormal distribution for the empirical probability mass function of word lengths, that is, f(ℓ)∼LN(μ,σ2), where LN denotes a lognormal distribution, whose associated normal distribution has mean μ and variance σ2 - https://www.mdpi.com/1099-4300/22/2/224/htm</p> -->
+
+    <!-- <p>Back to the Brevity law. There are a few ways to looks at it. One way is to look at the frequency of each length word, and see how correlated the are using spearman's test, like in this paper (https://royalsocietypublishing.org/doi/10.1098/rsos.191023) (note it also does the correlation test for words past a threshold freq). </p> -->
+
+    <!-- <p>Brevity law was originally formulated by the linguist George Kingsley Zipf in 1945 as a negative correlation between the frequency of a word and its size. - https://en.wikipedia.org/wiki/Brevity_law</p> -->
+
+    <!-- <p>The third linguistic law under analysis is Brevity Law, also known as Zipf’s Law of abbreviation. It qualitatively states that the more frequently a word is used, the ‘shorter’ that word tends to be [44,45,62]. Word size has been measured in terms of number of characters, according to which the law has been verified empirically in written corpora from almost a thousand languages of 80 different linguistic families [63], and similarly logograms tend to be made of fewer strokes in both Japanese and Chinese [64,65]. The law has also been observed acoustically when word size is measured in terms of word time duration [8,66,67], and recent evidence even suggests that this law also holds in the acoustic communication of other primates [68]. Despite all this empirical evidence, and while the origin of Zipf’s Law of abbreviation has been suggested to be related to optimization principles [45,69–71], to the best of our knowledge the law remains qualitative and a precise mathematical formulation is lacking - https://royalsocietypublishing.org/doi/10.1098/rsos.191023</p> -->
+
+    <!-- <p>https://www.mdpi.com/1099-4300/22/2/224/htm This analysis is based around the PROBABILITY MASS FUNCTION, i.e. ({ ...l: {...d: count(l,d) } } / total). first graph: scatter of type length vs type freq. Then it calculates correlation using pearson corr(l,n) and then also corr(l, ln(n)). Then they graph type length vs sum PMF for that length and claim it has a gamma fit instead of a lognormal fit. I probably can't do either of those fits, but qualitatively they say "The distribution is clearly unimodal (with its maximum at ℓ=7)...". So we'll probably do some visual analysis there. Then it looks at the other "marginal" distribution, frequency vs sum PMF for that frequency, which gets interpreted as zipf's law, interestingly. The paper then goes on to look at "conditional distributions", i.e. f(n|l), the frequency vs. # types for fixed lengths. They do a "scaling analysis" where they rescale the axes based on mean and mean^2 n|l to make them align. This might be cool to do if I can figure it out. They then use these conditional distributions to formulate the brevity law quantitatively.</p> -->
+
+    <!-- <p>https://royalsocietypublishing.org/doi/10.1098/rsos.191023 formulates the brevity law as 𝑓∼𝒟−𝜆𝒟ℓ,0<𝜆𝒟≤1, where f is the frequency of a linguistic element, ℓ is its size in whichever units we measure it (some property of the time duration distribution, number of phonemes and number of characters), 𝒟 is the size of the alphabet (the number of different linguistic elements at the particular linguistic level under study), and 𝜆𝒟 an exponent which quantifies deviation from compression optimality (the closer this exponent is to one, the closer to optimal compression).</p> -->
+
+    <!-- <p>We claim that a more complete approach to the relationship between word length and word frequency can be obtained from the joint probability distribution f(ℓ,n) of both variables, together with the associated conditional distributions f(n|ℓ). To be more precise, f(ℓ,n) is the joint probability mass function of type length and frequency, and f(n|ℓ) is the probability mass function of type frequency conditioned to fixed length. Naturally, the word-frequency distribution f(n) and the word-length distribution f(ℓ) are just the two marginal distributions of f(ℓ,n). The relationships between these quantities are f(ℓ)=∑n=1∞f(ℓ,n), f(n)=∑ℓ=1∞f(ℓ,n), f(ℓ,n)=f(n|ℓ)f(ℓ). Note that we will not use in this paper the equivalent relation f(ℓ,n)=f(ℓ|n)f(n), for sampling reasons (n takes many more different values than ℓ; so, for fixed values of n one may find there is not enough statistics to obtain f(ℓ|n))...We stress that, in our framework, each type yields one instance of the bivariate random variable (ℓ,n), in contrast to another equivalent approach for which it is each token that gives one instance of the (perhaps-different) random variables, see [7]. The use of each approach has important consequences for the formulation of Zipf’s law, as it is well known [7], and for the formulation of the word-length law (as it is not so well known [12]). Moreover, our bivariate framework is certainly different to the that in [18], where the frequency was understood as a four-variate distribution with the random variables taking 26 values from a to z, and also to the generalization in [19]. - https://www.mdpi.com/1099-4300/22/2/224/htm</p> -->
+
+
+
+    <h4>Zipf's Law</h4>
+
+    <p>If crossword answers are like English, or really any language at all, we'd expect the most common words to be much more common than, say, the 100th most common word. The common words (a, the, and) make up many many more of the <em>tokens</em> in a corpus than do uncommon words (funicular, ablution,...), although the uncommon words make up many many more of the <em>types</em>. Word frequencies fall off fast, and often they fall off like this: if the most frequent word in a corpus shows up 120 times, the next most common word will only show up <em><sup>120</sup>&frasl;<sub>2</sub> =</em> 60 times. The third place word will appear <em><sup>120</sup>&frasl;<sub>3</sub> =</em> 40 times, fourth place <em><sup>120</sup>&frasl;<sub>4</sub> =</em> 30 times, fifth place <em><sup>120</sup>&frasl;<sub>5</sub> =</em> 24 times, then <em><sup>120</sup>&frasl;<sub>6</sub> =</em> 20, and so on and so on.</p>
+
+    <p>This is commonly called Zipf's law, and people like it because it's weirdly consistent and shows up all over the place. It's been used to describe word frequencies, city populations, wealth distribution, you name it. And those are facts I've read all over the place -- it's so common that people love to point out how common it is! In fact it's so ubiquitous that we actually need to be pretty careful when handling it. There's a lot of nuance and at times disagreement about what mathematical form it should take, how it should be visualized, how error analysis applies to it, and most of all, endlessly, what causes it.</p>
+
+    <p>I want to give a quick shoutout to my main source for this section. There's a lot of interesting writing about Zipf's out there, but I can't recommend enough <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">this article</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of the various formulations, theorized explanations, complexities of, and shortcomings in the literature surrounding Zipf's law.</p>
+
+    <p>Let's dive into it. Zipf's law relates to a word's rank, <em>r</em> (where words are ranked in order of most frequent to least). It says that the <em>r</em><sup>th</sup> most frequent word will have a frequency <em>f</em> that is a negative power law function of its rank <em>r</em>. In other words:</p>
+
+    <p><em>f(r) = <sup>k</sup>&frasl;<sub>r<sup>α</sup></sub></em></p>
+
+    <p>for some normalizing constant <em>k</em>. We usually expect α to have a value around 1, resulting in the example at the start of this section with <sup>120</sup>&frasl;<sub>2, 3, 4, ...</sub> (where <em>k = 120</em>). Let's just quickly see what that looks like in a graph. Here's the rank-frequency graph for our wikipedia corpus:</p>
+
+    <!-- <p>A note on ranking: you can rank in any of several differnt ways, our default is "ordinal" https://en.wikipedia.org/wiki/Ranking</p> -->
+
+    <graph-loader data-id="rankFrequencyEn" data-src="api/stats/answers/rankFrequencyEn">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <!-- <p>TODO: make legend suck less/not reduce size of graph</p> -->
+
+    <p>The dropoff is so sharp we can't even see it on a normal graph. To visualize it better, we use logarithmic axes. When we do, the data look almost linear, and they should! When we take our equation <em>f(r) = <sup>k</sup>&frasl;<sub>r<sup>α</sup></sub></em> and apply logs, we get <em>log(f(r)) = log(<sup>k</sup>&frasl;<sub>r<sup>α</sup></sub>)</em>, which can be rewritten as <em>log(f(r)) = -αlog(r) + log(k)</em>. That's just a linear equation <em>y = mx + b</em>, where <em>y = log(frequency)</em>, <em>x = log(rank)</em>, <em>m = log(α)</em> and <em>b = log(k)</em>. In fact, this is a simple and common approach to fitting Zipf's law to data -- run a linear regression on the log of the data (what base of log you use doesn't matter). That's how we got the fit on the graph above! So easy!</p>
+
+    <p>Of course, it's not that easy. You may have noticed that the fit line doesn't actually match the data very well for the first thousand or so words. Yes, our <em>k</em> value is pretty consistent with the value of 1 that we were expecting, and yes, we have a pretty good r<sup>2</sup> score to our linear fit. So we can definitely say that our data are "near-Zipfian". But in fact a simple power law doesn't quite cut it. There have been a host of proposed formulae for a more refined version of Zipf's law among which some of the most common are log-normal, Yule-Simon, and Mandelbrot's generalization of Zipf's law. (<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">here</a> and <a href="https://scholar.google.com/scholar_lookup?title=Word+frequency+distributions&author=R+Baayen&publication_year=2001&">here</a> for more). As an example, the Zipf-Manelbrot looks a lot like the equation we already know, but a little different:</p>
+
+    <p><em>f(r) = <sup>k</sup>&frasl;<sub>(r + β)<sup>α</sup></sub></em></p>
+
+    <p>for some shift β. Unfortunately, it's a lot harder to fit. There are some good papers I'd like to read on how to do it <a href="https://volweb.utk.edu/~scolli46/zipfmandelbrotmc.html">here></a> and <a href="https://www.researchgate.net/publication/220364507_Some_practical_aspects_of_fitting_and_testing_the_Zipf-Mandelbrot_model">here></a>, but I haven't gotten there yet. In theory you could run multiple linear regressions over the log data for multiple trial values of β and maximize some fit or likeliness function, but that was hard and didn't work too well and didn't really run at interactive time scales and blah blah blah. Anyway, go check out some of these other formulations of Zipf's law!</p>
+
+    <p>A couple papers mention something we might find useful and intriguing. Namely, <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">here</a> and <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">here</a> they talk about fitting <em>two separate power laws</em> to a single corpus, one for the high-frequency domain and one for the low-frequency domain. Our log plot actually kind of looks like that...it seems like there are two linear regions with different slopes! This is a lot more practical than trying to fit the Zipf-Mandelbrot equation. TODO If we wanted to be really rigorous, we'd find some way to determine where the domains are, maybe by finding the critical point of the second derive somehow?</p>
+
+    <p>Actually, while we're on the topic, I'll mention another cool variant of Zipf's law. This one doesn't involve complicated functions, but rather states the law in relation to the probability mass function. Remember we discussed that earlier when we were talking about the brevity law! It's mentioned in this paper <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">here</a> and also this one <a href="https://arxiv.org/abs/1412.4577">here</a> (which prefers this formulation to explain Herdan's Law) and it says that</p>
+
+    <p><em>Q(j) = kj<sup>-β</sup></em></p>
+
+    <p>where <em>Q(j)</em> is the probability a given word is in the corpus <em>j</em> times, <em>k</em> is some constant, and <em>β</em> is about 2. This is exactly the same as the frequency marginal distribution of the PMF we looked at earlier!</p>
+
+    <p>Back to the Zipf fit graph. You may also have noticed that the fit line fits the last 990,000 or so words like way, way too well. That's probably in part because, as <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">this paper</a> points out, our axes are correlated. Since we used frequency to determine rank, our plot of frequency vs. rank is guaranteed to monotonically descend, and is maybe even more likely to look like something meaningful even when nothing meaningful is going on. Here's an example from the paper. Let's say we made a new corpus by grabbing a random word from a dictionary of a thousand words and doing that, say, a million times. Some words would show up more often just by chance, and when we plotted rank-frequency, we'd get something that <em>looked</em> like something:</p>
+
+    <graph-loader data-id="rankFrequencyRandom" data-src="api/stats/answers/rankFrequencyRandom">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>But all that's really going on is random noise. Needless to say, words <em>aren't</em> chosen randomly, and any explanation of Zipf's law that doesn't take into account actual factors of language is incomplete. No, what we need to do is to <em>decorrelate</em> our rank and frequency data for their relationship to be statistically useful. That's not to say that there's nothing to learn from correlated data, but decorrelating will give us more to analyze. Errors, for example (the difference between a fit and the data) are only meaningful when the data are decorrelated, and they contain a world of variation -- enough to at times make us question whether Zipf's law is just too general to have much meaning.</p>
+
+    <p>In order to decorrelated, we have to work with <em>two separate corpi</em>. That is, we plot rank from corpus A against frequency from corpus B. If they're still correlated, <em>then</em> we've got something worth looking at. We can make up a couple more random corpi the same way, and check for any trends up or down:</p>
+
+    <graph-loader data-id="decorrelatedRankFrequencyRandom" data-src="api/stats/answers/decorrelatedRankFrequencyRandom">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>Totally random! As we'd expect. The way we do this for our actual corpi is to split them in two. For every word (token), we randomly put it into corpus A or corpus B. Then we figure out the ranks and frequencies for the separate corpi and plot them against each other. In practice we can use preexisting frequency counts as the characteristic <em>n</em> value of a binomial distribution with <em>p = 0.5</em>. A single sample from such a per-type binomial distribution is the same as splitting up the frequency token-by-token.</p>
+
+    <p>Let's try putting all that togehter. We'll take another look at the wikipedia corpus, but instead of the simple graph from before, we'll plot <em>decorrelated</em> rank vs. frequency and fit it against <em>two</em> power laws in different domains:</p>
+
+    <graph-loader data-id="decorrelatedRankFrequencyEn" data-src="api/stats/answers/decorrelatedRankFrequencyEn"></graph-loader>
+
+    <p>This is a 2d histogram, where color is assigned based on the log of the number of words that fall within each bin. This graph characterizes what we'd expect from a near-Zipfian distribution. The high-frequency domain, on the left, fits a power law function very well, with α about 1, just like Zipf's law predicts. The low-frequency domain on the right fits a steeper power law function, and begins to fan out due to inaccuracy from low-frequency words. The domain split is at rank 5000. The vast majority of dictionary words fall into this latter region. Let's see how good our fit is by visualizing the difference with our data:</p>
+
+    <graph-loader data-id="decorrelatedRankFrequencyErrorEn" data-src="api/stats/answers/decorrelatedRankFrequencyErrorEn"></graph-loader>
+
+    <p>We generally expect some deviation from the fit lines, such as the slightly downward trend of the "fan" on the right, and ideally those deviations will suggest nuances about the corpus. For example, the slightly lower-than-predicted frequencies among relatively high-ranking words might reflect that a corpus of wikipedia articles intentionally and systematically spans many different topics (grammar words come up a lot but nouns/verbs spread across topics?). What causes the squiggle just before rank 5000?</p>
+
+    <p>Now that we've got a methodology, let's roll that back and rerun it for our crossword answer data. Here's the rank-frequency plot for our crossword corpus:</p>
+
+    <graph-loader data-id="rankFrequency" data-src="api/stats/answers/rankFrequency">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>Things are looking a little different! The falloff looks a little less steep, and with log axes it's looking way less linear. Let's double check by decorrelating our data:</p>
+
+    <graph-loader data-id="decorrelatedRankFrequency" data-src="api/stats/answers/decorrelatedRankFrequency"></graph-loader>
+
+    <p>Yup, looks like we were right. The low-frequency range (on the right) actually looks pretty good. Its shape and downward-ish trending falloff look just like the english corpus data. But the high-frequency domain (on the left-hand side) falls off way less steeply -- a fit to Zipf's law gives it an α of just 0.4 or less. This tells us that either the most frequent words are a lot less frequent, or the "tier 2" frequent words are a lot more frequent. </p>
+
+    <p>Just how much does Zipf's law even describe this corpus? Here's our fit error:</p>
+
+    <graph-loader data-id="decorrelatedRankFrequencyError" data-src="api/stats/answers/decorrelatedRankFrequencyError"></graph-loader>
+
+    <p>Evidently it depends a lot on where we split the domains, suggesting a more nuanced formulation of the law could be helpful here. But the fit doesn't look too terrible. Just like the english corpus data, there's a dip and then rise in the high-frequency domain. To be honest though, this one doesn't really tell us all that much except that however we slice it, some part of the domain will have really high error. And neither domain has a very good fit in the first place judging by the r<sup>2</sup> values.</p>
+
+    <p>So we've learned two things. One: Zipf's law doesn't really fit our data very well, although perhaps it could be called near-zipfian. Two: even the best fit of Zipf's law predicts a very slow dropoff in word frequencies across rank for high-frequency words. Can we explain these features of our corpus? Since the origins of Zipf's are so hotly debated, we're really up against a challenge. The paper from before gives a great list of all the different explanations and why they fall short. But <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987">this paper</a> may provide us a start. It posits that Zipf's law arises from two principle, er, principles. The first factor is essentially semantic specificity. Some words are so vague that they aren't actually all that useful to specify a concept. Some specific words may not come up very often if the subject to which they apply itself only rarely comes up. All of which is to say that: words that can apply in a <em>medium</em> range of contexts are the most common. The paper sets up a simple model involving a set of words that do/don't have meanings in a set of topics, like "pear", "fruit", and "tire". Then it chooses a random concept, like a pear. In theory, both "pear" and "fruit" could apply. So the model also generates <em>distractor</em> words to force specificity at times. If, for example, "apple" was wone of the distractor words, we'd need to use the word "pear" to describe a pear, to differentiate it from an apple.</p>
+
+    <p>I haven't quite figured out how to put numbers to this yet, but intuitively that seems like <em>exaclty</em> what's at play in a crossword puzzle, where you want your answers to be sort of obscure but definitely gettable. And in fact, the frequency plots produced by the paper's model look (from very basic visual inspection) reasonably similar to our crossword data.</p>
+
+    <p>The other factor the paper mentions is syntax. The paper begins by observing that for any given language, there's a set of Parts of Speech. Each part of speech comprises a pool of some W words, and those words show up in a corpus of that language some proportional number of times F. So in a way, you could fake a corpus of size N words by sampling (F * N) random words from the pool of W words for each part of speech. All of this is to say that certain parts of speech are more common than others, and certain parts of speech are made up of fewer different words than others. This should sound like our same old "token vs. type" thing. A part of speech with lots of tokens and few types produces words with high frequency counts in a corpus. The paper argues that this is part of why we see Zipf's law (although it doesn't explain why/how parts of speech arise).</p>
+
+    <p>But in our corpus, we're sort of <em>missing</em> parts of speech as an entire concept. Most puzzles, especially non-themed ones, don't need answers to form a sentence with each other, or to have any kind of syntactic interaction. In the paper, the parts of speech are what help guide semantic differences, which generate less drastic frequency differences, into a steeper Zipf-ian power law dropoff. So it sort of makes sense that we'd be missing that.</p>
+
+    <!-- <p>TODO: Come up with some statistical ways to analyze this? TODO: come up with a toy xw model? Can we model syntax as cross-ability????</p> -->
+
+    <p>However, it's not all easy answers. Semantically crossword puzzles are pretty weird, so it's possible they can't explain whatever Zipf we're seeing. It's pretty clear from <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">this paper</a> and also <a href="https://pubmed.ncbi.nlm.nih.gov/1591901/">this one</a> that semantics definitely affect word frequency. But crosswords have totally different semantics than other language. As an example, we can take Swadesh lists. These are lists of relatively common words that historical linguists use to compare languages. That paper says they should have really similar, and in fact near-Zipfian, frequency distributions across languages. So one thing we can do is to take a look at Swadesh words.</p>
+
+    <graph-loader data-id="rankFrequencySwadesh" data-src="api/stats/answers/rankFrequencySwadesh">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <!-- <p>TODO: repeat this for number words, other examples in the paper like decades, months, etc.</p> -->
+
+    <p>This is a rank-frequency graph plotting rank in our english corpus against frequency in our crossword corpus. In theory, according to the paper, many languages have roughly the same near-zipfian distribution of swadesh words <em>in roughly the same order</em>. Our crossword corpus doesn't really seem to match though. Compare that to numerical words, which also tend to have a strong correlation with frequency:</p>
+
+    <graph-loader data-id="rankFrequencyNumericals" data-src="api/stats/answers/rankFrequencyNumericals">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>These show much more correlation. All of this is to say that semantics sometimes works differently or at least works unpredictably in our xw corpus.</p>
+
+    <p>In summary. How similar is crosswordese to english? Well, it's not especially Zipfian, and falloff happens quite slowly. It (does/doesn't) share Swadesh words. At best we can say it's kind of like English but...missing...certain linguistic components like syntax.</p>
+
+    <!-- <p>Zipf’s law deals with how tokens are distributed into types, and can be formulated in two different ways, which are generally considered as equivalent [1, 3, 8, 9]. The first one is obtained when counting the number of tokens associated to each type, which are represented by their rank in the list of counts; if a (decreasing) power law holds between counts and ranks, with an exponent close to one, this indicates the fulfilment of Zipf’s law. The second version of the law arises when counting the number of types with a given value of the number of counts (this is the distribution of counts) and this yields a (decreasing) power law with exponent around two. However, in general, the fulfilment of Zipf’s law has not been tested with rigorous statistical methods [2, 10]; rather, researchers have become satisfied with just qualitative resemblances between empirical data and power laws. In part, this can be justified by the difficulties of obtaining clear statistics from the rank-count representation, in particular for high ranks (that is, for rare types), and also by poor methods of estimation of probability distributions - https://arxiv.org/pdf/1412.4577</p> -->
+
+    <!-- <p>ok explanation One of the most puzzling facts about human language is also one of the most basic: Words occur according to a famously systematic frequency distribution such that there are few very high-frequency words that account for most of the tokens in text (e.g., “a,” “the,” “I,” etc.) and many low-frequency words (e.g., “accordion,” “catamaran,” “ravioli”). What is striking is that the distribution is mathematically simple, roughly obeying a power law known as Zipf ’s law: The rth most frequent word has a frequency f(r) that scales according to f(r)∝1rα (1) for α≈1 - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/</p> -->
+
+    <!-- <p>Other formulation: Mandelbrot proposed and derived a generalization of this law that more closely fits the frequency distribution in language by “shifting” the rank by an amount β (Mandelbrot, 1953, 1962): f(r)∝1(r+β)α (2) for α≈1 and β≈2.7 - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/ AND introduces the term "near-zipfian", ON COMPLEXITY of models and the various ones: A superb reference for comparing distributions is Baayen (2001, Chap. 3), who reviewed evidence for and against a log-normal distribution (Carroll, 1967, 1969), a generalized inverse Gauss–Poisson model (Sichel, 1975), and a generalized Z-distribution (Orlov & Chitashvili, 1983) for which many other models (due to, e.g., Herdan, 1960, 1964; Mandelbrot, 1962; Rouault, 1978; Simon, 1955, 1960; Yule, 1924) are a special case (see also Montemurro, 2001; Popescu, 2009). Baayen finds, with a quantitative model comparison, that which model is best depends on which corpus is examined. For instance, the log-normal model is best for the text The Hound of the Baskervilles, but the Yule–Simon model is best for Alice in Wonderland. One plausible explanation for this is that none of these simple models—including the Zipf–Mandelbrot law in Eq. 2—is “right,”4 instead only capturing some aspects of the full distribution of word frequencies. - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/</p> -->
+
+    <!-- <p>ON graphs and models says that because the graphs we've been using are problematic, this is a flawed formula, and indeed the simple model hides complexities in the distribution that may be beyond a unified model QUOTE Indeed, none is right. The apparent simplicity of the distribution is an artifact of how the distribution is plotted. The standard method for visualizing the word frequency distribution is to count how often each word occurs in a corpus and to sort the word frequency counts by decreasing magnitude. The frequency f(r) of the rth most frequent word is then plotted against the frequency rank r, typically yielding a mostly linear curve on a log-log plot (Zipf, 1936), corresponding roughly to a power law distribution.5 This approach—although essentially universal since Zipf—commits a serious error of data visualization. In estimating the frequency-rank relationship this way, the frequency f(r) and frequency rank r of a word are estimated on the same corpus, leading to correlated errors between the x-location r and y-location f(r) of points in the plot. This is problematic because it may suggest spurious regularity.6 The problem can be best understood by a simple example. Imagine that all words in language were actually equally probable. In any sample (corpus) of words, we will find that some words occur more than others just by chance. When plotted in the standard manner, we will find a strikingly decreasing plot, erroneously suggesting that the true frequency-rank relationship has some interesting structure to be explained. This spurious structure is especially problematic for low-frequency words, whose frequencies are measured least precisely. Additionally, in the standard plot, deviations from the Zipfian curve are difficult to interpret, due to the correlation of measurement errors; it is hard to tell systematic deviations from noise. - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/ AND THEN the method for fixing Fortunately, the problem is easily fixed: We may use two independent corpora to estimate the frequency and frequency rank. In the above case where all words are equally probable, use of independent corpora will lead to no apparent structure—just a roughly flat frequency-rank relationship. In general, we need not have two independent corpora from the start; we can imagine splitting our initial corpus into two subcorpora before any text processing takes place. This creates two corpora that are independent bodies of text (conditioned on the general properties of the starting corpus) and, so, from which we can independently estimate r and f(r). A convenient technique to perform this split is to perform a binomial split on observed frequency of each word: If we observe a word, say, 100 times, we may sample from a binomial (N = 100, p = .5) and arrive at a frequency of, say, 62 used to estimate its true frequency and a frequency of N – 62 = 38 to estimate its true frequency rank. This exactly mirrors randomly putting tokens of each word into two independent corpora, before any text processing began. The choice of p = .5 is not necessary but yields two corpora of approximately the same size. With this method, the deviations from a fit are interpretable, and our plotting method no longer introduces any erroneous structure.</p> -->
+
+    <!-- <p>Concerning deviation in the error from fit plot, right hand side comes from low-freq inaccuracy " At the low-frequency end, we have more noise and, so, greater uncertainty about the shape of that curve." "the “scoop” on the right-hand size of the plot, corresponding to misestimation of higher ranked (lower-frequency) words." On LEFT of plot, "Such a complex structure should have been expected: Of course, the numerous influences on language production result in a distribution that is complex and structured. However, the complexity is not apparent in standard ways of plotting power laws. Such complexity is probably incompatible with attempts to characterize the distribution with a simple parametric law, since it is unlikely that a simple equation could fit all of the minima and maxima observed in this plot. At the same time, almost all of the variance in frequencies is fit very well by a simple law like Zipf’s power law or its close relatives. A simple relationship captures a considerable amount about word frequencies but clearly will not explain everything. The distribution in language is only near-Zipfian." - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/</p> -->
+
+    <!-- <p>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/ argues that frequency is related to semantics/meaning. It compares word frequencies across languages and finds strnog correlations that also match near zipfian dist.s -- the same words are approx the same freq in the same order with the same falloffs. Same for number words, this time near an inverse square law. Same for decades and historical time. Put another way, article goes on a quest to see: what things play a role in word frequency. Answer is semantic meaning, but also social context across words of the same meaning. Definitely scope of meaning is important, but we still see zipf dist for words whose meaning scope are highly limited like month or planet names. You also see zipf among non-word categories. Discusses syntactic categories, which have much more variability than words. Characterizing error: curve at bottom bows usually to the top. HERE IS SOME QUOTES: The general point from this section is, therefore, that word meaning is a substantial determinant of frequency, and it is perhaps intuitively the best causal force in shaping frequency. “Happy” is more frequent than “disillusioned” because the meaning of the former occurs more commonly in topics people like to discuss. A psychologically justified explanation of Zipf’s law in language must be compatible with the powerful influence that meaning has on frequency.</p> -->
+
+    <!-- <p>Zipf’s empirical observation of the relation between the frequency of occurrence of a word and its frequency rank probably is “the most well-known statement of quantitative linguistics” [3]. First observed in linguistics, the distribution was soon recognized in other disciplines too. In fact, Zipfian distributions are claimed to be “about as prevalent in social sciences as Gaussian distributions are in the natural sciences […], which implies that Zipf’s Law captures a very fundamental regularity in the universe surrounding human beings” [4]. As could be expected then, there is a vast literature on Zipfian distributions. But as several reviews conclude, in spite of the amount of work on Zipf’s law, no satisfactory account has been given and its origins still remain controversial (cf. [5–7]). For example, Piantadosi notes that “essentially all of the work in language research has focused solely on deriving the law itself in principle; very little work has attempted to assess the underlying assumptions of the hypothesized explanation” [7]. What is crucially needed, Piantadosi argues, is providing evidence for the cognitive validity of the proposal. This paper directly responds to this call to action, proposing a linguistically informed explanation in which the distribution follows from the interaction between syntax and semantics. - https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987</p> -->
+
+    <!-- <p>In this paper I have shown how a Zipfian distribution can be explained by the interaction of syntax and semantics, thus providing a linguistically informed explanation of Zipf’s law. Words are from different parts-of-speech classes, which differ in size by orders or magnitude. Within classes, words differ in meaning by being differentially specified for a number of meaning dimensions. If a word is specified for a few dimensions only, it becomes ambiguous; if it is overly specific, it will hardly ever be applicable. It was shown that neither of these ingredients suffices to produce Zipf’s law, but together they can. - https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987 AS TO THIS: what about in crosswords where semantics and syntax both somewhat break down? Maybe it's support -- medium semantic specificity could be a good thing. But for trivia it's not. But for trickiness it is. As for syntax, large sections of part of speech are ignored entirely. Do OUR zipf results rougly seem to follow the paper's results for the JUST SEMANTICS sections?</p> -->
+
+    <!-- <p>Here's the really good section on various derivations of zipf and why it's underwhelming, namely that they need to speak to psycholinguistic explanations : This question has been a central concern of statistical language theories for the past 70 years. Derivations of Zipf’s law from more basic assumptions are numerous, both in language and in the many other areas of science where this law occurs (for overviews, see Farmer & Geanakoplos, 2006; Mitzenmacher, 2004; Newman, 2005; Saichev, Malevergne & Sornette, 2010). Explanations for the distribution across the sciences span many formal ideas, frameworks, and sets of assumptions. To give a brief picture of the range of explanations that have been worked out, such distributions have been argued to arise from random concatenative processes (Conrad & Mitzenmacher, 2004; Li, 1992; Miller, 1957), mixtures of exponential distributions (Farmer & Geanakoplos, 2006), scale-invariance (Chater & Brown, 1999), (bounded) optimization of entropy (Mandelbrot, 1953) or Fisher information (Hernando, Puigdomènech, Villuendas, Vesperinas & Plastino, 2009), the invariance of such power laws under aggregation (see Farmer & Geanakoplos, 2006), multiplicative stochastic processes (see Mitzenmacher, 2004), preferential reuse (Simon, 1955; Yule, 1944), symbolic descriptions of complex stochastic systems (Corominas-Murtra & Solé, 2010), random walks on logarithmic scales (Kawamura & Hatano, 2002), semantic organization (Guiraud, 1968; D. Manin, 2008), communicative optimization (Ferrer i Cancho, 2005a, b; Ferrer i Cancho & Solé, 2003; Mandelbrot, 1962; Salge, Ay, Polani, & Prokopenko, 2013; Zipf, 1936, 1949), random division of elements into groups (Baek, Bernhardsson & Minnhagen 2011), first- and second-order approximation of most common (e.g., normal) distributions (Belevitch, 1959), and optimized memory search (Parker-Rhodes & Joyce, 1956), among many others. For language in particular, any such account of the Zipf’s law provides a psychological theory about what must be occurring in the minds of language users. Is there a multiplicative stochastic process at play? Communicative optimization? Preferential reuse of certain forms? In the face of such a profusion of theories, the question quickly becomes which—if any—of the proposed mechanisms provides a true psychological account of the law. This means an account that is connected to independently testable phenomena and mechanisms and fits with the psychological processes of word production and language use. Unfortunately, essentially all of the work in language research has focused solely on deriving the law itself in principle; very little work has attempted to assess the underlying assumptions of the hypothesized explanation, a problem for much work on power laws in science (Stumpf & Porter, 2012).2 It should be clear why this is problematic: The law itself can be derived from many starting points. Therefore, the ability of a theory to derive the law provides very weak evidence for that account’s cognitive validity. Other evidence is needed. - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/</p> -->
+
+    <!-- <p>Several different formulations: In the English language, the probability of encountering the rth most common word is given roughly by P(r)=0.1/r for r up to 1000 or so. The law breaks down for less frequent words, since the harmonic series diverges. Pierce's (1980, p. 87) statement that sumP(r)>1 for r=8727 is incorrect. Goetz states the law as follows: The frequency of a word is inversely proportional to its statistical rank r such that P(r) approx 1/(rln(1.78R)), where R is the number of different words. - https://mathworld.wolfram.com/ZipfsLaw.html</p> -->
+
+    <!-- <p>given some corpus of natural language utterances, the frequency of any word is inversely proportional to its rank in the frequency table. Thus the most frequent word will occur approximately twice as often as the second most frequent word, three times as often as the third most frequent word, etc....The law is named after the American linguist George Kingsley Zipf (1902–1950), who popularized it and sought to explain it (Zipf 1935, 1949), though he did not claim to have originated it.[2] The French stenographer Jean-Baptiste Estoup (1868–1950) appears to have noticed the regularity before Zipf.[3][not verified in body] It was also noted in 1913 by German physicist Felix Auerbach (1856–1933).[4]...such as the population ranks of cities...Zipf's law is most easily observed by plotting the data on a log-log graph, with the axes being log (rank order) and log (frequency)....A generalization of Zipf's law is the Zipf–Mandelbrot law, proposed by Benoit Mandelbrot, whose frequencies are: {\displaystyle f(k;N,q,s)={\frac {[{\text{constant}}]}{(k+q)^{s}}}.\,}{\displaystyle f(k;N,q,s)={\frac {[{\text{constant}}]}{(k+q)^{s}}}.\,}....In practice, as easily observable in distribution plots for large corpora, the observed distribution can be modelled more accurately as a sum of separate distributions for different subsets or subtypes of words that follow different parameterizations of the Zipf–Mandelbrot distribution, in particular the closed class of functional words exhibit s lower than 1, while open-ended vocabulary growth with document size and corpus size require s greater than 1 for convergence of the Generalized Harmonic Series.[2]... - https://en.wikipedia.org/wiki/Zipf%27s_law</p> -->
+
+    <!-- <p>Zipf’s law states that the frequency of a word is a power function of its rank. The exponent of the power is usually accepted to be close to (-)1. Great deviations between the predicted and real number of different words of a text, disagreements between the predicted and real exponent of the probability density function and statistics on a big corpus, make evident that word frequency as a function of the rank follows two different exponents, ˜(-)1 for the first regime and ˜(-)2 for the second. - https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101 THIS ONE also relates zipf to PDF marginal above but where the exponent goes from -1 to -2</p> -->
+
+    <!-- <p>This one (https://www.mdpi.com/1099-4300/22/2/224/htm) has an explicit formulation of zipf's over multiple freq domains: Given a sample of natural language (a text, a fragment of speech, or a corpus, in general), any word type (i.e., each unique word) has an associated word length, which we measure in number of characters (as we deal with a written corpus), and an associated word absolute frequency, which is the number of occurrences of the word type on the corpus under consideration (i.e., the number of tokens of the type). We denote these two random variables as ℓ and n, respectively. Zipf’s law of word frequency is written as a power-law relation between f(n) and n [6], i.e., f(n)∝1nβforn≥c, where f(n) is the empirical probability mass function of the word frequency n, the symbol ∝ denotes proportionality, β is the power-law exponent, and c is a lower cut-off below which the law losses its validity (so, Zipf’s law is a high-frequency phenomenon). The exponent β takes values typically close to 2. When very large corpora are analyzed (made from many different texts an authors) another (additional) power-law regime appears at smaller frequencies [16,17], f(n)∝1nαfora≤n≤b, with α a new power law exponent smaller than β, and a and b lower and upper cut-offs, respectively (with a&ltb&ltc). This second power law is not identified with Zipf’s law.</p> -->
+
+    <!-- <p>Take a look at https://journals.aps.org/pre/abstract/10.1103/PhysRevE.102.052113 for maybe more info on fitting power law to zipf</p> -->
+
+    <!-- <p>Nevertheless, although the power-law regime for intermediate frequencies (n<0.1θ) is very clear, the validity of the other power law (the one for large frequencies) is questionable, in the sense that the power law provides an “acceptable” fit but other distributions could do the same good job, due to the limited range spanned by the tail (less than one order of magnitude). Our main reason to fit a power law to the large-frequency regime is the comparison with Zipf’s law (β≃2), and, as we see, the resulting value of β for f(n|ℓ) turns out to be rather large (the results of β for all f(n|ℓ) turn out to be statistically compatible with β=2.75). In addition, we will show in the next subsection that the high-frequency behavior of the conditional distributions (power law or not) has nothing to do with Zipf’s law - https://www.mdpi.com/1099-4300/22/2/224/htm</p> -->
+
+    <!-- <p>Here's a random article on fitting to zipfian that I didn't use https://journals.aps.org/pre/abstract/10.1103/PhysRevE.102.052113</p> -->
+
+
+    <h4>Herdan's (Heaps's) Law</h4>
+
+    <p>Let's take a look at the last of our linguistic laws, Herdan's or Heaps' Law. This one has to do with something that's come up a few times: tokens vs. types. When analyzing Zipf's law, we said that a small number of types account for a large portion of the corpus's tokens (the high-frequency domain), and a large number of types comprise a very few tokens (the low-frequency domain, e.g. one token per type). Let's say you took a corpus that followed Zipf's law, and you went through it keeping track of how many tokens you'd looked at and how many types you'd come across. Well if all the tokens were evenly distributed, you'd probably expect to come across a lot of the high-frequency words pretty quickly, but it'd take you a while to find all the low-frequency words. That's essentially what Herdan's law is getting at. Qualitativley it says you'll find new words very quickly at first, and then slower and more steadily later. Quantitatively, it says:</p>
+
+    <p><em>V = kN<sup>h</sup></em></p>
+
+    <p>where <em>V</em> is the size of the vocabulary, the number of types you've come across, <em>N</em> is the size of the corpus, i.e. the number of tokens you've come across, and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1.</p>
+
+    <p>We can come up with a little toy simulation of Herdan's law. Let's build a fake corpus with some Vocab Size (number of types) and some characteristic Zipf's Law power. That'll give us a certain probability of each word in the vocab coming up. Then we can build a fake document from that corpus by randomly picking words. For each word, we count how many word tokens we've picked and how many word types we've seen. (Note that we're assuming our corpus is infinitly big token-wise, or else we'd have to "remove" tokens from our probability distribution).</p>
+
+    <graph-loader data-id="simulateHerdan" data-src="api/stats/answers/simulateHerdan?refTypes=1000&refZipf=1.01&docSize=400">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>(DISCLAIMER: this is an oversimplified system! Look <a href="https://arxiv.org/abs/1412.4577">here</a> for a more complete explanation of how this would be set up. Note that they use the PMF formulation of Zipf, and they argue that Herdan's law is wrong). This <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">paper</a> also contests the relationship between Zipf and Herdan! It may seem like Herdan's law should arise easily out of Zipf's, but that's a topic that's under some considerable debate. Possibly worth removing this section.</p>
+
+    <p>Just like with Zipf's law, we can use a linear regression of the log-data to try and fit the model. But wait, what do we actually use for data? A toy corpus model is all well and good, but we don't want to just randomly pull crossword answers from our corpus -- Herdan's Law should hold for <em>naturally occurring</em> features of corpi. Helpfully, <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">this paper</a> outlines a few different ways you can divide a corpus to check for Herdan's law. Essentially what we want is a way to get a lot of different token-type data points without being completely contrived. To do that, you have to subdivide your corpus in some way, for example</p>
+
+    <ul>
+      <li>For a corpus of advertisement slogans, look at tokens vs types of all slogans in each language</li>
+      <li>For a corpus of wikipedia articles, look at tokens vs types for each article</li>
+      <li>For a corpus made up of a single textbook, look at accumulated tokens vs. types page-by-page</li>
+    </ul>
+
+    <p>We have a corpus of puzzles, each of which is sort of like its own "document" (or wikipedia article, in the example above). But any given puzzle will probably have a token:type ratio of 1 because answers are generally not repeated in a single puzzle. Instead, we're probably better off looking at the <em>accumulated</em> tokens and types for answers across puzzles. Here it is:</p>
+
+    <graph-loader data-id="tokenTypesOverTime" data-src="api/stats/answers/tokenTypesOverTime">
+      <graph-log-axis-checkbox></graph-log-axis-checkbox>
+    </graph-loader>
+
+    <p>It's a near-perfect fit, with <em>h</em> around 0.6, right where we'd expect it. As of writing, the data show a Pearson’s correlation coefficient of 0.9996. Earlier we pointed out that individual puzzles don't repeat answers. I wonder if that's part of why this fit is so good, as if it enforces some regularity on the corpus. Either way it seems like the crossword corpus epitomizes Herdan's law. Maybe this tells us that it's very similar to english!</p>
+
+    <p>One thing that I'd sort of like to do is to follow the analysis presented in <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">this paper</a> that looks at the statistically expected size of the vocabulary over progressive token count averaged across all shufflings of the data. I tried doing that but I can't calculate binomial coefficients that are that big :(((( How the hell do you do this????</p>
+
+    <!-- <graph-loader data-id="tokenTypesOverTimeAnalysis" data-src="api/stats/answers/tokenTypesOverTimeAnalysis">
+      <graph-log-axis-checkbox axes="x+y+y2"></graph-log-axis-checkbox>
+    </graph-loader> -->
+
+    <!-- <p>Zipf’s law can be considered as the “tip of the iceberg” of text statistics. Another well-known pattern of this sort is Herdan’s law, also called Heaps’ law [2,8,9], which states that the growth of vocabulary with text length is sublinear (however, the precise mathematical dependence has been debated [10]). Herdan’s law has been related to Zipf’s law, sometimes with too simple arguments, although rigorous connections have been established as well [8,10]. The authors of [11] provide another example of relations between linguistic laws, but, in general, no general framework encompassing all laws exists. - https://www.mdpi.com/1099-4300/22/2/224/htm</p> -->
+
+    <p>
+      Now there are a lot of other corpus stats we could look at and proposed linguistics laws.
+      - Word frequency effect?
+      - What can we say about infrequent words?
+      - Letter frequency?
+      - Analyze clue word corpus
+      But for now let's just move on to linguistic change.
+    </p>
+
+    <h3>Keyness</h3>
+
+    <p>Another bulk statistical analysis we can run is called "keyness". Unlike the language laws, there's no model for how keyness works, but it's perhaps the most pertinent measure for differentiating "crosswordese" from English. Keyness is a measure of, or a statistical test for, how different a frequency feature is between two collections. In simpler terms: which words show up a lot more or less often in our crossword answers than we'd expect them to when compared to an English corpus. On the face of it, this should be pretty easy. You'd think we could get a sense of this just by comparng the difference in relative frequencies, so we could get the keyness of the word "EONS" by comparing the number of times "EONS" is a crossword answer, divided by the total number of crossword answers, with the number of times "EONS" shows up in our wikipedia articles, divided by the total number of word (tokens) in that corpus. Here's the highest/lowest relative frequency difference words:</p>
+
+    <table-loader data-id="relativeFrequencyDifference" data-src="api/stats/answers/relativeFrequencyDifference?positive=false">
+      <table-query-param-input data-query-param="positive" data-label="only positive values"></table-query-param-input>
+    </table-loader>
+
+    <p>As we'd expect, a bunch of short words and grammar words show up first. But we also see only negative relative frequencies. These are the words that showed up less often in our corpus than we'd expect from the english corpus. This is probably because of just how common the most common words in English are -- see Zipf's Law section. Even our most common words in crosswordese aren't all that common from a corpus ling perspective, so they don't show up in our list. You can look at the words with the highest positive relative frequency by checking the checkbox or whatever. Suddenly we start to see our group of likely crosswordese suspects. All those three-to-four-letter, vowel-heavy (especially first and last letter) words pop right up.</p>
+
+    <p>HOWEVER! There's a lot we're not accounting for. Words with low frequency, especially in a smaller corpus, may have a high degree of variability to them. Take the word "HOWEVER". It shows up a lot in Wikipedia, but it's only ever been an answer in the crossword once. Does that definitely make it a keyword? Well, because we only have the one example of it in the crossword, we're not really sure <em>what</em> its frequency is in the puzzle. We only have one data point! We'd rather choose words that we're <em>sure</em> show up infrequently. For that we need a statistical test like the chi-squared test. But again we run into a problem. We can't define keyness as the "probability that the observed difference in frequency isn't some random chance"! That ignores <em>how big the ovserved frequency difference really is</em>. That could return words with almost identically relative frequencies, but high statistical significance in their difference! And for that matter, why <em>don't</em> we care about words with high similarity?</p>
+
+    <p>A few things worth noting about keyness. One is that it can help contribute to a broader study of <em>aboutness</em>, i.e. the subject of a given document. Documents about different things should have statistically significant keywords with respect to each other, or with respect to a reference corpus. So we can keep an eye out for what crosswords are "about". But keyness is just one factor in aboutness. Things like collocation also must be considered with aboutness. Another common topic of discussion surrounding keyness is whether you take a focused or an exploratory approach. A focused approach will evaluate the keyness of certain words/features of interest. We will be tending towards an exploratory approach, in which we evaluate keyness across all word types in the corpus and try to draw conclusions from there.</p>
+
+    <p>Okay all of this is a lot to consider, so what do we do? Well, we can use a statistical metric to threshold our results, and then compare the statistically significant results based on an effect-size metric. Here's an example of that:</p>
+
+    <table-loader data-id="keyness" data-src="api/stats/answers/keyness?enThresh=0">
+      <table-query-param-input data-query-param="enThresh" data-label="frequency threshold for english corpus"></table-query-param-input>
+    </table-loader>
+
+    <p>A word on interpretation. "Log ratio" and "difference coefficient" are our effect-size metrics. The log ratio is, as you'd guess, the log (base 2) of the relative frequencies. For every point of log ratio, a word appears twice as many times in one corpus or the other (relative to corpus size). A log ratio of 14 means a word showed up about 16,000 times as often. "Difference coefficient" is the difference over the sum of normalized frequencies. It ranges from -1 to 1, where the extremes mean a word only showed up in one corpus or another, and 0 means the relative frequencies are the same. Our many values of -1 and 1 are rounding errors for very very high differences. "Log likelihood G2" and "Bayes factor" are statistical metrics. A strong G<sup>2</sup> value is around 19, overwhelming around 23. A string BIC or Bayes factor is around 6, overwhelming around 10. Methodologically, these data filter out any values with a bayesFactor <= 2. There's also an input for filtering out words that occurred below a certain threshold number of times in the english corpus. This can be a helpful knob to tweak if you're looking for keyness of words that are definitely used, not just e.g. concatenated phrases.</p>
+
+    <p>Anyway, the results look much better! We've gotten rid of almost all the words that only show up a handful of times in the crossword corpus, improving our statistical significance. You'll see words that don't show up in the english corpus very much (or at all), but that's because the english corpus is so big that we can be confident this <em>lack</em> is conspicuous/significant. We've also gotten rid of words that were showing up simply because they have high frequency in the crossword corpus. What we have left is a host of words that really <em>aren't english at all</em> -- they're borrowed, abbreviations, phrases, etc. If they raw frequency difference showed us some of the more boring crosswordese words, this analysis perhaps shows us some of the more egregious ones, things where you'd go "that's not even a word!", or "ATEE, come on!!!". These, to me, are some of the real feel-bad answers.</p>
+
+    <p>If you play with the threshold input, you'll start to see more and more words that are at least kind of normal english. At threshold 1, brands like ELAL and EDYS start showing up. French words like ETES and ETRE, proper nouns like OHARE or RELEE (oof), phrases like IBET, and double whammies like borrowed phrase ELNINO. Abbreviations like RTES. Bullshit jargon like ALIENEE. Oof. Weird uses of affixes like RETAG, ACMES, YIPE, or ANEAR. Then go and check out some of the clues for these. ELEE is almost entirely "waiting for the ___" or "gen. robt. ___". ALIENEE is almost always identical.</p>
+
+    <table-loader data-id="answerClues" data-src="api/stats/answers/answerClues?search=ALIENEE">
+      <table-query-param-input data-query-param="search" data-label="answer"></table-query-param-input>
+    </table-loader>
+
+    <p>I can't figure it out. In theory, part of what makes a crossword puzzle fun is that it's trivia. There should be weird answers that you don't always come across. But they shouldn't be so weird that you've, you know, never heard of them. They should have clues that reward you if you know the answer. But the clues should also reward you if you've just seen this combination of words a hundred times, and some neuron fires. That's what's fun about guessing in Jeopardy. It's got all the stuff you'd expect to like in trivia, and yet I know that to me, when I'm solving a crossword, this is feel-bad city. Unoriginal clues, whacky answers. Yuck.</p>
+
+    <p>Let's keep cranking up the english frequency threshold. At 150, we start seeing a few more common english words like TO and HE. As for our crosswordese, we still get some proper nouns like ESTEE, borrowings like ERAT, etc. But we also get EPEE, STY, STET, OLIO, OLEO, EDAM, OAF, EMOTE, SLOE, ANON, AGUE...It's clear word length as well as vowel and common letter count is still playing a huge role here. But we also start to see weird old words (ANON, AGUE), extremely niche words (EPEE, STY, STET, SLOE) and words that just...wouldn't show up very much in wikipedia (EMOTE, OAF). This is strting to be better territory to me. At threshold 500, the list starts to look like almost entirely affixes and abbreviations??? And by threshold 1000, we're into pretty normal words that differ between corpi: ALOE, OAT, ETNA as well as reverse keywords like DISTRICT, INTERNATIONAL, and JANUARY. Once we hit 10000, almost all the words favor the wikipedia corpus, except for ELI.</p>
+
+    <!-- <p>TODO: samness table or form input for above</p> -->
+    <p>We can try to look at sameness by filtering for words with low log ratios but still with high Bayes. What we get is OLD, AREAS, ABLE, USE, EVEN, UNIT, RATE, TRUE, SON, USES, EVER, RACE, LED, SEE, EAST, UPON, SANTA, ROLE, INC, SEA, NOTE, TOM, BAD, DEL, SOON, MEN, PETER, NEAR, SAVE, PORT, ROSE, START, SEX....tend to be short and vowel-rich, plus generic words and verbs? Not sure!</p>
+
+    <!-- <p>TODO: word length table or form input for above</p> -->
+    <p>We can also look at longer words. With no english threshold, we get a lot of phrases and names. ATEASE, OTOOLE, ELPASO, ASARULE, ATONCE, ATREST, ALSORAN, ALGORE, ONEDGE, ETALII, OREIDA, ONEONONE, INTOTO, EDASNER, LEERAT, ALDENTE. Once we hit threshold 10, these all seem like pretty decent words to me AVIATE, TSHIRT, OATERS, ELATES, ONTIME, EERIER, EGOTRIP, REESES, YESSIR, APTEST, SNORED, ONSALE, DESADE, TODATE, ALAMODE, EVILEYE, ICIEST, DOODAD. 100 are pretty good too AERATE, OMELET, SNEERS, NESTEA, RATATAT, DETENTE, HOWEVER, ESSENE, AGATES, LEANTO, EDERLE, ORNERY, ENTREE.</p>
+
+    <p>One sort of neat thing we can do with keyness is to analyze subsets of crosswords against the whole corpus. We can use this to see, for example, if any words were key in a given year:</p>
+
+    <table-loader data-id="keynessPerYear" data-src="api/stats/answers/keynessPerYear"></table-loader>
+
+    <p>Notice our statistical indicators are a lot smaller. We expect this -- some of these words only showed up a handful of times ever. Was 2016 obsessed with ROMCOMs and 2014 with ANAGRAMS? Most of these are neologisms and cultural trends. One thing we can do with this kind of information is to see roughly how long a thing seeps into the cultural backwater of the NYTXW.</p>
+
+    <table>
+      <tr><th>category</th><th>answer</th><th>year originated</th><th>first crossword appearance</th><th>high keyness year</th></tr>
+      <tr><td>tech</td><td>ETSY</td><td>2005</td><td>2014</td><td>2020</td></tr>
+      <tr><td>tech</td><td>SELFIE</td><td>Somewhere around 2006?</td><td>2015</td><td>2018</td></tr>
+      <tr><td>tech</td><td>SIRI</td><td>2011</td><td>2013</td><td>2019</td></tr>
+      <tr><td>tech</td><td>UBERS</td><td>2009</td><td>2017</td><td>2019</td></tr>
+      <tr><td>music/tv/movies</td><td>BORAT</td><td>2006</td><td>2008</td><td>2019</td></tr>
+      <tr><td>music/tv/movies</td><td>GADOT</td><td>2009? Wonder Woman 2016-17</td><td>2018</td><td>2019</td></tr>
+      <tr><td>music/tv/movies</td><td>MOANA</td><td>Late 2016</td><td>2017</td><td>2017</td></tr>
+      <tr><td>music/tv/movies</td><td>NAENAE</td><td>2013</td><td>2017</td><td>2018</td></tr>
+      <tr><td>music/tv/movies</td><td>QUEEREYE</td><td>2003, 2018</td><td>2004</td><td>2021</td></tr>
+      <tr><td>music/tv/movies</td><td>SIA</td><td>Big releases in 2010 & 2013-14</td><td>2016</td><td>2020</td></tr>
+    </table>
+
+    <p>We could maybe posit a trend: tech neologisms are actually extremely slow to get picked up and slow to build/peak. In the arbitrary category of music/tv/movies, your smash hit will probably get picked up and then peak pretty quickly. Of course, what we don't know is how these times compare to other institutions like the OED. We should check on that! We should also try to do this more systematically -- time between first appearance and peak? Lifespan?</p>
+
+    <!-- <p>A LINGUISTIC NOTE: proper linguistic analysis would take all of this analysis as a STARTING POINT, from which it would go and examine any anomalies, trends, etc. in contextualized detail.</p> -->
+
+    <p>For more information on keyness, check out <a href="https://core.ac.uk/download/pdf/227092349.pdf">Costas Gabrielatos's phenomenal chapter</a> on keyness, which is where almost all of this comes from. There is <a href="http://ucrel.lancs.ac.uk/llwizard.html">one</a> and <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">two</a> good sources giving implementation details for some of the statistics involved.</p>
+
+  </section>
+  <section>
+    <h2>How do crosswords change over time?</h2>
+
+    <p>It seems like our Herdan's Law analysis should be able to tell us a thing or two about how our crossword corpus changes over time. And in a way it does. What it tells us is that new words are introduced into the crossword language according roughly to a power law. One way to study this would be to randomly shuffle the puzzles and see how word introduction looks relative to this fit. If there's a pattern to the fit errors that isn't present in shuffled versions, we might have found an interesting feature to look at. See <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">here</a>.</p>
+
+    <graph-loader data-id="tokenTypesOverTimeError" data-src="api/stats/answers/tokenTypesOverTimeError"></graph-loader>
+
+    <p>Intuitively, we can come up with a few other metrics by which we might want to analyze language chage. For example, we can look at recent word births, the first instance of a word that would go on to be used some threshold number of times (in this case, twice):</p>
+
+    <table-loader data-id="mostRecentNewWords" data-src="api/stats/answers/mostRecentNewWords?thresh=3">
+      <table-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></table-query-param-input>
+    </table-loader>
+
+    <p>We can also look at the "top" (most overall occurrences) words introduced each year:</p>
+
+    <table-loader data-id="topNewWordsByYear" data-src="api/stats/answers/topNewWordsByYear"></table-loader>
+
+    <p>Similarly we can look at deaths. Here are the oldest words to die that had a certain threshold lifetime use:</p>
+
+    <table-loader data-id="oldestDeadWords" data-src="api/stats/answers/oldestDeadWords?thresh=3">
+      <table-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></table-query-param-input>
+    </table-loader>
+
+    <p>I really don't know what to make of these. The most identifiable are probably uncomfortable words like RAPE, MASSA, and KKK. But the rest seem...like fine answers? There are older words in there like SPAKE, outdated things like WEEWILLIEWINKIE, but that should be fine for a puzzle. Some of them, like OSCEOLA, even seem useful! (Those are all I think at thresh 5, but words like ORALE and SHANA too). Even neologisms like IAMA, which "died out" in 2013. Around thresh 20 you start getting some bs words though like LVI, IFA, and OTE. We can see a few culture deaths though. ALAR hasn't been since 2018, and has been going down steadily over time. A few other examples of cultural ghosts: ORT, SDI, GSA. Although weirdly, GSA came up 9 times in 2015, and I checked and it's not because it suddenly means Gay-straight Alliance.</p>
+
+    <p>Here's a slightly more statistical overview: births and deaths over time:</p>
+
+    <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/stats/answers/countBirthsDeathsOverTime?timescale=month&thresh=1">
+      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
+      <graph-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></graph-query-param-input>
+    </graph-loader>
+
+    <p>This is pretty unsatisfactory. Our births and deaths, because they're just first/last instances of words, shape themselves to the data. So-called births slow down roughly according to Herdan's/Heaps' law, diminishing types for increasing tokens, and it's pretty clear a similar thing is going on with deaths. Our time scale is too showrt, however, and our data too patchy, to look expect e.g. dwindling usage as a fraction of median lifetime usage. We can't really expect to see long-term artifacts on the scale of Ngrams. So we need to figure out a couple things: 1. a better metric to describe birth/death, and 2. what our data is actually useful for. Idea for 1: threshold years, threshold lifetime usage. Idea for 2: neologisms?</p>
+
+    <p>In <a href="https://www.nature.com/articles/srep00313">here</a> birth and death years are defined by the first year where usage hits 5% of the words median lifetime usage. That's kind of a total pain in the ass and probably not super relevant for our data set, so we may as well look at first and last usage instances.</p>
+
+    <p>Perhaps one thing we could do would be to fit a power function to both the birth and death curves, and then measure deviation from the fit.</p>
+
+    <graph-loader data-id="countBirthsDeathsOverTimeErrors" data-src="api/stats/answers/countBirthsDeathsOverTimeErrors?timescale=month&thresh=1">
+      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
+    </graph-loader>
+
+    <p>Another thing we might look at is dictionary size over time, i.e. how many word types are used in a given time span. This should tell us if the vocabulary is increasing or decreasing over time.</p>
+
+    <graph-loader data-id="dictionarySizeOverTime" data-src="api/stats/answers/dictionarySizeOverTime?timescale=month">
+      <graph-query-param-input data-query-param="timescale" data-label="timescale"></graph-query-param-input>
+    </graph-loader>
+
+    <p>Seems like it's about steady, which likely points to word birth and death balancing out. The yearly aggregate indicates more varition, with a peak around 2012-13. Perhps this is really more just a function of word repetition though, i.e. a given month/year's vocab size is just related to how often words were repeated in a given year.</p>
+
+    <p>However, there's nothing to suggest that a <em>real language</em> would <em>evolve</em> that way. We've also looked at word keyness over time and related keyness to the year the word first appeared in the puzzle. But that wasn't really a systematic process. We want to find some means of analyzing our corpus that tell us how the <em>language changes</em>. We don't just want bulk word accretion or specific trend years. It'd be great if we could find some bulk and case-by-case metrics that can tell us about word birth, death, spelling changes, replaacement, etc.</p>
+
+    <p>Words change over time based on several factors:</p>
+
+    <ul>
+      <li><a href="https://www.nature.com/articles/nature06176">High-frequency words change more slowly</a></li>
+      <li><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0019009">On shorter time scales, dissemination among users and applicability across topics reflects whether the word will survive. [words are pretty clumped among users and topics -- suggests a look at word clumping by author]</a></li>
+      <li><a href="https://www.nature.com/articles/srep00313">Languages change faster during wartime, and relate to social and technological trends, local cultural factors</a> (also mentioned <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">here</a>)</li>
+      <li><a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this is just a good paper</a></li>
+    </ul>
+
+    <p>We can also identify a few distinct ways in which words can change:</p>
+
+    <ul>
+      <li>Birth: neologisms</li>
+      <li>Birth: borrowing</li>
+      <li>Birth: acronyms</li>
+      <li>Birth: portmanteaus</li>
+      <li>Birth: abbreviations</li>
+      <li>Birth: analogies (-athon, -orama, -gate, -burger, Mc-, -ster, -ware, -nik)</li>
+      <li>Death: cultural</li>
+      <li>Death: appropriateness (rubber/eraser)</li>
+      <li>Change: verbification</li>
+      <li>Change: gerundification</li>
+      <li>Change: irregular verb past tense conjugation</li>
+      <li>Death: Forgetting</li>
+    </ul>
+
+    <p>We've seen a lot of these things come up already. A lot of the word birth categories also show up when we looked at keyness -- the puzzle has a number of neologisms, borrowings, acronyms, and abbreviations that show up with unusually frequency when compared to English.</p>
+
+    <p>Note: should start with long-scale analysis and then try and parse the short-term one? <a href="https://www.nature.com/articles/srep00313">This paper</a> says there are quantifiable birth and death rates for languages. We should do the same for ours! It also checks the average of the median lifetime relative use for words born/died each year. Should check for words that have died! Could maybe check year by year fluctuation or deviation in freq to see how steadily words are used? <a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this</a> tracks fame by name frequency, that could be fun! They look at e.g. age when fame.</p>
+
+    <p>The article above tracks some info based on word lifespan, so I'm going to start quantifying that. Here's a histogram of word lifespans with lifetime usage over a certain threshold:</p>
+
+    <graph-loader data-id="wordLongevity" data-src="api/stats/answers/wordLongevity?thresh=1">
+      <graph-query-param-input data-query-param="thresh" data-label="lifetime usage threshold"></graph-query-param-input>
+    </graph-loader>
+
+    <p>One thing we can notice is that there are a few extremely peaky words, i.e. what are the words that have >= 10 uses in 4-5 years?</p>
+
+    <p>I'd also like to look bulk at standard deviation of word use over time. The paper also looks at a couple "time to acceptance" metrics, one using std dev and one using amt of time taken to hit a given frequency. I wonder if we could do a double query for this, so like outer query gets birth/death dates and total usage numbers, inner query gets per-time-bin usage numbers.</p>
+
+    <p>
+      A couple midnight thought notes:
+        0. MAKE MENTION OF official nyt rules, like max word count and rotational symmetry
+        1. Need to analyze what other things are factors in word frequency!
+          - letters
+          - scrab. score
+          - vowel placement
+          - ???
+        2. Then, once found ^those things, should see if we can simulate them to reconstruct zipf curve
+          - e.g. JUST sampling tokens (high 2-5) over types (high ~7)
+          - e.g. split into vowel placement categories & sample
+          - argument: probably SOME semantic factor, although maybe not bc there's some real bullshit out there, and then probably some letter/structure/length factor
+          - to do this properly, we should really take into account how constructers work?
+            - best way:
+              1. take a dictionary of words with en letter freq dist
+              2. pick some long words
+              3. auto-fill (???)
+            - but I'm not convinced this is enough of a _model_. We may want something a bit more distilled and mathematical?
+              - Maybe this is a graph problem?
+              - it's pretty clear that PARALLEL words end up dictating the grid in a lot of ways.
+              - Could we...
+            - model by letter frequency
+              1. build grid with word sizes based on xw word size distribution (controlled) OR compared to crossing difficulty vs word length?
+              2. fill in the grid according: for each square, pull a letter sample from en letter frequency distribution (do/don't take into account word length & position)
+              - Obviously the relationship between grid and size distribution is little more complex, but maybe we can show that they're pretty closely tied
+            - model by crossing difficulty
+              1. come up with a length vs crossing difficulty metric & distribution
+              2. pick the number of clues in the puzzle
+              3. sample answer length based on length vs difficulty distribution
+              4. for each answer, fill with letter distribution words
+            - THEN look at
+              - letter frequency
+              - vowel distribution
+              - word frequency
+              - word length
+        2.5. Difficulty of crossing
+          - We know it's harder to make crosses for longer words
+          - Maybe we can quantify the difficulty to cross a word as having a few factors:
+            1. Length of word
+              - Crossing with more words will alwyas be harder
+            2. Length of crosses
+              2A. Frequency -- there are the most 7 letter dictionary words, etc.
+              2B. Affected area -- the longer your crosses are, the more crosses THOSE crosses have to make
+            3. Letter distribution
+              - More common letters will be easier to cross
+        3. Clearly need to do some sort of letter content analysis
+          - for a start, try graphing en letter freq vs. xw letter freq vs. scrabble score
+          - try also grphing vowel placement
+        7. Bad fill analysis
+          A. Pick some bad fill words
+          B. Get stats on them
+            - common crosses or cross letter distribution
+            - puzzle word length distribution
+          C. Compare to medians/avgs?
+            - puzzle word length distribution
+        4. Grid analysis
+          - Word length by grid location
+          - Repetition by grid location???
+          - Block square Heatmap/histogram pretty easy
+          - ^BUT doesn't really tell the story, need like grid patterns somehow?
+          - Mode letter per square?
+          - Try and show that a certain word length frequency has to arise from the grid format? One way to do this would be to look at every possible valid grid and count word lengths. Obviously this is not how it actually works -- the usage distribution of those grids arises from ease of crossing. But if we can quantify how hard crossing is as a function of word length, that could be good!
+        5. Day of week analysis
+          - word length (tokens)
+          - word length (types)
+        6. Direction analysis
+          - word length (tokens)
+          - word length (types)
+    </p>
+
+    <p></p>
+    <p></p>
+    <p></p>
+    <p></p>
+    <p></p>
+
+
+    <p></p>
+  </section>
+  <section>
+    <h2>Methodology notes</h2>
+  </section>
+  <script src="js/lib/plotly-latest.min.js"></script>
+  <script src="js/graph-loader.js"></script>
+  <script src="js/table-loader.js"></script>
+  <script src="js/graph-log-axis-checkbox.js"></script>
+  <script src="js/graph-query-param-input.js"></script>
+  <script src="js/table-query-param-input.js"></script>
+</body>
+</html>
