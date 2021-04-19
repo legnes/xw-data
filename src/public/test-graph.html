@@ -10,61 +10,53 @@
 </head>
 <body>
   <p>answer repetition heat map</p>
-  <graph-loader data-id="answerRepetitionHeatMap" data-src="api/stats/answers/answerRepetitionHeatMap"></graph-loader>
+  <graph-loader data-id="answerRepetitionHeatMap" data-src="api/figures/answerRepetitionHeatMap"></graph-loader>
   <p>answer start heat map</p>
-  <graph-loader data-id="answerStartHeatMap" data-src="api/stats/answers/answerStartHeatMap"></graph-loader>
+  <graph-loader data-id="answerStartHeatMap" data-src="api/figures/answerStartHeatMap"></graph-loader>
   <p>answer length heat map</p>
-  <graph-loader data-id="answerLengthHeatMap" data-src="api/stats/answers/answerLengthHeatMap"></graph-loader>
+  <graph-loader data-id="answerLengthHeatMap" data-src="api/figures/answerLengthHeatMap"></graph-loader>
   <p>block square heat map</p>
-  <graph-loader data-id="blockSquaresHeatMap" data-src="api/stats/answers/blockSquaresHeatMap"></graph-loader>
+  <graph-loader data-id="blockSquaresHeatMap" data-src="api/figures/blockSquaresHeatMap"></graph-loader>
   <p>multi answer frequency over year</p>
-  <graph-loader data-id="frequencyOverTime" data-src="api/stats/answers/frequencyOverTime?search=ip*d%2Cimac%2Cios">
+  <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime?search=ip*d%2Cimac%2Cios">
     <graph-query-param-input data-query-param="search" data-label="search terms"></graph-query-param-input>
   </graph-loader>
   <p>cumulative puzzles by authors</p>
-  <graph-loader data-id="authorCounts" data-src="api/stats/puzzles/authorCounts">
+  <graph-loader data-id="authorCounts" data-src="api/figures/authorCounts">
     <graph-log-axis-checkbox></graph-log-axis-checkbox>
   </graph-loader>
   <p>multi answer frequency over year</p>
-  <graph-loader data-id="frequencyOverTime" data-src="api/stats/answers/frequencyOverTime?search=ip*d%2Cimac%2Cios"></graph-loader>
+  <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime?search=ip*d%2Cimac%2Cios"></graph-loader>
   <p>rank frequency decorrelated histogram error</p>
-  <graph-loader data-id="rankFrequencyDecorrelatedErrorHistogram" data-src="api/stats/answers/rankFrequencyDecorrelatedErrorHistogram"></graph-loader>
+  <graph-loader data-id="decorrelatedRankFrequencyError" data-src="api/figures/decorrelatedRankFrequencyError"></graph-loader>
   <p>rank frequency decorrelated histogram</p>
-  <graph-loader data-id="rankFrequencyDecorrelatedHistogram" data-src="api/stats/answers/rankFrequencyDecorrelatedHistogram"></graph-loader>
+  <graph-loader data-id="decorrelatedRankFrequency" data-src="api/figures/decorrelatedRankFrequency"></graph-loader>
   <p>words with high keyness compared to an english corpus</p>
-  <table-loader data-id="keyness" data-src="api/stats/answers/keyness"></table-loader>
+  <table-loader data-id="keyness" data-src="api/figures/keyness"></table-loader>
   <p>top-performing words introduced each year</p>
-  <table-loader data-id="topNewWordsByYear" data-src="api/stats/answers/topNewWordsByYear"></table-loader>
+  <table-loader data-id="topNewWordsByYear" data-src="api/figures/topNewWordsByYear"></table-loader>
   <p>most recent words to appear with more than N uses</p>
-  <table-loader data-id="mostRecentNewWords" data-src="api/stats/answers/mostRecentNewWords"></table-loader>
+  <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords"></table-loader>
   <p>words with high keyness per year compared with whole corpus</p>
-  <table-loader data-id="keynessPerYear" data-src="api/stats/answers/keynessPerYear"></table-loader>
-  <p>words introduced over time</p>
-  <graph-loader data-id="countNewWordsByMonth" data-src="api/stats/answers/countNewWordsByMonth"></graph-loader>
+  <table-loader data-id="keynessPerYear" data-src="api/figures/keynessPerYear"></table-loader>
   <p>lengths by overall puzzle size</p>
-  <graph-loader data-id="lengthByPuzzleSize" data-src="api/stats/answers/lengthByPuzzleSize"></graph-loader>
+  <graph-loader data-id="lengthByPuzzleSize" data-src="api/figures/lengthByPuzzleSize"></graph-loader>
   <p>lengths per dow</p>
-  <graph-loader data-id="lengthByDayOfWeek" data-src="api/stats/answers/lengthByDayOfWeek"></graph-loader>
+  <graph-loader data-id="lengthByDayOfWeek" data-src="api/figures/lengthByDayOfWeek"></graph-loader>
   <p>lengths per direction</p>
-  <graph-loader data-id="lengthByDirection" data-src="api/stats/answers/lengthByDirection"></graph-loader>
+  <graph-loader data-id="lengthByDirection" data-src="api/figures/lengthByDirection"></graph-loader>
   <p>tokens types over sections</p>
-  <graph-loader data-id="tokenTypesOverSections" data-src="api/stats/answers/tokenTypesOverSections"></graph-loader>
+  <graph-loader data-id="tokenTypesOverSections" data-src="api/figures/tokenTypesOverSections"></graph-loader>
   <p>tokens types over time</p>
-  <graph-loader data-id="tokenTypesOverTime" data-src="api/stats/answers/tokenTypesOverTime">
-    <graph-log-axis-checkbox></graph-log-axis-checkbox>
-  </graph-loader>
-  <p>rank frequency decorrelated</p>
-  <graph-loader data-id="rankFrequencyDecorrelated" data-src="api/stats/answers/rankFrequencyDecorrelated">
+  <graph-loader data-id="tokenTypesOverTime" data-src="api/figures/tokenTypesOverTime">
     <graph-log-axis-checkbox></graph-log-axis-checkbox>
   </graph-loader>
   <p>rank frequency</p>
-  <graph-loader data-id="rankFrequency" data-src="api/stats/answers/rankFrequency">
+  <graph-loader data-id="rankFrequency" data-src="api/figures/rankFrequency">
     <graph-log-axis-checkbox></graph-log-axis-checkbox>
   </graph-loader>
-  <p>answer length vs answer tokens</p>
-  <graph-loader data-src="api/stats/answers/lengthTokens"></graph-loader>
-  <p>answer length vs answer types</p>
-  <graph-loader data-src="api/stats/answers/lengthTypes"></graph-loader>
+  <p>answer length vs answer types/tokens</p>
+  <graph-loader data-src="api/figures/lengthTypesAndTokens"></graph-loader>
   <script src="js/lib/plotly-latest.min.js"></script>
   <script src="js/graph-loader.js"></script>
   <script src="js/table-loader.js"></script>
