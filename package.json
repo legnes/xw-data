@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node ./src",
     "start:dev": "nodemon ./src",
-    "ingest": "./scripts/ingest_nyt_year_month"
+    "ingest": "./scripts/ingest_nyt_year_month",
+    "parse": "node ./scripts/parsePuzFile"
   },
   "dependencies": {
     "cors": "^2.8.5",

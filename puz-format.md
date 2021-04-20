@@ -1,4 +1,5 @@
 Puz format
+https://code.google.com/archive/p/puz/wikis/FileFormat.wiki
 
 Header
 | Component          | Offset       | End       | Length       | Type       | Description                                                                               |

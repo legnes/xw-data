@@ -63,7 +63,6 @@ class GraphLoader extends HTMLElement {
     const dataSrc = this.getAttribute('data-src');
     const response = await fetch(dataSrc);
     const data = await response.json();
-    // console.log(data);
     return data;
   }
 
@@ -72,6 +71,7 @@ class GraphLoader extends HTMLElement {
   }
 
   setLayout(layout) {
+    // TODO: make more robust
     for (const [key, val] of Object.entries(layout)) {
       this.layout[key] = Object.assign(this.layout[key] || {}, val);
     }

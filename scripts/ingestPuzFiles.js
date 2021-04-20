@@ -115,11 +115,11 @@ async function ingestPuzzle(puzzle) {
   }
 }
 
-function ingestPuzzleFile(path) {
+function ingestPuzzleFile(filePath) {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, async (err, data) => {
+    fs.readFile(filePath, async (err, data) => {
       try {
-        const nytId = path.match(/.+_([0-9]+).puz/)[1];
+        const nytId = filePath.match(/.+_([0-9]+).puz/)[1];
         const puzzle = Puzzle.fromPuzFile(data);
         puzzle.nytId = nytId;
         await ingestPuzzle(puzzle);

@@ -10,12 +10,21 @@ class QueryParamForm extends HTMLFormElement {
     this.appendChild(submit);
 
     this.addEventListener('submit', async () => {
-      const figure = await this.loadFigure();
-      this.parentNode.renderData(figure);
+      submit.setAttribute('disabled', true);
+      try {
+        const figure = await this.loadFigure();
+        this.parentNode.renderData(figure);
+      } catch (e) {
+        // console.log(e);
+      } finally {
+        // TODO: loading spinner?
+        submit.removeAttribute('disabled');
+      }
     });
   }
 
   get queryString() {
+    // TODO: make more robust
     const queryTerms = [];
     for (const child of this.childNodes) {
       if (child.tagName !== 'LABEL') continue;
@@ -42,6 +51,8 @@ class QueryParamForm extends HTMLFormElement {
 
   connectedCallback() {
     if (this.isConnected) {
+      // TODO: propagte changes before initial data load?
+      // alterntively, disable until initial load
       this.parentNode.setAttribute('data-src', this.dataUrl);
     }
   }

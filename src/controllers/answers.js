@@ -7,6 +7,7 @@ answers.get = (req, res, next) => {
 SELECT
   c1.answer,
   p.date,
+  p.id,
   c1.grid_number,
   c1.direction,
   c1.text,
@@ -16,7 +17,7 @@ INNER JOIN puzzles p ON c1.puzzle_id=p.id
 INNER JOIN crosses ON crosses.clue1_id=c1.id
 INNER JOIN clues c2 ON crosses.clue2_id=c2.id
 WHERE c1.answer='${req.params.answer.toUpperCase()}'
-GROUP BY p.date, c1.id
+GROUP BY p.date, p.id, c1.id
 ORDER BY p.date;
 `, (err, data) => {
     if (err) return next(err);
