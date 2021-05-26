@@ -1,0 +1,71 @@
+<p>In this post, we'll be using keyness to tease apart different kinds of crosswordese/bad fill. For more information on keyness, check out Costas Gabrielatos's phenomenal chapter <a href="https://core.ac.uk/download/pdf/227092349.pdf">[REF]</a> in Corpus Approaches to Discourse <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">[REF]</a>, edited by Charlotte Taylor and Anna Marchi. I owe pretty much everything in this post to Gabrielatos's explanation. The implementation is all my own; if you're looking to do something similar, I got a lot of help from <a href="http://ucrel.lancs.ac.uk/llwizard.html">this log-likelihood wizard</a> put out by Paul Rayson and UCREL at Lancaster University, as well as <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">this chapter</a> from Alvin Chen's National Taiwan Normal University course on corpus linguistics.</p>
+
+<h3>Difference in Relative Frequencies</h3>
+
+<p>So-called <a href="https://en.wikipedia.org/wiki/Crosswordese">crosswordese</a> and <a href="https://www.nytimes.com/2018/06/13/crosswords/how-to-make-a-crossword-fill.html#:~:text=bad%20fill">bad fill</a> plague many regular crosswords, and the NYT puzzle is no exception. But what <em>is</em> crosswordese? What makes certain words feel a little cheesy or unfair?</p>
+
+<p>We took a look at raw answer frequency in the <a href="/common-answers-and-word-length">post about about word length</a>. But crosswordese is a little different. To isolate that feeling of unfairness, we have to compare crossword answers to normal english. Words that are really common in crosswords but relatively rare in normal english, those are the ones we roll our eyes at. The gap between how common a word is in crosswords and how common it is in normal enligh is its difference in relative frequency.</p>
+
+<p>A note about the reference corpus: I'm using a frequency list of <a href="https://github.com/IlyaSemenov/wikipedia-word-frequency">english words from wikipedia articles</a> scraped in 2019. It'll produce different results than, say, a corpus of newspaper articles or of science fiction novels. Likely its style is pretty formal but with a lot of variation. It'll also probably skew towards people, places, institutions, acronyms, and in general the kind of thing you'd write a wikipedia article about. Anyway, enough throat clearing. Let's look at the numbers:</p>
+
+<table-loader data-id="relativeFrequencyDifference" data-src="api/figures/relativeFrequencyDifference">
+  <form is="query-param-form">
+    <label>only positive values <input is="query-param-input" data-query-param="positive" type="checkbox"></label>
+  </form>
+</table-loader>
+
+<p>The table shows words with large differences in relative frequency. Mostly they're grammatically useful words like articles, conjunctions, and prepositions. We should've expected as much. These are words that show up all over the place in normal english, but don't make very good crossword answers. Crossword answers don't really connect gramatically in the same way english words do, and anyway a lot of these would be really hard to clue. There are also a couple of two-letter words that <a href="https://www.nytimes.com/puzzles/submissions/crossword">according to the Times' rules</a> aren't allowed to be crossword answers.</p>
+
+<p>Right now the table is only showing common english words. You can tell because they have <em>negative</em> values in the "differences in relative frequencies" column. What we care about are words that have a <em>positive</em> value, which you can see by checking the "only positive values" box and reloading the data. A group of likely crosswordese suspects pops right up: three-to-four-letters, vowel-heavy.</p>
+
+<p>As an aside, you might think words like ERA that show up semi-medium-often-ish in normal english would have a lower relative frequency difference. In fact, ERA still tops our list. That's because word frequency is nonlinear. The most frequent words are disproportionately more common than less frequent words. If ERA is the most common crossword answer but only, say, the 1000<sup>th</sup> most common english word, its crossword relative frequency will dwarf its english relative frequency. Check out <a href="">the post on Zipf's law</a> for more!</p>
+
+<h3>Keyness</h3>
+
+<p>We have a good guess about crosswordese, but it's not the full story. For a more complete picture, we need a more complex metric. Keyness combines <strong>effect-size</strong> measures, which tell us about how big a difference there is between two corpora, with <strong>statistical measures</strong>, which tell us how reliable that difference is. A big difference doesn't mean much if it happened by chance. Then again, a statistically significant usage pattern isn't worth looking at unless it's interesting too.</p>
+
+<p>Let's put it all together. We'll use a statistical metric to select only statistically significant results, and then sort them based on an effect-size metric, like this:</p>
+
+<!-- <p>A quick aside. I just wanted to mention that keyness can help contribute to the broader study of <strong>aboutness</strong>, i.e. the subject of a given document. Documents about different things should have statistically significant keywords with respect to each other, or with respect to a reference corpus. So while we're going around looking at keyness, we can in theory keep an eye out for what crosswords are "about". That said, keyness is just one factor in aboutness; things like collocation area also super important. Another common theme surrounding keyness is whether you take a focused or an exploratory approach. A focused approach will evaluate the keyness of certain words/features of interest. We will be tending towards an exploratory approach, in which we evaluate keyness across all word types in the corpus and try to draw conclusions from there.</p> -->
+
+<table-loader data-id="keyness" data-src="api/figures/keyness">
+  <form is="query-param-form">
+    <label>frequency threshold for english corpus <input is="query-param-input" data-query-param="enFreqThresh" type="number" min="1" value="1"></label>
+    <label>word length threshold <input is="query-param-input" data-query-param="lengthThresh" type="number" min="0" value="1"></label>
+    <label>sameness (lowest log ratios) <input is="query-param-input" data-query-param="sameness" type="checkbox"></label>
+  </form>
+</table-loader>
+
+<p>What does it all mean? Well, "log ratio" and "difference coefficient" are effect-size metrics. For every point of log ratio, a word appears (relatively) twice as many times in one corpus or the other. A log ratio of 14 means a word is about 16,000 times as common. "Difference coefficient" is the same as the difference in relative frequencies from earlier, only normalized by the combined relative frequencies (so, difference over sum). Normalizing is helpful because it lets us see past the most common words in each corpus (again, Zipf's law). Then, "log likelihood G2" and "bayes factor" are statistical metrics. A strong G<sup>2</sup> value is around 19, and a value of 23 is overwhelming. A strong BIC or Bayes factor is around 6, and 10 is overwhelming. We're filtering out anything with a bayes factor <= 2.</p>
+
+<p>What we're left with is a very different list of keywords. Most of them <em>aren't really english words at all</em> -- they're loanwords, abbreviations, phrases, etc. And weird ones at that! Brands like ELAL and EDYS, french words like ETES and ETRE, proper nouns like OHARE and RELEE (yikes), phrases like IBET, and double whammies like borrowed phrase ELNINO. Abbreviations like RTES. Jargon like ALIENEE (woof). Irregular uses of affixes like RETAG, ACMES, and ANEAR.</p>
+
+<p>At its best, the grid quietly locks into place with a satisfying click. Around bad fill, though, the grid seems obviously forced. It's tiring to see the same words over and over again in the puzzle, but it's worse when those words are so irregular or obscure that you were never going to think of them without guessing from the crosses. If raw frequency difference showed us some of the more boring crosswordese answers, I think this analysis shows us some of the more egregious ones. Answers where you'd go "that's not a word!", or "EVENER!? Come on!". These, to me, are some of the real feel-bad answers.</p>
+
+<h3>Cluing Keywords</h3>
+
+<p>Bad fill is hard to clue. Disclaimer: this is a bit of a crackpot theory and I haven't put it into numbers yet. But I've noticed that some very common answers can be clued in a bunch of creative ways. ERA can be a time period, a baseball statistic, a proposed constitutional amendment, or even a laundry detergent. Keyword answers, on the other hand...well, check out the clues for ALIENEE:</p>
+
+<table-loader data-id="answerClues" data-src="api/figures/answerClues">
+  <form is="query-param-form">
+    <label>answer <input is="query-param-input" data-query-param="search" type="text" value="alienee"></label>
+  </form>
+</table-loader>
+
+<p>Pretty much word-for-word the same since its first appearance in 1996. ELEE is almost always "waiting for the ___" or "gen. robt. ___". ANEAR is sometimes "at hand" or "close" (ew), or more commonly "lend ___" (AN EAR).</p>
+
+<p>Sometimes it's fun to see a word in a clue and go "ooh, I bet it's going to be APSE!" But maybe if we as constructors feel <em>forced</em> to use a tired clue, it's a sign of bad fill.</p>
+
+<h3>Keyness Variables</h3>
+
+<p>I included some little knobs and switches underneath the keyness table. One is an english frequency threshold. It's hepful for looking at keywords that are <em>definitely</em> also english words. If you crank it up to 150, you'll still get some proper nouns (ESTEE), borrowings (ERAT), etc. And as usual you'll find short vowelly words (OLIO, OLEO, EDAM). But you'll also notice old words (ANON, AGUE), semantically niche words (EPEE, STET, SLOE), and words that just wouldn't show up very much in wikipedia (EMOTE, OAF). At threshold 500 you find a lot of abbreviations (ENE, ENS). By threshold 1000, you're into unusual nouns (ALOE, OAT, ETNA) as well as reverse keywords (DISTRICT, INTERNATIONAL, JANUARY).</p>
+
+<p>There's also an input for answer length and one for "sameness". As you'd expect, upping the length threshold gives us a lot of phrases and names (IRONORE, ENMASSE, RIOTACT, NESTEGG, BONJOVI). All I can say about sameness -- filtering for words with high bayes factors but low log ratios -- is that it seems to come up with generic words (OLD, EVER, UPON). I'd like to do some more here!</p>
+
+<h3>Keyness Over Time</h3>
+
+<p>One kind of neat thing we can do with keyness is to analyze subsets of crosswords against the whole corpus. So we can look at, for example, whether any words were key in a given year:</p>
+
+<table-loader data-id="keynessPerYear" data-src="api/figures/keynessPerYear"></table-loader>
+
+<p>Notice that the statistical metrics are a lot lower. Makes sense -- the sample sizes are smaller. So it's not exactly a statistical fact that ANAGRAMS were super trendy in 2014 or that 2016 got really into ROMCOMs. But it's a fun way to look at cultural trends and to track the spread of neologisms. For more, check out the <a href="">post on language change!</a></p>

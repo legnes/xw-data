@@ -42,6 +42,7 @@ class TableLoader extends HTMLElement {
 
     // table
     const table = document.createElement('table');
+    table.setAttribute('tabindex', 0);
     tableContainer.appendChild(table);
     this.table = table;
 
@@ -75,11 +76,28 @@ class TableLoader extends HTMLElement {
       const column = figure.columns[i];
       const headerCell = document.createElement('th');
       headerCell.textContent = column.label;
-      headerCell.addEventListener('click', () => { this.setSortConfigAndRerender(i); });
+
+      // handle sorting
+      // TODO: use tabindex 0 for the currently selected header,
+      //       and tabindex -1 combined with arrow key nav for the others
+      //       as per example 2 here https://www.w3.org/TR/wai-aria-practices/examples/grid/dataGrids.html
+      // TODO: because we recreate the table on rerender, focus is lost
+      headerCell.setAttribute('tabindex', 0);
+      headerCell.addEventListener('click', () => {
+        this.setSortColumnAndRerender(i);
+      });
+      headerCell.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.stopPropagation();
+          evt.preventDefault();
+          this.setSortColumnAndRerender(i);
+        }
+      });
       if (i === this.sortConfig.columnIdx) {
-        // TODO: use classList.add?
         headerCell.className = `sort-column-${this.sortConfig.isAscending ? 'asc' : 'desc'}`;
+        headerCell.setAttribute('aria-sort', this.sortConfig.isAscending ? 'ascending' : 'descending');
       }
+
       headerRow.appendChild(headerCell);
     }
     this.table.appendChild(headerRow);
@@ -111,7 +129,7 @@ class TableLoader extends HTMLElement {
     });
   }
 
-  setSortConfigAndRerender(columnIdx) {
+  setSortColumnAndRerender(columnIdx) {
     if (typeof columnIdx !== 'undefined') {
       if (this.sortConfig.columnIdx !== columnIdx) {
         this.sortConfig.columnIdx = columnIdx;

@@ -1,3 +1,6 @@
+body {
+  width: 800px;
+}
 graph-loader {
   opacity: 1;
   transition: opacity 300ms;

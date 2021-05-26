@@ -7,7 +7,7 @@ const { promiseQuery } = require('../util/query');
 const analysis = require('../util/analysis');
 const { cleanText, cleanNumber, cleanBoolean } = require('../util/url');
 const { DEFAULT_HISTOGRAM_2D } = require('../util/figure');
-const { addInto, numSortBy } = require('../util/base');
+const { addInto, numSortBy, sortBy } = require('../util/base');
 
 const { english, scrabble } = require('../constants/language');
 const { START_YEAR, END_YEAR, DAYS_OF_WEEK } = require('../constants/data');
@@ -400,6 +400,212 @@ ORDER BY length DESC, count DESC, answer;
         { label: 'count', key: 'count'},
       ],
     };
+
+    res.json(figure);
+  });
+};
+
+figures.relativeFrequencyDifference = (req, res, next) => {
+  const sortyByAbsDiff = req.query.positive !== 'true';
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+    const xwTotal = analysis.sumBy(data.rows, 'frequency');
+    const enTotal = WIKI_CORPUS.totalWordTokens;
+    // console.log(xwTotal, enTotal);
+    for (row of data.rows) {
+      row.xwFrequency = +row.frequency;
+      row.enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 0;
+      row.xwRelativeFrequency = row.xwFrequency / xwTotal;
+      row.enRelativeFrequency = row.enFrequency / enTotal;
+      row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency).toFixed(5);
+      row.absFrequencyDiff = Math.abs(row.frequencyDiff);
+    }
+    data.rows.sort(numSortBy(sortyByAbsDiff ? 'absFrequencyDiff' : 'frequencyDiff', true));
+
+    const figure = {
+      rows: data.rows.slice(0, 100),
+      columns: [
+        { label: 'answer', key: 'answer'},
+        { label: 'difference in relative frequencies', key: 'frequencyDiff'},
+        { label: 'crossword frequency', key: 'xwFrequency'},
+        { label: 'english corpus frequency', key: 'enFrequency'},
+      ],
+    }
+
+    res.json(figure);
+  });
+};
+
+figures.keyness = (req, res, next) => {
+  const enFreqThresh = cleanNumber(req.query.enFreqThresh, 0);
+  const lengthThresh = cleanNumber(req.query.lengthThresh, 0);
+  const sortSameness = cleanBoolean(req.query.sameness);
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+    const xwTotal = data.rows.reduce((total, row) => (total + +row.frequency), 0);
+    const enTotal = WIKI_CORPUS.totalWordTokens;
+    // console.log(xwTotal, enTotal);
+    for (row of data.rows) {
+      const xwFrequency = +row.frequency;
+      const enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 1e-15;
+      const combinedFrequency = xwFrequency + enFrequency;
+      const combinedTotal = xwTotal + enTotal;
+      const xwNormalizedFrequency = xwFrequency / xwTotal;
+      const enNormalizedFrequency = enFrequency/ enTotal;
+      const logRatio = Math.log2(xwNormalizedFrequency / enNormalizedFrequency);
+      const differenceCoefficient = (xwNormalizedFrequency - enNormalizedFrequency) / (xwNormalizedFrequency + enNormalizedFrequency);
+      const xwExpectedValue = xwTotal * combinedFrequency / combinedTotal;
+      const enExpectedValue = enTotal * combinedFrequency / combinedTotal;
+      const logLikelihoodG2 = 2 * (xwFrequency * Math.log(xwFrequency / xwExpectedValue) + enFrequency * Math.log(enFrequency / enExpectedValue));
+      const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+      row.enFrequency = enFrequency == 1e-15 ? 0 : enFrequency;
+      row.logRatio = logRatio.toFixed(2);
+      row.differenceCoefficient = differenceCoefficient.toFixed(6);
+      row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
+      row.bayesFactor = bayesFactor.toFixed(2);
+    }
+    const rows = data.rows.filter((row) => (
+      row.bayesFactor > 2 &&
+      row.enFrequency >= enFreqThresh &&
+      row.answer.length > lengthThresh
+    )).sort((a, b) => (
+      (sortSameness ? -1 : 1) * (Math.abs(b.logRatio) - Math.abs(a.logRatio))
+    ));
+
+    const figure = {
+      rows: rows.slice(0, 200),
+      columns: [
+        { label: 'answer', key: 'answer'},
+        { label: 'frequency', key: 'frequency'},
+        { label: 'english corpus frequency', key: 'enFrequency'},
+        { label: 'log ratio', key: 'logRatio'},
+        { label: 'difference coefficient', key: 'differenceCoefficient'},
+        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
+        { label: 'bayes factor', key: 'bayesFactor'}
+      ],
+    }
+
+    res.json(figure);
+  });
+};
+
+figures.answerClues = (req, res, next) => {
+  const searchTerm = cleanText(req.query.search)[0]
+  if (!searchTerm) return next(new Error('Missing search term'));
+
+  db.query(`
+SELECT
+  DATE_TRUNC('year', p.date) AS year,
+  text AS clue
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE answer='${searchTerm}'
+ORDER BY p.date DESC
+LIMIT 40;
+`, (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach(row => { row.year = new Date(row.year).getFullYear(); });
+    // Could do this in query, but I want to limit on date
+    data.rows.sort(sortBy('clue', true));
+
+    const figure = {
+      rows: data.rows,
+      columns: [
+        { label: 'clue', key: 'clue'},
+        { label: 'year', key: 'year'},
+      ]
+    };
+
+    res.json(figure);
+  });
+};
+
+figures.keynessPerYear = (req, res, next) => {
+  const queries = [promiseQuery(`
+SELECT
+  answer,
+  COUNT(*) frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
+GROUP BY answer;`
+  )];
+  for (let i = START_YEAR; i <= END_YEAR; i++) {
+    queries.push(promiseQuery(`
+SELECT
+  answer,
+  COUNT(*) frequency,
+  DATE_TRUNC('year', p.date) as year
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '${i}-01-01' AND '${i}-12-31'
+GROUP BY answer, year;`
+    ));
+  }
+  Promise.all(queries).then((results) => {
+    const totals = results.map((yearlyCounts) => yearlyCounts.reduce((total, yearlyCount) => (total + +yearlyCount.frequency), 0));
+    const allTimeCountsByWord = results.shift().reduce((countsByWord, wordCount) => {
+      countsByWord[wordCount.answer] = +wordCount.frequency;
+      return countsByWord;
+    }, {});
+    const allTimeTotal = totals.shift();
+    for (const yearIndex in results) {
+      const yearlyCounts = results[yearIndex];
+      for (const yearlyCount of yearlyCounts) {
+        const yearlyFrequency = +yearlyCount.frequency;
+        const yearlyTotal = +totals[yearIndex];
+        const allTimeFrequency = allTimeCountsByWord[yearlyCount.answer] || 1e-15;
+        const combinedFrequency = yearlyFrequency + allTimeFrequency;
+        const combinedTotal = yearlyTotal + allTimeTotal;
+        const yearlyNormalizedFrequency = yearlyFrequency / yearlyTotal;
+        const allTimeNormalizedFrequency = allTimeFrequency/ allTimeTotal;
+        const logRatio = Math.log2(yearlyNormalizedFrequency / allTimeNormalizedFrequency);
+        const differenceCoefficient = (yearlyNormalizedFrequency - allTimeNormalizedFrequency) / (yearlyNormalizedFrequency + allTimeNormalizedFrequency);
+        const yearlyExpectedValue = yearlyTotal * combinedFrequency / combinedTotal;
+        const allTimeExpectedValue = allTimeTotal * combinedFrequency / combinedTotal;
+        const logLikelihoodG2 = 2 * (yearlyFrequency * Math.log(yearlyFrequency / yearlyExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
+        const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+        yearlyCount.allTimeFrequency = allTimeFrequency;
+        yearlyCount.logRatio = logRatio.toFixed(2);
+        yearlyCount.differenceCoefficient = differenceCoefficient.toFixed(2);
+        yearlyCount.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
+        yearlyCount.bayesFactor = bayesFactor.toFixed(2);
+        yearlyCount.year = new Date(yearlyCount.year).getFullYear()
+        // console.log(yearlyFrequency, yearlyTotal, allTimeFrequency, allTimeTotal, logLikelihoodG2, bayesFactor, logRatio);
+      }
+      results[yearIndex] = yearlyCounts.filter((result) => result.bayesFactor > 2).sort((a, b) => Math.abs(b.logRatio) - Math.abs(a.logRatio));
+    }
+
+    const figure = {
+      rows: results.flat(),
+      columns: [
+        { label: 'year', key: 'year'},
+        { label: 'answer', key: 'answer'},
+        { label: 'frequency', key: 'frequency'},
+        { label: 'all time frequency', key: 'allTimeFrequency'},
+        { label: 'log ratio', key: 'logRatio'},
+        { label: 'difference coefficient', key: 'differenceCoefficient'},
+        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
+        { label: 'bayes factor', key: 'bayesFactor'}
+      ],
+    }
 
     res.json(figure);
   });
@@ -1489,210 +1695,6 @@ LIMIT 1000;
         { label: 'answer', key: 'answer'},
         { label: 'occurrences', key: 'occurrences'},
       ],
-    };
-
-    res.json(figure);
-  });
-};
-
-figures.keynessPerYear = (req, res, next) => {
-  const queries = [promiseQuery(`
-SELECT
-  answer,
-  COUNT(*) frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
-GROUP BY answer;`
-  )];
-  for (let i = START_YEAR; i <= END_YEAR; i++) {
-    queries.push(promiseQuery(`
-SELECT
-  answer,
-  COUNT(*) frequency,
-  DATE_TRUNC('year', p.date) as year
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '${i}-01-01' AND '${i}-12-31'
-GROUP BY answer, year;`
-    ));
-  }
-  Promise.all(queries).then((results) => {
-    const totals = results.map((yearlyCounts) => yearlyCounts.reduce((total, yearlyCount) => (total + +yearlyCount.frequency), 0));
-    const allTimeCountsByWord = results.shift().reduce((countsByWord, wordCount) => {
-      countsByWord[wordCount.answer] = +wordCount.frequency;
-      return countsByWord;
-    }, {});
-    const allTimeTotal = totals.shift();
-    for (const yearIndex in results) {
-      const yearlyCounts = results[yearIndex];
-      for (const yearlyCount of yearlyCounts) {
-        const yearlyFrequency = +yearlyCount.frequency;
-        const yearlyTotal = +totals[yearIndex];
-        const allTimeFrequency = allTimeCountsByWord[yearlyCount.answer] || 1e-15;
-        const combinedFrequency = yearlyFrequency + allTimeFrequency;
-        const combinedTotal = yearlyTotal + allTimeTotal;
-        const yearlyNormalizedFrequency = yearlyFrequency / yearlyTotal;
-        const allTimeNormalizedFrequency = allTimeFrequency/ allTimeTotal;
-        const logRatio = Math.log2(yearlyNormalizedFrequency / allTimeNormalizedFrequency);
-        const differenceCoefficient = (yearlyNormalizedFrequency - allTimeNormalizedFrequency) / (yearlyNormalizedFrequency + allTimeNormalizedFrequency);
-        const yearlyExpectedValue = yearlyTotal * combinedFrequency / combinedTotal;
-        const allTimeExpectedValue = allTimeTotal * combinedFrequency / combinedTotal;
-        const logLikelihoodG2 = 2 * (yearlyFrequency * Math.log(yearlyFrequency / yearlyExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
-        const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
-        yearlyCount.allTimeFrequency = allTimeFrequency;
-        yearlyCount.logRatio = logRatio.toFixed(2);
-        yearlyCount.differenceCoefficient = differenceCoefficient.toFixed(2);
-        yearlyCount.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
-        yearlyCount.bayesFactor = bayesFactor.toFixed(2);
-        yearlyCount.year = new Date(yearlyCount.year).getFullYear()
-        // console.log(yearlyFrequency, yearlyTotal, allTimeFrequency, allTimeTotal, logLikelihoodG2, bayesFactor, logRatio);
-      }
-      results[yearIndex] = yearlyCounts.filter((result) => result.bayesFactor > 2).sort((a, b) => Math.abs(b.logRatio) - Math.abs(a.logRatio));
-    }
-
-    const figure = {
-      rows: results.flat(),
-      columns: [
-        { label: 'year', key: 'year'},
-        { label: 'answer', key: 'answer'},
-        { label: 'frequency', key: 'frequency'},
-        { label: 'all time frequency', key: 'allTimeFrequency'},
-        { label: 'log ratio', key: 'logRatio'},
-        { label: 'difference coefficient', key: 'differenceCoefficient'},
-        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
-        { label: 'bayes factor', key: 'bayesFactor'}
-      ],
-    }
-
-    res.json(figure);
-  });
-};
-
-figures.keyness = (req, res, next) => {
-  const enFreqThresh = cleanNumber(req.query.enFreqThresh, 0);
-  const lengthThresh = cleanNumber(req.query.lengthThresh, 0);
-  const sortSameness = cleanBoolean(req.query.sameness);
-  db.query(`
-SELECT
-  answer,
-  COUNT(*) frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-    const xwTotal = data.rows.reduce((total, row) => (total + +row.frequency), 0);
-    const enTotal = WIKI_CORPUS.totalWordTokens;
-    // console.log(xwTotal, enTotal);
-    for (row of data.rows) {
-      const xwFrequency = +row.frequency;
-      const enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 1e-15;
-      const combinedFrequency = xwFrequency + enFrequency;
-      const combinedTotal = xwTotal + enTotal;
-      const xwNormalizedFrequency = xwFrequency / xwTotal;
-      const enNormalizedFrequency = enFrequency/ enTotal;
-      const logRatio = Math.log2(xwNormalizedFrequency / enNormalizedFrequency);
-      const differenceCoefficient = (xwNormalizedFrequency - enNormalizedFrequency) / (xwNormalizedFrequency + enNormalizedFrequency);
-      const xwExpectedValue = xwTotal * combinedFrequency / combinedTotal;
-      const enExpectedValue = enTotal * combinedFrequency / combinedTotal;
-      const logLikelihoodG2 = 2 * (xwFrequency * Math.log(xwFrequency / xwExpectedValue) + enFrequency * Math.log(enFrequency / enExpectedValue));
-      const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
-      row.enFrequency = enFrequency == 1e-15 ? 0 : enFrequency;
-      row.logRatio = logRatio.toFixed(2);
-      row.differenceCoefficient = differenceCoefficient.toFixed(2);
-      row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
-      row.bayesFactor = bayesFactor.toFixed(2);
-    }
-    const rows = data.rows.filter((row) => (
-      row.bayesFactor > 2 &&
-      row.enFrequency >= enFreqThresh &&
-      row.answer.length > lengthThresh
-    )).sort((a, b) => (
-      (sortSameness ? -1 : 1) * (Math.abs(b.logRatio) - Math.abs(a.logRatio))
-    ));
-
-    const figure = {
-      rows: rows.slice(0, 1000),
-      columns: [
-        { label: 'answer', key: 'answer'},
-        { label: 'frequency', key: 'frequency'},
-        { label: 'english corpus frequency', key: 'enFrequency'},
-        { label: 'log ratio', key: 'logRatio'},
-        { label: 'difference coefficient', key: 'differenceCoefficient'},
-        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
-        { label: 'bayes factor', key: 'bayesFactor'}
-      ],
-    }
-
-    res.json(figure);
-  });
-};
-
-figures.relativeFrequencyDifference = (req, res, next) => {
-  const sortyByAbsDiff = req.query.positive !== 'true';
-  db.query(`
-SELECT
-  answer,
-  COUNT(*) frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-    const xwTotal = analysis.sumBy(data.rows, 'frequency');
-    const enTotal = WIKI_CORPUS.totalWordTokens;
-    // console.log(xwTotal, enTotal);
-    for (row of data.rows) {
-      row.xwFrequency = +row.frequency;
-      row.enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 0;
-      row.xwRelativeFrequency = row.xwFrequency / xwTotal;
-      row.enRelativeFrequency = row.enFrequency / enTotal;
-      row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency).toFixed(5);
-      row.absFrequencyDiff = Math.abs(row.frequencyDiff);
-    }
-    data.rows.sort(numSortBy(sortyByAbsDiff ? 'absFrequencyDiff' : 'frequencyDiff', true));
-
-    const figure = {
-      rows: data.rows.slice(0, 100),
-      columns: [
-        { label: 'answer', key: 'answer'},
-        { label: 'difference in relative frequencies', key: 'frequencyDiff'},
-        { label: 'crossword frequency', key: 'xwFrequency'},
-        { label: 'english corpus frequency', key: 'enFrequency'},
-      ],
-    }
-
-    res.json(figure);
-  });
-};
-
-figures.answerClues = (req, res, next) => {
-  const searchTerms = cleanText(req.query.search)
-  if (searchTerms.length < 1) return next(new Error('Missing search terms'));
-
-  db.query(`
-SELECT
-  DATE_TRUNC('year', p.date) AS year,
-  text AS clue
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE ${searchTerms.map(str => (`answer LIKE '${str}'`)).join(' OR ')}
-ORDER BY p.date DESC
-LIMIT 100;
-`, (err, data) => {
-    if (err) return next(err);
-
-    data.rows.forEach(row => { row.year = new Date(row.year).getFullYear(); });
-
-    const figure = {
-      rows: data.rows,
-      columns: [
-        { label: 'clue', key: 'clue'},
-        { label: 'year', key: 'year'},
-      ]
     };
 
     res.json(figure);

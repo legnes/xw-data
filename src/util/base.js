@@ -16,6 +16,8 @@ base.pushInto = (outObj, key, val) => {
   return outObj;
 };
 
+base.sortBy = (key, desc) => (a, b) => (a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0);
+
 base.numSort = (desc) => (a, b) => ((+a - +b) * (desc ? -1 : 1));
 
 base.numSortBy = (key, desc) => (a, b) => ((desc ? -1 : 1) * (+a[key] - +b[key]));
