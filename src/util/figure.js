@@ -11,7 +11,8 @@ figure.DEFAULT_HISTOGRAM_2D = {
     ['0.01', 'rgb(242,211,56)'],
     ['0.1', 'rgb(242,143,56)'],
     ['1', 'rgb(217,30,30)']
-  ]
+  ],
+  showscale: false
 };
 
 module.exports = figure;

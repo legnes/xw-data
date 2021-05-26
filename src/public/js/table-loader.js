@@ -45,6 +45,12 @@ class TableLoader extends HTMLElement {
     tableContainer.appendChild(table);
     this.table = table;
 
+    this.figure = null;
+    this.sortConfig = {
+      columnIdx: -1,
+      isAscending: false
+    };
+
     // button click
     const handleButton = async () => {
       button.removeEventListener('click', handleButton);
@@ -59,11 +65,21 @@ class TableLoader extends HTMLElement {
   }
 
   renderData(figure) {
+    this.figure = figure;
+    // Will be skipped if sort config isn't initialized
+    this.sortData();
+
     this.table.innerHTML = '';
     const headerRow = document.createElement('tr');
-    for (const column of figure.columns) {
+    for (let i = 0, len = figure.columns.length; i < len; i++) {
+      const column = figure.columns[i];
       const headerCell = document.createElement('th');
       headerCell.textContent = column.label;
+      headerCell.addEventListener('click', () => { this.setSortConfigAndRerender(i); });
+      if (i === this.sortConfig.columnIdx) {
+        // TODO: use classList.add?
+        headerCell.className = `sort-column-${this.sortConfig.isAscending ? 'asc' : 'desc'}`;
+      }
       headerRow.appendChild(headerCell);
     }
     this.table.appendChild(headerRow);
@@ -77,6 +93,35 @@ class TableLoader extends HTMLElement {
       }
       this.table.appendChild(dataRow);
     }
+  }
+
+  sortData() {
+    if (!this.figure ||
+        this.sortConfig.columnIdx < 0 ||
+        this.sortConfig.columnIdx >= this.figure.columns.length) return;
+    const sortColumn = this.figure.columns[this.sortConfig.columnIdx];
+    const directionMultiplier = this.sortConfig.isAscending ? 1 : -1;
+    this.figure.rows.sort((rowA, rowB) => {
+      let valA = rowA[sortColumn.key];
+      let valB = rowB[sortColumn.key];
+      valA = !isNaN(+valA) ? +valA : valA;
+      valB = !isNaN(+valB) ? +valB : valB;
+      const comparisonValue = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return directionMultiplier * comparisonValue;
+    });
+  }
+
+  setSortConfigAndRerender(columnIdx) {
+    if (typeof columnIdx !== 'undefined') {
+      if (this.sortConfig.columnIdx !== columnIdx) {
+        this.sortConfig.columnIdx = columnIdx;
+        this.sortConfig.isAscending = false;
+      } else {
+        this.sortConfig.isAscending = !this.sortConfig.isAscending;
+      }
+    }
+
+    this.renderData(this.figure);
   }
 
   async loadTable() {
@@ -109,6 +154,18 @@ class TableLoader extends HTMLElement {
 
 table {
   width: 100%;
+}
+
+th {
+  cursor: pointer;
+}
+
+.sort-column-asc::after {
+  content: " ↑";
+}
+
+.sort-column-desc::after {
+  content: " ↓";
 }
 
 button {

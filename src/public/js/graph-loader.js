@@ -49,7 +49,7 @@ class GraphLoader extends HTMLElement {
       loaderContainer.removeChild(button);
       loaderContainer.appendChild(spinner);
       const figure = await this.loadFigure();
-      if (figure.layout) Object.assign(this.layout, figure.layout);
+      if (figure.layout) this.setLayout(figure.layout);
       if (figure.config) Object.assign(this.config, figure.config);
       this.renderData(figure);
       this.parentNode.insertBefore(graphContainer, this);

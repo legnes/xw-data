@@ -5,14 +5,372 @@ const { linear } = require('regression');
 
 const { promiseQuery } = require('../util/query');
 const analysis = require('../util/analysis');
-const { cleanText, cleanNumber } = require('../util/url');
+const { cleanText, cleanNumber, cleanBoolean } = require('../util/url');
 const { DEFAULT_HISTOGRAM_2D } = require('../util/figure');
+const { addInto, numSortBy } = require('../util/base');
 
-const { english: { SWADESH_LIST, NUMERICAL_WORDS }} = require('../constants/language');
+const { english, scrabble } = require('../constants/language');
 const { START_YEAR, END_YEAR, DAYS_OF_WEEK } = require('../constants/data');
 const { english: { WIKI_CORPUS }} = require('../constants/corpora');
 
+// TODO:
+//  - use OVER and PARTITION BY??
+
 const figures = {};
+
+figures.mostFrequentAnswers = (req, res, next) => {
+  const lengthThresh = cleanNumber(req.query.lengthThresh, 3);
+  db.query(`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS count
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+AND LENGTH(answer) >= ${lengthThresh}
+GROUP BY answer
+HAVING COUNT(*) > 1
+ORDER BY count DESC, length DESC, answer
+LIMIT 30;
+`, (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach((row, idx) => { row.rank = `${idx + 1}.` });
+    res.json({
+      rows: data.rows,
+      columns: [
+        { label: '', key: 'rank'},
+        { label: 'answer', key: 'answer'},
+        { label: 'count', key: 'count'},
+      ],
+    });
+  });
+};
+
+figures.lengthFrequency = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    res.json({
+      data: [
+        {
+          x: data.rows.map(row => +row.length),
+          y: data.rows.map(row => Math.log10(+row.frequency)),
+          ...DEFAULT_HISTOGRAM_2D
+        }
+      ],
+      layout: {
+        xaxis: { title: { text: 'answer length' }},
+        yaxis: { title: { text: 'frequency (log 10 scale)' }}
+      }
+    });
+  });
+};
+
+figures.lengthFrequencyCorrelations = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const lengthRanks = analysis.rankRowGroupCounts(data.rows, 'length');
+    const frequencyRanks = analysis.rankRowGroupCounts(data.rows, 'frequency');
+    data.rows.forEach((row) => {
+      row.logFrequency = Math.log(+row.frequency);
+      row.lengthRank = lengthRanks[row.length];
+      row.frequencyRank = frequencyRanks[row.frequency];
+    });
+
+    const correlationResults = [
+      { keyX: 'length', keyY: 'frequency' , name: 'Pearson', variables: 'Length vs Frequency' },
+      { keyX: 'length', keyY: 'logFrequency', name: 'Pearson', variables: 'Length vs Log Frequency' },
+      { keyX: 'lengthRank', keyY: 'frequencyRank', name: 'Spearman (rank Pearson)', variables: 'Length vs Frequency' },
+    ].map(test => analysis.runCorrelationTest(data.rows, test));
+
+    res.json({
+      rows: correlationResults,
+      columns: [
+        { label: 'test name', key: 'name'},
+        { label: 'test variables', key: 'variables'},
+        { label: 'correlation coefficient', key: 'coeff'},
+        { label: 'fisher transformation z score', key: 'zScore'}
+      ],
+    });
+  });
+};
+
+figures.lengthFrequencyEn = (req, res, next) => {
+  res.json({
+    data: [
+      {
+        x: Object.entries(WIKI_CORPUS.wordFrequencies).map(([word, frequency]) => word.length),
+        y: Object.entries(WIKI_CORPUS.wordFrequencies).map(([word, frequency]) => Math.log10(frequency)),
+        ...DEFAULT_HISTOGRAM_2D
+      }
+    ],
+    layout: {
+      xaxis: { title: { text: 'answer length' }},
+      yaxis: { title: { text: 'frequency (log 10 scale)' }}
+    }
+  });
+};
+
+figures.lengthFrequencyCorrelationsEn = (req, res, next) => {
+  const rows = Object.entries(WIKI_CORPUS.wordFrequencies).map(([answer, frequency]) => ({ answer, frequency, length: answer.length }));
+  const lengthRanks = analysis.rankRowGroupCounts(rows, 'length');
+  const frequencyRanks = analysis.rankRowGroupCounts(rows, 'frequency');
+  rows.forEach((row) => {
+    row.logFrequency = Math.log(+row.frequency);
+    row.lengthRank = lengthRanks[row.length];
+    row.frequencyRank = frequencyRanks[row.frequency];
+  });
+
+  const correlationResults = [
+    { keyX: 'length', keyY: 'frequency' , name: 'Pearson', variables: 'Length vs Frequency' },
+    { keyX: 'length', keyY: 'logFrequency', name: 'Pearson', variables: 'Length vs Log Frequency' },
+    { keyX: 'lengthRank', keyY: 'frequencyRank', name: 'Spearman (rank Pearson)', variables: 'Length vs Frequency' },
+  ].map(test => analysis.runCorrelationTest(rows, test));
+
+  res.json({
+    rows: correlationResults,
+    columns: [
+      { label: 'test name', key: 'name'},
+      { label: 'test variables', key: 'variables'},
+      { label: 'correlation coefficient', key: 'coeff'},
+      { label: 'fisher transformation z score', key: 'zScore'}
+    ],
+  });
+};
+
+figures.lengthFrequencyPmfLengthConditionals = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    // const allowedLengths = [4, 6, 8, 10, 14];
+    const allowedLengths = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    // const tokens = analysis.sumBy(data.rows, 'frequency');
+    const types = data.rows.length;
+    const lengthSums = {};
+    const pmf = data.rows.reduce((probs, row) => {
+      const length = +row.length;
+      const frequency = +row.frequency;
+      if (allowedLengths.indexOf(length) < 0) return probs;
+
+      const freqProbs = probs[length] || {};
+      probs[length] = freqProbs;
+
+      addInto(freqProbs, frequency, 1 / types);
+      addInto(lengthSums, length, 1 / types);
+
+      return probs;
+    }, {});
+
+    const traces = Object.entries(pmf).map(([length, freqProbs]) => ({
+      x: Object.entries(freqProbs).map(([frequency, prob]) => frequency),
+      y: Object.entries(freqProbs).map(([frequency, prob]) => (prob / lengthSums[length])),
+      type: 'scatter',
+      mode: 'lines',
+      name: `L = ${length}`
+    }));
+
+    const layout = {
+      xaxis: { title: { text: 'answer frequency' }},
+      yaxis: { title: { text: 'length-conditional probability mass' }}
+    };
+
+    const figure = { data: traces, layout };
+    res.json(figure);
+  });
+};
+
+figures.lengthFrequencyPmfLengthMarginal = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    // TODO: rewrite in query?
+    // const tokens = analysis.sumBy(data.rows, 'frequency');
+    const types = data.rows.length;
+    const lengthMarginal = data.rows.reduce((probs, row) => addInto(probs, +row.length, 1 / types), {});
+
+    const dataTrace = {
+      x: Object.entries(lengthMarginal).map(([length, prob]) => length),
+      y: Object.entries(lengthMarginal).map(([length, prob]) => prob),
+      type: 'scatter',
+      mode: 'markers+lines',
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'answer length' }},
+      yaxis: { title: { text: 'marginal probability mass' }}
+    };
+
+    const figure = { data: [ dataTrace ], layout };
+    res.json(figure);
+  });
+};
+
+figures.lengthTypesAndTokens = (req, res, next) => {
+  db.query(`
+SELECT
+  LENGTH(answer) as length,
+  COUNT(DISTINCT answer) AS types,
+  COUNT(*) AS tokens
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY length
+ORDER BY length ASC;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const lengths = data.rows.map(row => row.length);
+
+    const tokensTrace = {
+      x: lengths,
+      y: data.rows.map(row => row.tokens),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'tokens'
+    };
+
+    const typesTrace = {
+      x: lengths,
+      y: data.rows.map(row => row.types),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'types',
+    };
+
+    const diffTrace = {
+      x: lengths,
+      y: data.rows.map(row => (row.tokens - row.types)),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'tokens - types',
+      visible: 'legendonly'
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'answer length' }},
+    };
+
+    const figure = { data: [ tokensTrace, typesTrace, diffTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.lengthTypesAndTokensCombined = (req, res, next) => {
+  db.query(`
+SELECT
+  LENGTH(answer) as length,
+  COUNT(DISTINCT answer) AS types,
+  COUNT(*) AS tokens
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY length
+ORDER BY length ASC;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const countsByLength = {};
+    for (const [answer, frequency] of Object.entries(WIKI_CORPUS.wordFrequencies)) {
+      const length = answer.length;
+      const counts = countsByLength[length] || {
+        tokens: 0,
+        types: 0
+      };
+      counts.tokens += frequency;
+      counts.types++;
+      countsByLength[length] = counts;
+    }
+
+    const lengths = data.rows.map(row => row.length);
+
+    const tokensTrace = {
+      x: lengths,
+      y: data.rows.map(row => row.tokens),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'xw tokens'
+    };
+
+    const typesTrace = {
+      x: lengths,
+      y: data.rows.map(row => row.types),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'xw types',
+      // yaxis: 'y2'
+    };
+
+    const tokensTraceEn = {
+      x: lengths,
+      y: lengths.map(length => countsByLength[length] ? countsByLength[length].tokens : 0),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'en tokens',
+      yaxis: 'y2'
+    };
+
+    const typesTraceEn = {
+      x: lengths,
+      y: lengths.map(length => countsByLength[length] ? countsByLength[length].types : 0),
+      type: 'scatter',
+      mode: 'markers+lines',
+      name: 'en types',
+      yaxis: 'y2'
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'answer length' }},
+      yaxis: { title: { text: 'crosswords' }},
+      yaxis2: {
+        overlaying: 'y',
+        side: 'right',
+        title: { text: 'english' }
+      }
+    };
+
+    const figure = { data: [ tokensTrace, typesTrace, tokensTraceEn, typesTraceEn ], layout };
+    res.json(figure)
+  });
+};
 
 figures.mostFrequentLongAnswers = (req, res, next) => {
   db.query(`
@@ -23,10 +381,10 @@ SELECT
 FROM clues
 INNER JOIN puzzles p ON puzzle_id=p.id
 WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-AND LENGTH(answer) > 11
+AND LENGTH(answer) > 13
 GROUP BY answer
-HAVING COUNT(*) > 1
-ORDER BY count DESC, length DESC, answer;
+HAVING (COUNT(*) > 1 AND LENGTH(answer) > 15) OR (COUNT(*) > 3 AND LENGTH(answer) > 13)
+ORDER BY length DESC, count DESC, answer;
 `, (err, data) => {
     if (err) return next(err);
 
@@ -86,10 +444,10 @@ ORDER BY frequency DESC, answer;
 `, (err, data) => {
     if (err) return next(err);
 
-    const swadeshRows = SWADESH_LIST.map((word) => ({ word, frequency: WIKI_CORPUS.countsByWord[word]})).sort(analysis.numSortBy('frequency', true));
+    const swadeshRows = english.SWADESH_LIST.map((word) => ({ word, frequency: WIKI_CORPUS.wordFrequencies[word]})).sort(numSortBy('frequency', true));
 
     const frequencies = data.rows.reduce((freqs, row) => {
-      if (SWADESH_LIST.includes(row.answer)) {
+      if (english.SWADESH_LIST.includes(row.answer)) {
         freqs[row.answer] = +row.frequency;
       }
       return freqs;
@@ -121,10 +479,10 @@ ORDER BY frequency DESC, answer;
 `, (err, data) => {
     if (err) return next(err);
 
-    const numberRows = NUMERICAL_WORDS.map((word) => ({ word, frequency: WIKI_CORPUS.countsByWord[word]})).sort(analysis.numSortBy('frequency', true));
+    const numberRows = english.NUMERICAL_WORDS.map((word) => ({ word, frequency: WIKI_CORPUS.wordFrequencies[word]})).sort(numSortBy('frequency', true));
 
     const frequencies = data.rows.reduce((freqs, row) => {
-      if (NUMERICAL_WORDS.includes(row.answer)) {
+      if (english.NUMERICAL_WORDS.includes(row.answer)) {
         freqs[row.answer] = +row.frequency;
       }
       return freqs;
@@ -190,9 +548,9 @@ ORDER BY frequency DESC, answer;
 };
 
 figures.rankFrequencyEn = (req, res, next) => {
-  let rows = WIKI_CORPUS.frequencyRows;
+  let rows = WIKI_CORPUS.wordFrequencyRows;
   rows = rows.sort((a, b) => (b.frequency - a.frequency));//.slice(0, 200000);
-  const corpusSize = WIKI_CORPUS.total;
+  const corpusSize = WIKI_CORPUS.totalWordTokens;
 
   const ranks = [], frequencies = [], logFrequencySeries = [];
   for (let i = 0, len = rows.length; i < len; i++) {
@@ -232,7 +590,7 @@ figures.decorrelatedRankFrequencyEn = (req, res, next) => {
     rankFrequency,
     highFrequencyFit,
     lowFrequencyFit
-  } = analysis.decorrelatedRankFrequencyAnalysis(WIKI_CORPUS.frequencyRows, { domainSplitRank: 5000 });
+  } = analysis.decorrelatedRankFrequencyAnalysis(WIKI_CORPUS.wordFrequencyRows, { domainSplitRank: 5000 });
 
   const figure = { data: [ rankFrequency, highFrequencyFit, lowFrequencyFit ], layout: {} };
   res.json(figure)
@@ -243,7 +601,7 @@ figures.decorrelatedRankFrequencyErrorEn = (req, res, next) => {
     errors,
     highFrequencyZeroErrorLine,
     lowFrequencyZeroErrorLine
-  } = analysis.decorrelatedRankFrequencyAnalysis(WIKI_CORPUS.frequencyRows, { domainSplitRank: 5000 });
+  } = analysis.decorrelatedRankFrequencyAnalysis(WIKI_CORPUS.wordFrequencyRows, { domainSplitRank: 5000 });
 
   const figure = { data: [ errors, highFrequencyZeroErrorLine, lowFrequencyZeroErrorLine ], layout: {} };
   res.json(figure)
@@ -256,7 +614,7 @@ figures.rankFrequencyRandom = (req, res, next) => {
   const wordCounts = {};
   for (let i = 0; i < corpusSize; i++) {
     const word = dictionary[Math.floor(Math.random() * dictionarySize)];
-    wordCounts[word] = (wordCounts[word] || 0) + 1;
+    addInto(wordCounts, word, 1);
   }
   const rows = Object.entries(wordCounts).map(([word, frequency]) => ({ word, frequency })).sort((a, b) => (b.frequency - a.frequency));
 
@@ -281,10 +639,10 @@ figures.decorrelatedRankFrequencyRandom = (req, res, next) => {
   const corpusB = {};
   for (let i = 0; i < corpusSize; i++) {
     const wordA = dictionary[Math.floor(Math.random() * dictionarySize)];
-    corpusA[wordA] = (corpusA[wordA] || 0) + 1;
+    addInto(corpusA, wordA, 1);
 
     const wordB = dictionary[Math.floor(Math.random() * dictionarySize)];
-    corpusB[wordB] = (corpusB[wordB] || 0) + 1;
+    addInto(corpusB, wordB, 1);
   }
   const rowsA = Object.entries(corpusA).map(([word, frequency]) => ({ word, frequency })).sort((a, b) => (b.frequency - a.frequency));
 
@@ -363,145 +721,6 @@ figures.simulateHerdan = (req, res, next) => {
   res.json(figure);
 };
 
-figures.lengthFrequency = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  LENGTH(answer) as length,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-
-    const dataTrace = {
-      x: data.rows.map(row => +row.length),
-      y: data.rows.map(row => Math.log10(+row.frequency)),
-      ...DEFAULT_HISTOGRAM_2D
-    };
-
-    const figure = { data: [ dataTrace ], layout: {} };
-    res.json(figure);
-  });
-};
-
-figures.lengthFrequencyCorrelations = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  LENGTH(answer) as length,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-
-    const lengthRanks = analysis.rankRowGroupCounts(data.rows, 'length');
-    const frequencyRanks = analysis.rankRowGroupCounts(data.rows, 'frequency');
-    data.rows.forEach((row) => {
-      row.logFrequency = Math.log(+row.frequency);
-      row.lengthRank = lengthRanks[row.length];
-      row.frequencyRank = frequencyRanks[row.frequency];
-    });
-
-    const correlationResults = [
-      { keyX: 'length', keyY: 'frequency' , name: 'Pearson', variables: 'Length vs Frequency' },
-      { keyX: 'length', keyY: 'logFrequency', name: 'Pearson', variables: 'Length vs Log Frequency' },
-      { keyX: 'lengthRank', keyY: 'frequencyRank', name: 'Spearman (rank Pearson)', variables: 'Length vs Frequency' },
-    ].map(test => analysis.runCorrelationTest(data.rows, test));
-
-    const figure = {
-      rows: correlationResults,
-      columns: [
-        { label: 'test name', key: 'name'},
-        { label: 'test variables', key: 'variables'},
-        { label: 'correlation coefficient', key: 'coeff'},
-        { label: 'fisher transformation z score', key: 'zScore'}
-      ],
-    };
-
-    res.json(figure);
-  });
-};
-
-figures.lengthFrequencyEn = (req, res, next) => {
-  const dataTrace = {
-    x: Object.entries(WIKI_CORPUS.countsByWord).map(([word, frequency]) => word.length),
-    y: Object.entries(WIKI_CORPUS.countsByWord).map(([word, frequency]) => Math.log10(frequency)),
-    ...DEFAULT_HISTOGRAM_2D
-  };
-
-  const figure = { data: [ dataTrace ], layout: {} };
-  res.json(figure);
-};
-
-figures.lengthFrequencyCorrelationsEn = (req, res, next) => {
-  const rows = Object.entries(WIKI_CORPUS.countsByWord).map(([answer, frequency]) => ({ answer, frequency, length: answer.length }));
-  const lengthRanks = analysis.rankRowGroupCounts(rows, 'length');
-  const frequencyRanks = analysis.rankRowGroupCounts(rows, 'frequency');
-  rows.forEach((row) => {
-    row.logFrequency = Math.log(+row.frequency);
-    row.lengthRank = lengthRanks[row.length];
-    row.frequencyRank = frequencyRanks[row.frequency];
-  });
-
-  const correlationResults = [
-    { keyX: 'length', keyY: 'frequency' , name: 'Pearson', variables: 'Length vs Frequency' },
-    { keyX: 'length', keyY: 'logFrequency', name: 'Pearson', variables: 'Length vs Log Frequency' },
-    { keyX: 'lengthRank', keyY: 'frequencyRank', name: 'Spearman (rank Pearson)', variables: 'Length vs Frequency' },
-  ].map(test => analysis.runCorrelationTest(rows, test));
-
-  const figure = {
-    rows: correlationResults,
-    columns: [
-      { label: 'test name', key: 'name'},
-      { label: 'test variables', key: 'variables'},
-      { label: 'correlation coefficient', key: 'coeff'},
-      { label: 'fisher transformation z score', key: 'zScore'}
-    ],
-  };
-
-  res.json(figure);
-};
-
-figures.lengthFrequencyPmfLengthMarginal = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  LENGTH(answer) as length,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-
-    // TODO: rewrite in query?
-    // const tokens = analysis.sumBy(data.rows, 'frequency');
-    const types = data.rows.length;
-    const lengthMarginal = data.rows.reduce((probs, row) => {
-      const length = +row.length;
-      probs[length] = (probs[length] || 0) + (1 / types);
-      return probs;
-    }, {});
-
-    const dataTrace = {
-      x: Object.entries(lengthMarginal).map(([length, prob]) => length),
-      y: Object.entries(lengthMarginal).map(([length, prob]) => prob),
-      type: 'scatter',
-      mode: 'markers+lines',
-    };
-
-    const figure = { data: [ dataTrace ], layout: {} };
-    res.json(figure);
-  });
-};
-
 figures.lengthFrequencyPmfFrequencyMarginal = (req, res, next) => {
   db.query(`
 SELECT
@@ -517,11 +736,7 @@ GROUP BY answer;
 
     // const tokens = analysis.sumBy(data.rows, 'frequency');
     const types = data.rows.length;
-    const frequencyMarginal = data.rows.reduce((probs, row) => {
-      const frequency = +row.frequency;
-      probs[frequency] = (probs[frequency] || 0) + (1 / types);
-      return probs;
-    }, {});
+    const frequencyMarginal = data.rows.reduce((probs, row) => addInto(probs, +row.frequency, 1 / types), {});
 
     const dataTrace = {
       x: Object.entries(frequencyMarginal).map(([frequency, prob]) => frequency),
@@ -535,55 +750,13 @@ GROUP BY answer;
   });
 };
 
-figures.lengthFrequencyPmfLengthConditionals = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  LENGTH(answer) as length,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer;
-`, (err, data) => {
-    if (err) return next(err);
-
-    // const allowedLengths = [4, 6, 8, 10, 14];
-    const allowedLengths = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-    // const tokens = analysis.sumBy(data.rows, 'frequency');
-    const types = data.rows.length;
-    const pmf = data.rows.reduce((probs, row) => {
-      const length = +row.length;
-      const frequency = +row.frequency;
-      if (allowedLengths.indexOf(length) < 0) return probs;
-
-      const freqProbs = probs[length] || {};
-      probs[length] = freqProbs;
-
-      freqProbs[frequency] = (freqProbs[frequency] || 0) + (1 / types);
-
-      return probs;
-    }, {});
-
-    const traces = Object.entries(pmf).map(([length, freqProbs]) => ({
-      x: Object.entries(freqProbs).map(([frequency, prob]) => frequency),
-      y: Object.entries(freqProbs).map(([frequency, prob]) => prob),
-      type: 'scatter',
-      mode: 'lines',
-      name: `l = ${length}`
-    }));
-
-    const figure = { data: traces, layout: {} };
-    res.json(figure);
-  });
-};
-
 figures.lengthFrequencyPmfLengthConditionalsEn = (req, res, next) => {
   // const allowedLengths = [4, 6, 8, 10, 14];
   const allowedLengths = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
   // const tokens = analysis.sumBy(data.rows, 'frequency');
-  const rows = Object.entries(WIKI_CORPUS.countsByWord).map(([answer, frequency]) => ({ answer, frequency, length: answer.length }));
+  const rows = Object.entries(WIKI_CORPUS.wordFrequencies).map(([answer, frequency]) => ({ answer, frequency, length: answer.length }));
   const types = rows.length;
+  const lengthSums = {};
   const pmf = rows.reduce((probs, row) => {
     const length = +row.length;
     const frequency = +row.frequency;
@@ -592,14 +765,15 @@ figures.lengthFrequencyPmfLengthConditionalsEn = (req, res, next) => {
     const freqProbs = probs[length] || {};
     probs[length] = freqProbs;
 
-    freqProbs[frequency] = (freqProbs[frequency] || 0) + (1 / types);
+    addInto(freqProbs, frequency, 1 / types);
+    addInto(lengthSums, length, 1 / types);
 
     return probs;
   }, {});
 
   const traces = Object.entries(pmf).map(([length, freqProbs]) => ({
     x: Object.entries(freqProbs).map(([frequency, prob]) => frequency),
-    y: Object.entries(freqProbs).map(([frequency, prob]) => prob),
+    y: Object.entries(freqProbs).map(([frequency, prob]) => (prob / lengthSums[length])),
     type: 'scatter',
     mode: 'lines',
     name: `l = ${length}`
@@ -657,54 +831,9 @@ ORDER BY length ASC;
   });
 };
 
-figures.lengthTypesAndTokens = (req, res, next) => {
-  db.query(`
-SELECT
-  LENGTH(answer) as length,
-  COUNT(DISTINCT answer) AS types,
-  COUNT(*) AS tokens
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY length
-ORDER BY length ASC;
-`, (err, data) => {
-    if (err) return next(err);
-
-    const lengths = data.rows.map(row => row.length);
-
-    const tokensTrace = {
-      x: lengths,
-      y: data.rows.map(row => row.tokens),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'tokens'
-    };
-
-    const typesTrace = {
-      x: lengths,
-      y: data.rows.map(row => row.types),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'types',
-      // yaxis: 'y2'
-    };
-
-    const layout = {
-      // yaxis2: {
-      //   overlaying: 'y',
-      //   side: 'right'
-      // }
-    };
-
-    const figure = { data: [ tokensTrace, typesTrace ], layout };
-    res.json(figure)
-  });
-};
-
 figures.lengthTypesAndTokensEnglish = (req, res, next) => {
   const countsByLength = {};
-  for (const [answer, frequency] of Object.entries(WIKI_CORPUS.countsByWord)) {
+  for (const [answer, frequency] of Object.entries(WIKI_CORPUS.wordFrequencies)) {
     const length = answer.length;
     const counts = countsByLength[length] || {
       tokens: 0,
@@ -733,8 +862,8 @@ figures.lengthTypesAndTokensEnglish = (req, res, next) => {
     // yaxis: 'y2'
   };
 
-  // const enTotal = WIKI_CORPUS.total;
-  //   const enFrequency = WIKI_CORPUS.countsByWord[row.answer] || 1e-15;
+  // const enTotal = WIKI_CORPUS.totalWordTokens;
+  //   const enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 1e-15;
 
   const layout = {
     // yaxis2: {
@@ -745,81 +874,6 @@ figures.lengthTypesAndTokensEnglish = (req, res, next) => {
 
   const figure = { data: [ tokensTrace, typesTrace ], layout };
   res.json(figure);
-};
-
-figures.lengthTypesAndTokensCombined = (req, res, next) => {
-  db.query(`
-SELECT
-  LENGTH(answer) as length,
-  COUNT(DISTINCT answer) AS types,
-  COUNT(*) AS tokens
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY length
-ORDER BY length ASC;
-`, (err, data) => {
-    if (err) return next(err);
-
-    const countsByLength = {};
-    for (const [answer, frequency] of Object.entries(WIKI_CORPUS.countsByWord)) {
-      const length = answer.length;
-      const counts = countsByLength[length] || {
-        tokens: 0,
-        types: 0
-      };
-      counts.tokens += frequency;
-      counts.types++;
-      countsByLength[length] = counts;
-    }
-
-    const lengths = data.rows.map(row => row.length);
-
-    const tokensTrace = {
-      x: lengths,
-      y: data.rows.map(row => row.tokens),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'xw tokens'
-    };
-
-    const typesTrace = {
-      x: lengths,
-      y: data.rows.map(row => row.types),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'xw types',
-      // yaxis: 'y2'
-    };
-
-    const tokensTraceEn = {
-      x: lengths,
-      y: lengths.map(length => countsByLength[length] ? countsByLength[length].tokens : 0),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'en tokens',
-      yaxis: 'y2'
-    };
-
-    const typesTraceEn = {
-      x: lengths,
-      y: lengths.map(length => countsByLength[length] ? countsByLength[length].types : 0),
-      type: 'scatter',
-      mode: 'markers+lines',
-      name: 'en types',
-      yaxis: 'y2'
-    };
-
-    const layout = {
-      yaxis2: {
-        overlaying: 'y',
-        side: 'right'
-      }
-    };
-
-    const figure = { data: [ tokensTrace, typesTrace, tokensTraceEn, typesTraceEn ], layout };
-    res.json(figure)
-  });
 };
 
 figures.lengthByPuzzleSize = (req, res, next) => {
@@ -1516,7 +1570,9 @@ GROUP BY answer, year;`
 };
 
 figures.keyness = (req, res, next) => {
-  const enThresh = cleanNumber(req.query.enThresh, 0);
+  const enFreqThresh = cleanNumber(req.query.enFreqThresh, 0);
+  const lengthThresh = cleanNumber(req.query.lengthThresh, 0);
+  const sortSameness = cleanBoolean(req.query.sameness);
   db.query(`
 SELECT
   answer,
@@ -1528,11 +1584,11 @@ GROUP BY answer;
 `, (err, data) => {
     if (err) return next(err);
     const xwTotal = data.rows.reduce((total, row) => (total + +row.frequency), 0);
-    const enTotal = WIKI_CORPUS.total;
+    const enTotal = WIKI_CORPUS.totalWordTokens;
     // console.log(xwTotal, enTotal);
     for (row of data.rows) {
       const xwFrequency = +row.frequency;
-      const enFrequency = WIKI_CORPUS.countsByWord[row.answer] || 1e-15;
+      const enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 1e-15;
       const combinedFrequency = xwFrequency + enFrequency;
       const combinedTotal = xwTotal + enTotal;
       const xwNormalizedFrequency = xwFrequency / xwTotal;
@@ -1549,13 +1605,13 @@ GROUP BY answer;
       row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
       row.bayesFactor = bayesFactor.toFixed(2);
     }
-    const rows = data.rows.filter((row) => (row.bayesFactor > 2 && row.enFrequency >= enThresh)).sort((a, b) => Math.abs(b.logRatio) - Math.abs(a.logRatio));
-
-    // Sameness?
-    // const rows = data.rows.filter((row) => (row.bayesFactor > 2 && row.enFrequency >= enThresh)).sort((a, b) => Math.abs(a.logRatio) - Math.abs(b.logRatio));
-
-    // Length?
-    // const rows = data.rows.filter((row) => (row.bayesFactor > 2 && row.enFrequency >= enThresh && row.answer.length > 5)).sort((a, b) => Math.abs(b.logRatio) - Math.abs(a.logRatio));
+    const rows = data.rows.filter((row) => (
+      row.bayesFactor > 2 &&
+      row.enFrequency >= enFreqThresh &&
+      row.answer.length > lengthThresh
+    )).sort((a, b) => (
+      (sortSameness ? -1 : 1) * (Math.abs(b.logRatio) - Math.abs(a.logRatio))
+    ));
 
     const figure = {
       rows: rows.slice(0, 1000),
@@ -1587,17 +1643,17 @@ GROUP BY answer;
 `, (err, data) => {
     if (err) return next(err);
     const xwTotal = analysis.sumBy(data.rows, 'frequency');
-    const enTotal = WIKI_CORPUS.total;
+    const enTotal = WIKI_CORPUS.totalWordTokens;
     // console.log(xwTotal, enTotal);
     for (row of data.rows) {
       row.xwFrequency = +row.frequency;
-      row.enFrequency = WIKI_CORPUS.countsByWord[row.answer] || 0;
+      row.enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 0;
       row.xwRelativeFrequency = row.xwFrequency / xwTotal;
       row.enRelativeFrequency = row.enFrequency / enTotal;
       row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency).toFixed(5);
       row.absFrequencyDiff = Math.abs(row.frequencyDiff);
     }
-    data.rows.sort(analysis.numSortBy(sortyByAbsDiff ? 'absFrequencyDiff' : 'frequencyDiff', true));
+    data.rows.sort(numSortBy(sortyByAbsDiff ? 'absFrequencyDiff' : 'frequencyDiff', true));
 
     const figure = {
       rows: data.rows.slice(0, 100),
@@ -1706,7 +1762,7 @@ GROUP BY grid_index;
       grid[y][x] = row.count;
     });
 
-    data.rows.sort(analysis.numSortBy('count'));
+    data.rows.sort(numSortBy('count'));
     const max = +data.rows[data.rows.length - 1].count;
     const median = +data.rows[Math.floor(data.rows.length / 2)].count;
 
@@ -1910,6 +1966,368 @@ ORDER BY count DESC;
     };
 
     const figure = { data: [ cumulativeTrace, cumulativeFitTrace, absoluteTrace, absoluteFitTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.letterCounts = (req, res, next) => {
+  const plotDictionary = cleanBoolean(req.query.dictionary);
+  const enLetterFrequencies = plotDictionary ? english.DICTIONARY_LETTER_FREQUENCIES : english.TEXT_LETTER_FREQUENCIES;
+  // const enLetterFrequencies = plotDictionary ? WIKI_CORPUS.letterFrequencies.dict : WIKI_CORPUS.letterFrequencies.text;
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    let lettersTotal = 0;
+    const letterCounts = {};
+    data.rows.forEach(row => {
+      const letters = (row.answer.match(/\w/g) || '').length;
+      lettersTotal += letters * (plotDictionary ? 1 : +row.frequency);
+      for (let i = 0, len = row.answer.length; i < len; i++) {
+        const letter = row.answer[i];
+        addInto(letterCounts, letter, plotDictionary ? 1 : +row.frequency);
+      }
+    });
+
+    const letters = Object.keys(enLetterFrequencies).sort((a, b) => {
+      const diffA = (letterCounts[a] / lettersTotal) - enLetterFrequencies[a];
+      const diffB = (letterCounts[b] / lettersTotal) - enLetterFrequencies[b];
+      return diffB - diffA;
+    });
+
+    const dataTrace = {
+      x: letters,
+      y: letters.map(letter => (letterCounts[letter] / lettersTotal)),
+      type: 'bar',
+      name: 'crossword answers'
+    };
+
+    const enTrace = {
+      x: letters,
+      y: letters.map(letter => enLetterFrequencies[letter]),
+      type: 'bar',
+      name: 'english'
+    };
+
+    const scrabbleTrace = {
+      x: letters,
+      y: letters.map(letter => scrabble.LETTER_FREQUENCIES[letter]),
+      type: 'bar',
+      name: 'scrabble'
+    };
+
+    const figure = { data: [ dataTrace, enTrace/*, scrabbleTrace*/ ] };
+    res.json(figure)
+  });
+};
+
+figures.letterFrequencyComparison = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    let textLettersTotal = 0;
+    let dictLettersTotal = 0;
+    const textLetterCounts = {};
+    const dictLetterCounts = {};
+    data.rows.forEach(row => {
+      const letters = (row.answer.match(/\w/g) || '').length;
+      dictLettersTotal += letters;
+      textLettersTotal += letters * +row.frequency;
+      for (let i = 0, len = row.answer.length; i < len; i++) {
+        const letter = row.answer[i];
+        addInto(dictLetterCounts, letter, 1);
+        addInto(textLetterCounts, letter, +row.frequency);
+      }
+    });
+
+    const letters = Object.keys(english.DICTIONARY_LETTER_FREQUENCIES);
+
+    const dataTrace = {
+      // x: letters.map(letter => ((dictLetterCounts[letter] / dictLettersTotal) - WIKI_CORPUS.letterFrequencies.dict[letter])),
+      // y: letters.map(letter => ((textLetterCounts[letter] / textLettersTotal) - WIKI_CORPUS.letterFrequencies.text[letter])),
+      x: letters.map(letter => ((dictLetterCounts[letter] / dictLettersTotal) - english.DICTIONARY_LETTER_FREQUENCIES[letter])),
+      y: letters.map(letter => ((textLetterCounts[letter] / textLettersTotal) - english.TEXT_LETTER_FREQUENCIES[letter])),
+      text: letters,
+      type: 'scatter',
+      mode: 'text'
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'diff dictionary frequency' }},
+      yaxis: { title: { text: 'diff text frequency' }}
+    };
+
+    const figure = { data: [ dataTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.letterScoreFrequency = (req, res, next) => {
+  const wordLength = cleanNumber(req.query.wordLength, 3);
+  const scrabbleScore = cleanBoolean(req.query.scrabbleScore);
+  const logScale = cleanBoolean(req.query.logScale);
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+AND LENGTH(answer) = ${wordLength}
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach(row => {
+      row.letterScore = scrabbleScore ? analysis.scrabbleScore(row.answer) : analysis.letterFrequencyScore(row.answer);
+    });
+
+    const dataTrace = {
+      x: data.rows.map(row => row.letterScore),
+      y: data.rows.map(row => (logScale ? Math.log10(+row.frequency) : +row.frequency)),
+      ...DEFAULT_HISTOGRAM_2D
+    };
+
+    const figure = { data: [ dataTrace ]};
+    res.json(figure)
+  });
+};
+
+figures.vowelPlacement = (req, res, next) => {
+  const wordLength = cleanNumber(req.query.wordLength, 3);
+  if (wordLength > 10) return next('word length too high');
+  const tokenTypeSort = cleanBoolean(req.query.tokenTypeSort);
+  const byPosition = cleanBoolean(req.query.byPosition);
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+AND LENGTH(answer) = ${wordLength}
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const totalTokens = analysis.sumBy(data.rows, 'frequency');
+    const totalTypes = data.rows.length;
+
+    const wildcardCharacter = byPosition ? '*' : '-';
+    const zeroPadding = new Array(wordLength).fill(0).join('');
+    const numToVowelBinary = (val) => ((zeroPadding + val.toString(2)).slice(-wordLength).replace(/1/g, 'V').replace(/0/g, wildcardCharacter));
+    const numPlacements = byPosition ? wordLength : 2 ** wordLength;
+    const placements = Array.from({ length: numPlacements }, (val, idx) => numToVowelBinary(byPosition ? 2 ** idx : idx));
+
+    const vowelTokenCounts = {};
+    const vowelTypesCounts = {};
+
+    if (byPosition) {
+      data.rows.forEach(row => {
+        for (let i = 0, len = row.answer.length; i < len; i++) {
+          const letter = row.answer[i];
+          if (english.VOWELS[letter]) {
+            const vowelBinary = numToVowelBinary(2 ** i);
+            addInto(vowelTokenCounts, vowelBinary, +row.frequency / totalTokens);
+            addInto(vowelTypesCounts, vowelBinary, 1 / totalTypes);
+          }
+        }
+      });
+    } else {
+      const vowelBinaryHelper = new Array(wordLength).fill(wildcardCharacter);
+      data.rows.forEach(row => {
+        for (let i = 0, len = row.answer.length; i < len; i++) {
+          const letter = row.answer[i];
+          vowelBinaryHelper[i] = english.VOWELS[letter] ? 'V' : wildcardCharacter
+        }
+        const vowelBinary = vowelBinaryHelper.join('');
+        addInto(vowelTokenCounts, vowelBinary, +row.frequency / totalTokens);
+        addInto(vowelTypesCounts, vowelBinary, 1 / totalTypes);
+      });
+    }
+
+    if (tokenTypeSort) {
+      placements.sort((a, b) => ((vowelTokenCounts[b] / vowelTypesCounts[b]) - (vowelTokenCounts[a] / vowelTypesCounts[a])));
+    } else {
+      placements.sort((a, b) => (b < a ? -1 : 1));
+    }
+
+    const typesTrace = {
+      x: placements,
+      y: placements.map(vowelBinary => vowelTypesCounts[vowelBinary]),
+      type: 'bar',
+      name: 'types'
+    };
+
+    const tokensTrace = {
+      x: placements,
+      y: placements.map(vowelBinary => vowelTokenCounts[vowelBinary]),
+      type: 'bar',
+      name: 'tokens',
+      // yaxis: 'y2',
+    };
+
+    const layout = {
+      xaxis: {
+        type: 'category'
+      }
+    };
+
+    const figure = { data: [ tokensTrace, typesTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.vowelPlacementFrequency = (req, res, next) => {
+  const wordLength = cleanNumber(req.query.wordLength, 3);
+  if (wordLength > 10) return next('word length too high');
+  const freqSort = cleanBoolean(req.query.freqSort);
+  const logScale = cleanBoolean(req.query.logScale);
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+AND LENGTH(answer) = ${wordLength}
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const totalTokens = analysis.sumBy(data.rows, 'frequency');
+    const totalTypes = data.rows.length;
+
+    const wildcardCharacter = '-';
+    const vowelBinaryHelper = new Array(wordLength).fill(wildcardCharacter);
+    data.rows.forEach(row => {
+      for (let i = 0, len = row.answer.length; i < len; i++) {
+        const letter = row.answer[i];
+        vowelBinaryHelper[i] = english.VOWELS[letter] ? 'V' : wildcardCharacter
+      }
+      row.vowelBinary = vowelBinaryHelper.join('');
+    });
+
+    if (freqSort) {
+      data.rows.sort(numSortBy('frequency', true));
+    } else {
+      data.rows.sort((a, b) => (b.vowelBinary < a.vowelBinary ? -1 : 1));
+    }
+    const typeCounts = analysis.countRowGroups(data.rows, 'vowelBinary');
+    const typeCountRows = Object.entries(typeCounts);
+
+    const frequencyTrace = {
+      x: data.rows.map(row => row.vowelBinary),
+      y: data.rows.map(row => (logScale ? Math.log10(+row.frequency) : +row.frequency)),
+      ...DEFAULT_HISTOGRAM_2D,
+    };
+
+    const typeTrace = {
+      x: typeCountRows.map(([vowelBinary, count]) => vowelBinary),
+      y: typeCountRows.map(([vowelBinary, count]) => count),
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: '# word types',
+      yaxis: 'y2'
+    };
+
+    const layout = {
+      xaxis: {
+        type: 'category'
+      },
+      yaxis2: {
+        overlaying: 'y',
+        side: 'right'
+      },
+      showlegend: true,
+    };
+
+    const figure = { data: [ frequencyTrace, typeTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.vowelCountFrequency = (req, res, next) => {
+  const wordLength = cleanNumber(req.query.wordLength, 3);
+  const freqSort = cleanBoolean(req.query.freqSort);
+  const logScale = cleanBoolean(req.query.logScale);
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+AND LENGTH(answer) = ${wordLength}
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach(row => {
+      row.vowelCount = 0;
+      for (let i = 0, len = row.answer.length; i < len; i++) {
+        if (english.VOWELS[row.answer[i]]) row.vowelCount++;
+      }
+    });
+
+    data.rows.sort(numSortBy(freqSort ? 'frequency' : 'vowelCount', freqSort ? true : false));
+
+    const countsTrace = {
+      x: data.rows.map(row => row.vowelCount),
+      y: data.rows.map(row => (logScale ? Math.log10(+row.frequency) : +row.frequency)),
+      ...DEFAULT_HISTOGRAM_2D,
+    };
+
+    const layout = {
+      xaxis: {
+        type: 'category'
+      },
+    };
+
+    const figure = { data: [ countsTrace ], layout };
+    res.json(figure)
+  });
+};
+
+figures.vowelsByLength = (req, res, next) => {
+  const countTokens = cleanBoolean(req.query.tokens);
+  db.query(`
+SELECT
+  answer
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+${countTokens ? '' : 'GROUP BY answer'};
+`, (err, data) => {
+    if (err) return next(err);
+
+    const dataTrace = {
+      x: data.rows.map(row => row.answer.length),
+      y: data.rows.map(row => analysis.countVowels(row.answer)),
+      ...DEFAULT_HISTOGRAM_2D
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'answer length' }},
+      yaxis: { title: { text: 'num vowels' }}
+    };
+
+    const figure = { data: [ dataTrace ], layout };
     res.json(figure)
   });
 };

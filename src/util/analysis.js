@@ -2,7 +2,10 @@ const { alea } = require('seedrandom');
 const { randomBinomial } = require("d3-random");
 const { linear } = require('regression');
 
+const { addInto, pushInto, numSort, numSortBy } = require('./base');
 const { DEFAULT_HISTOGRAM_2D } = require('./figure');
+
+const { scrabble: { LETTER_SCORES }, english } = require('../constants/language');
 
 const analysis = {};
 
@@ -11,41 +14,20 @@ const analysis = {};
 // Largely it expects data to be an array of objects, and will perform operations
 // on the values stored in those objects at given property names.
 
-function numSort(desc) {
-  return (a, b) => ((+a - +b) * (desc ? -1 : 1));
-}
-
-analysis.numSortBy = (key, desc) => {
-  return (a, b) => ((desc ? -1 : 1) * (+a[key] - +b[key]));
-};
-
 function getGroupName(row, groupKey) {
   return typeof groupKey === 'function' ? groupKey(row) : row[groupKey];
 }
 
 analysis.groupRowsBy = (rows, groupKey) => {
-  return rows.reduce((groups, row) => {
-    const groupName = getGroupName(row, groupKey);
-    if (!groups[groupName]) groups[groupName] = [];
-    groups[groupName].push(row);
-    return groups;
-  }, {});
+  return rows.reduce((groups, row) => pushInto(groups, getGroupName(row, groupKey), row), {});
 };
 
 analysis.sumRowGroupsBy = (rows, groupKey, sumKey) => {
-  return rows.reduce((sums, row) => {
-    const groupName = getGroupName(row, groupKey);
-    sums[groupName] = (sums[groupName] || 0) + +(row[sumKey])
-    return sums;
-  }, {});
+  return rows.reduce((sums, row) => addInto(sums, getGroupName(row, groupKey), +(row[sumKey])), {});
 };
 
 analysis.countRowGroups = (rows, groupKey) => {
-  return rows.reduce((counts, row) => {
-    const groupName = getGroupName(row, groupKey);
-    counts[groupName] = (counts[groupName] || 0) + 1;
-    return counts;
-  }, {});
+  return rows.reduce((counts, row) => addInto(counts, getGroupName(row, groupKey), 1), {});
 };
 
 analysis.rankRowGroupCounts = (rows, groupKey, asc=true) => {
@@ -159,7 +141,7 @@ analysis.decorrelatedRankFrequencyAnalysis = (rows, opts = {}) => {
       frequencyA,
       frequencyB
     };
-  }).filter((val) => (!!val)).sort(analysis.numSortBy('frequencyB', true));
+  }).filter((val) => (!!val)).sort(numSortBy('frequencyB', true));
 
   // Assemble some helpful arrays
   const logRanks = [];
@@ -286,6 +268,37 @@ analysis.isProbablyTheSameAuthor = (a, b) => {
     return false;
   }
   return true;
+};
+
+analysis.scrabbleScore = (word) => {
+  let score = 0;
+  for (let i = 0, len = word.length; i < len; i++) {
+    score += (LETTER_SCORES[word[i]] || 0);
+  }
+  return score;
+};
+
+analysis.letterFrequencyScore = (word) => {
+  const frequencies = english.DICTIONARY_LETTER_FREQUENCIES;
+  const maxFrequency = Math.max(...Object.values(frequencies));
+  let score = 0;
+  for (let i = 0, len = word.length; i < len; i++) {
+    // Get 1 point for ever order of factor of 2 less frequent than the most frequent
+    score += 1 + Math.log2(maxFrequency / (frequencies[word[i]] || maxFrequency));
+  }
+  return score;
+};
+
+analysis.countVowels = (word) => {
+  let numVowels = 0;
+  for (let i = 0, len = word.length; i < len; i++) {
+    if (english.VOWELS[word[i]]) numVowels++;
+  }
+  return numVowels;
+};
+
+analysis.percentVowels = (word) => {
+  return analysis.countVowels(word) / word.length;
 };
 
 module.exports = analysis;

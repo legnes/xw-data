@@ -1,76 +1,91 @@
-const puzzles = require('./controllers/puzzles');
-const answers = require('./controllers/answers');
-const crosses = require('./controllers/crosses');
-const clues = require('./controllers/clues');
+// const puzzles = require('./controllers/puzzles');
+// const answers = require('./controllers/answers');
+// const crosses = require('./controllers/crosses');
+// const clues = require('./controllers/clues');
+const fs = require('fs');
+const path = require('path');
 const figures = require('./controllers/figures');
+const { dashCaseToWords } = require('./util/base');
 
-const apiRoutes = [
-  {
-    path: 'test',
-    controller: answers.topWordsPerYear,
-    description: 'test route'
-  },
-  {
-    path: 'puzzles',
-    controller: puzzles.list,
-    description: 'list all puzzles'
-  },
-  {
-    path: 'puzzles/:id',
-    controller: puzzles.get,
-    description: 'list a puzzle\'s metadata'
-  },
-  {
-    path: 'puzzles/:id/answers',
-    controller: puzzles.getAnswers,
-    description: 'list a puzzle\'s answers'
-  },
-  {
-    path: 'answers/:answer',
-    controller: answers.get,
-    description: 'list all clues with a given answer'
-  },
-  {
-    path: 'stats/answers/top',
-    controller: answers.listTopAnswers,
-    description: 'list top used answers'
-  },
-  {
-    path: 'stats/answers/direction',
-    controller: answers.listTopDirectionRatio,
-    description: 'list answers that are more across or down'
-  },
-  {
-    path: 'stats/answers/location',
-    controller: answers.listTopLocationBias,
-    description: 'list answers that are more likely to be found in a given quadrant'
-  },
-  {
-    path: 'stats/clues/top',
-    controller: clues.listTopClues,
-    description: 'list top used verbatim clues'
-  },
-  {
-    path: 'stats/clues/top',
-    controller: clues.listTopClueWords,
-    description: 'list most common clue words'
-  },
-  {
-    path: 'stats/clues/answers',
-    controller: clues.listTopClueWordsWithTheSameAnswers,
-    description: 'list most common clue word X answer combos'
-  },
-  {
-    path: 'stats/clues/bogus',
-    controller: clues.listBogusClues,
-    description: 'list clues with no text or undefined answer'
-  },
-  {
-    path: 'stats/crosses/top',
-    controller: crosses.listTopCrosses,
-    description: 'list most common crosses'
-  },
-];
+// const articles = [
+//   'topic',
+//   'common-answers-and-word-length'
+// ];
+
+const articles = fs.readdirSync(path.join(__dirname, 'views/articles'))
+                    .map(filename => path.basename(filename, '.ejs'))
+                    .filter(filename => (
+                      !path.extname(filename) &&
+                      !(process.env.NODE_ENV === 'production' && filename.match(/^unpublished-/)))
+                    );
+
+// const apiRoutes = [
+//   {
+//     path: 'test',
+//     controller: answers.topWordsPerYear,
+//     description: 'test route'
+//   },
+//   {
+//     path: 'puzzles',
+//     controller: puzzles.list,
+//     description: 'list all puzzles'
+//   },
+//   {
+//     path: 'puzzles/:id',
+//     controller: puzzles.get,
+//     description: 'list a puzzle\'s metadata'
+//   },
+//   {
+//     path: 'puzzles/:id/answers',
+//     controller: puzzles.getAnswers,
+//     description: 'list a puzzle\'s answers'
+//   },
+//   {
+//     path: 'answers/:answer',
+//     controller: answers.get,
+//     description: 'list all clues with a given answer'
+//   },
+//   {
+//     path: 'stats/answers/top',
+//     controller: answers.listTopAnswers,
+//     description: 'list top used answers'
+//   },
+//   {
+//     path: 'stats/answers/direction',
+//     controller: answers.listTopDirectionRatio,
+//     description: 'list answers that are more across or down'
+//   },
+//   {
+//     path: 'stats/answers/location',
+//     controller: answers.listTopLocationBias,
+//     description: 'list answers that are more likely to be found in a given quadrant'
+//   },
+//   {
+//     path: 'stats/clues/top',
+//     controller: clues.listTopClues,
+//     description: 'list top used verbatim clues'
+//   },
+//   {
+//     path: 'stats/clues/top',
+//     controller: clues.listTopClueWords,
+//     description: 'list most common clue words'
+//   },
+//   {
+//     path: 'stats/clues/answers',
+//     controller: clues.listTopClueWordsWithTheSameAnswers,
+//     description: 'list most common clue word X answer combos'
+//   },
+//   {
+//     path: 'stats/clues/bogus',
+//     controller: clues.listBogusClues,
+//     description: 'list clues with no text or undefined answer'
+//   },
+//   {
+//     path: 'stats/crosses/top',
+//     controller: crosses.listTopCrosses,
+//     description: 'list most common crosses'
+//   },
+// ];
 
 function routes(app) {
   app.get('/api/figures/rankFrequency', figures.rankFrequency);
@@ -118,16 +133,33 @@ function routes(app) {
   app.get('/api/figures/answerStartHeatMap', figures.answerStartHeatMap);
   app.get('/api/figures/answerLengthHeatMap', figures.answerLengthHeatMap);
   app.get('/api/figures/answerRepetitionHeatMap', figures.answerRepetitionHeatMap);
+  app.get('/api/figures/letterCounts', figures.letterCounts);
+  app.get('/api/figures/letterFrequencyComparison', figures.letterFrequencyComparison);
+  app.get('/api/figures/letterScoreFrequency', figures.letterScoreFrequency);
+  app.get('/api/figures/vowelCountFrequency', figures.vowelCountFrequency);
+  app.get('/api/figures/vowelPlacement', figures.vowelPlacement);
+  app.get('/api/figures/vowelPlacementFrequency', figures.vowelPlacementFrequency);
+  app.get('/api/figures/mostFrequentAnswers', figures.mostFrequentAnswers);
+  app.get('/api/figures/vowelsByLength', figures.vowelsByLength);
 
-  apiRoutes.forEach(({ path, controller }) => {
-    app.get(`/api/${path}`, controller);
-  });
+  // apiRoutes.forEach(({ path, controller }) => {
+  //   app.get(`/api/${path}`, controller);
+  // });
 
-  app.get('/api', (req, res, next) => {
-    res.json(apiRoutes.map(({ path, description }) => ({
-      route: `/api/${path}`,
-      description
-    })));
+  // app.get('/api', (req, res, next) => {
+  //   res.json(apiRoutes.map(({ path, description }) => ({
+  //     route: `/api/${path}`,
+  //     description
+  //   })));
+  // });
+
+  app.get('/', (req, res, next) => res.render('index', { articles }));
+
+  articles.forEach(article => {
+    app.get(`/${article}`, (req, res, next) => res.render('article-template', {
+      title: dashCaseToWords(article),
+      article
+    }));
   });
 }
 

@@ -54,8 +54,8 @@
     <!-- <p>TODO: figure out how to make this a bar chart with multiple y axes? maybe. doesnt' seem to work</p> -->
     <!-- <p>NOTE: I kind of like it as not</p> -->
     <graph-loader data-id="lengthTypesAndTokens" data-src="api/figures/lengthTypesAndTokens">
-      <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
-      <!-- <graph-log-axis-checkbox data-axes="y+y2"></graph-log-axis-checkbox> -->
+      <!-- <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox> -->
+      <graph-log-axis-checkbox data-axes="y+y2"></graph-log-axis-checkbox>
     </graph-loader>
 
     <p>Ok so when we say "number of answers" that's actually sort of complicated. You can count answers two different ways -- either the <em>total</em> number of answers with length, say, 4, OR the number of different <em>distinct words</em> with length 4 that show up as answers. So it comes down to whether you count e.g. the word <em>oleo</em> 245 times or just once. You'll hear a range of terms for these concepts, like word "occurrences" (total) vs. "dictionary" words (distinct), or "tokens" (total) vs. "types" (distinct).</p>
@@ -83,6 +83,8 @@
     <p>Perhaps as we'd expect, almost all of these are phrases or proper nouns. It would seem that constructors, just like the rest of us, love Leonardo Da Vinci, Arturo Toscanini, and, of course, Grover Cleveland.</p>
 
     <p>Actually, we need to talk about what a "word" is. In general many of these linguistic laws apply to other linguistic units than words, and the bias towards words in the literature is maybe even a problem. Also, as we just saw, a lot of crossword answers aren't "words". They're often multiword phrases, sub-word affixes/morphemes, or who knows what -- abbreviations, words/phrases from other languages, etc. Nonetheless, I'd argue you can treat the crossword answers as a corpus of words -- we will be comparing it to english but mainly through its bulk properties.</p>
+
+    <p>And things are a little weird in crossword land too. Don't forget that a lot of the phenomena we'll be seeing have to do with the NYTXW's rules, which specify things like a minimum word count (incentivizing longer words) and diagonal symmetry (perhaps causing a more regular or characteristically shaped word length distribution). </p>
 
     <p>Ok, back to brevity. A common way to quantify brevity is using a correlation test. First, we plot every distinct answer's length vs its frequency, like this:</p>
 
@@ -371,7 +373,9 @@
 
     <table-loader data-id="keyness" data-src="api/figures/keyness">
       <form is="query-param-form">
-        <label>frequency threshold for english corpus <input is="query-param-input" data-query-param="enThresh" type="number" min="1" value="1"></label>
+        <label>frequency threshold for english corpus <input is="query-param-input" data-query-param="enFreqThresh" type="number" min="1" value="1"></label>
+        <label>word length threshold <input is="query-param-input" data-query-param="lengthThresh" type="number" min="0" value="1"></label>
+        <label>sameness (lowest log ratios) <input is="query-param-input" data-query-param="sameness" type="checkbox"></label>
       </form>
     </table-loader>
 
@@ -391,10 +395,8 @@
 
     <p>Let's keep cranking up the english frequency threshold. At 150, we start seeing a few more common english words like TO and HE. As for our crosswordese, we still get some proper nouns like ESTEE, borrowings like ERAT, etc. But we also get EPEE, STY, STET, OLIO, OLEO, EDAM, OAF, EMOTE, SLOE, ANON, AGUE...It's clear word length as well as vowel and common letter count is still playing a huge role here. But we also start to see weird old words (ANON, AGUE), extremely niche words (EPEE, STY, STET, SLOE) and words that just...wouldn't show up very much in wikipedia (EMOTE, OAF). This is strting to be better territory to me. At threshold 500, the list starts to look like almost entirely affixes and abbreviations??? And by threshold 1000, we're into pretty normal words that differ between corpora: ALOE, OAT, ETNA as well as reverse keywords like DISTRICT, INTERNATIONAL, and JANUARY. Once we hit 10000, almost all the words favor the wikipedia corpus, except for ELI.</p>
 
-    <!-- <p>TODO: samness table or form input for above</p> -->
     <p>We can try to look at sameness by filtering for words with low log ratios but still with high Bayes. What we get is OLD, AREAS, ABLE, USE, EVEN, UNIT, RATE, TRUE, SON, USES, EVER, RACE, LED, SEE, EAST, UPON, SANTA, ROLE, INC, SEA, NOTE, TOM, BAD, DEL, SOON, MEN, PETER, NEAR, SAVE, PORT, ROSE, START, SEX....tend to be short and vowel-rich, plus generic words and verbs? Not sure!</p>
 
-    <!-- <p>TODO: word length table or form input for above</p> -->
     <p>We can also look at longer words. With no english threshold, we get a lot of phrases and names. ATEASE, OTOOLE, ELPASO, ASARULE, ATONCE, ATREST, ALSORAN, ALGORE, ONEDGE, ETALII, OREIDA, ONEONONE, INTOTO, EDASNER, LEERAT, ALDENTE. Once we hit threshold 10, these all seem like pretty decent words to me AVIATE, TSHIRT, OATERS, ELATES, ONTIME, EERIER, EGOTRIP, REESES, YESSIR, APTEST, SNORED, ONSALE, DESADE, TODATE, ALAMODE, EVILEYE, ICIEST, DOODAD. 100 are pretty good too AERATE, OMELET, SNEERS, NESTEA, RATATAT, DETENTE, HOWEVER, ESSENE, AGATES, LEANTO, EDERLE, ORNERY, ENTREE.</p>
 
     <p>One sort of neat thing we can do with keyness is to analyze subsets of crosswords against the whole corpus. We can use this to see, for example, if any words were key in a given year:</p>
@@ -529,55 +531,112 @@
     <p>One thing we can notice is that there are a few extremely peaky words, i.e. what are the words that have >= 10 uses in 4-5 years?</p>
 
     <p>I'd also like to look bulk at standard deviation of word use over time. The paper also looks at a couple "time to acceptance" metrics, one using std dev and one using amt of time taken to hit a given frequency. I wonder if we could do a double query for this, so like outer query gets birth/death dates and total usage numbers, inner query gets per-time-bin usage numbers.</p>
+  </section>
+
+  <section>
+    <h2>Letters</h2>
+
+    <p>It's become hard to ignore that letters play a central role in crossword answers. We don't need graphs to tell us that vowels, especially at the beginnings and ends of words, plus a handful of other letters like S, are really useful in constructing crosswords. But let's take a look anyway:</p>
+
+    <graph-loader data-id="letterCounts" data-src="api/figures/letterCounts">
+      <form is="query-param-form">
+        <label>dictionary words <input is="query-param-input" data-query-param="dictionary" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>The English data comes from a <a href="https://en.wikipedia.org/wiki/Letter_frequency">table, that I found on wikipedia</a>, of letter frequency in english texts. Big winners compared to English: A, E, L, P, R, S. Losers: D, F, H, I, T, U, W, Y. So in fact, we were kind of wrong. And it looks like scrabble makes the same (wrong) assumption we do about the usefulness of vowels. On the other hand, H is way more useful in normal English than it is in games. When we plot dictionary words, our winners are A, E, H, O, T -- these are letters that show up in the list of xw words more than they show up in the list of english words. Our losers of this category -- letters that don't appear as much in a crossword dictionary -- are C, G, I, N, S, U. Here's another way of looking at it:</p>
+
+    <graph-loader data-id="letterFrequencyComparison" data-src="api/figures/letterFrequencyComparison"></graph-loader>
+
+    <p>What does all this tell us? Well, there are some letters that show up more times in the puzzle than they do in english text (e.g. AELPRS). Of these some (AE) appear (relatively) more in the crossword dictionary than the english dictionary. These are the most valuable letters. Then there are some (LRS) that are in relatively fewer dictionary words, but still show up a lot. These letters are probably used in highly repeated words. Conversely, some letters (HT) are highly <em>un</em>repeated -- they show up in relatively rarely in the puzzle but they're in a disproportionately high number of dictionary words. And some letters (INU) are just less useful in crosswords than in english.</p>
+
+    <p>It's worth noting that when using our wikipedia corpus as the reference english corpus, the dictionary changes pretty significantly. A and H go to low relative frequency, S to high, for dictionary words.</p>
+
+    <p>As a brief aside, while we're on the topic of letters, we may be curious whether longer words have more vowels or something. Here's word length vs. vowels, histogram of word types. Not very helpful! Visually looks linear but slope less than 1?</p>
+
+    <graph-loader data-id="vowelsByLength" data-src="api/figures/vowelsByLength">
+      <form is="query-param-form">
+        <label>count tokens <input is="query-param-input" data-query-param="tokens" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>It's now our job to try to figure out how letters affect the corpus. One main way this happens is that letters that are easy to cross get used more often. A reasonable initial guess for a model might be: words with more vowels are more frequent. Note that we need to control for word length, which we already know affects frequency. Ideally we'd control for other factors, like semantic specificity, but that's a lot harder to do. Anyway, here's what that looks like.</p>
+
+    <graph-loader data-id="vowelCountFrequency" data-src="api/figures/vowelCountFrequency">
+      <form is="query-param-form">
+        <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="1" value="3"></label>
+        <label>sort by max frequency <input is="query-param-input" data-query-param="freqSort" type="checkbox"></label>
+        <label>log scale (needs reload) <input is="query-param-input" data-query-param="logScale" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>A quick note about my treatment of vowels. I ingore Y. Possibly I should not. Anyway, there's clearly some kind of relationship, but it doesn't really look like our characteristic zipfian power law curve. Maybe vowels is a little too simplistic. We could look at something that takes into account letter frequency. One option would be to make up our own custom letter frequency score (the one here gives 1 point for the most frequent word, and 1 point for every factor of 2 less frequent a letter is than that). Or we could use an out-of-the-box metric, like word's the scrabble score:</p>
+
+    <graph-loader data-id="letterScoreFrequency" data-src="api/figures/letterScoreFrequency">
+      <form is="query-param-form">
+        <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="1" value="3"></label>
+        <label>use scrabble score <input is="query-param-input" data-query-param="scrabbleScore" type="checkbox" checked></label>
+        <label>log scale (needs reload) <input is="query-param-input" data-query-param="logScale" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>This feels like it's getting a little closer! It's worth noting that the shape of this graph is highly reflective of the scoring function. In that way and in others, it's still a pretty simplistic view. Instead of looking just at total score, we should be looking at the placement of letters within the word. Here's what I mean. Let's look at the vowel <em>placement</em> across words of a given length.</p>
+
+    <graph-loader data-id="vowelPlacement" data-src="api/figures/vowelPlacement">
+      <form is="query-param-form">
+        <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="3" max="10" value="3"></label>
+        <label>per-letter <input is="query-param-input" data-query-param="byPosition" type="checkbox"></label>
+        <label>sort by tokens:types <input is="query-param-input" data-query-param="tokenTypeSort" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>The results here are a little hard to analyze, but here's what I think they mean. Let's say we have a dictionary of 100 3-letter words, and we also have 1000 3-letter crossword answers, each of which is a word in that dictionary. There are eight possible vowel placements for a 3-letter word: a vowel at the beginning (V--), a vowel in the middle (-V-), at the end (--V), first two letters are vowels (VV-), etc. This graph shows us that about a third of all 3-letter dictionary words have a vowel in the middle (-V-). Coincidentally, about a third of all 3-letter crossword answers <em>need</em> a vowel in the middle, based on the crosses. So there are about 333 answers, chosen from a pool of about 33 words, giving an average repetition of about 333/33 = ~10. On the other hand, only 8% of dictionary words start and end with a vowel (V-V), but 18% of answers need a word that starts and ends with a vowel. So the average repetition for that kind of word would be 180/8 = ~22. For all word lengths, vowels at the start and end have the highest ratio of tokens:types, and generally the lower types.</p>
+
+    <p>The graph also lets us look at "per-letter" placements, i.e. the number of words <em>total</em> that have a vowel at a given letter position, <em>regardless</em> of whether they have other vowels. This distribution should add up to more than 1, since some words have multiple vowels and so will be represented in both columns. The idea is: if you choose a word at random, how likely is it that you get a vowel at a given position (rather than: how likely is it that you choose a word with a given complete vowel/consonant placement).</p>
+
+    <p>Perhaps an easier way of saying all that would be: for a given vowel placement, the higher its "tokens" is, and the lower its "types", the more times we'll see words like that repeated on average. That's why words like ERA, ERE, ELI, ONE, ORE etc. top the most-frequent words chart. In fact, 18 of the top 20 most-frequent words all start and end with vowels. Here they are:</p>
+
+    <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers">
+      <form is="query-param-form">
+        <label>min word length <input is="query-param-input" data-query-param="wordLengthThresh" type="number" value="3"></label>
+      </form>
+    </table-loader>
+
+    <p>Okay, so it feels like we're onto something here. Letter placement is clearly important to word repetition. So let's see how it stacks up against our earlier graphs, in terms of zipfian distribtuion.</p>
+
+    <graph-loader data-id="vowelPlacementFrequency" data-src="api/figures/vowelPlacementFrequency">
+      <form is="query-param-form">
+        <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="3" max="10" value="3"></label>
+        <label>sort by max frequency <input is="query-param-input" data-query-param="freqSort" type="checkbox"></label>
+        <label>log scale (needs reload) <input is="query-param-input" data-query-param="logScale" type="checkbox"></label>
+      </form>
+    </graph-loader>
+
+    <p>Notice that, just like we'd expect, vowel placements with a larger number of word types (dictionary words) tend to have their words clustered in the low-frequency range, whereas the highest frequency words tend to have vowel placements with relatively shallow word pools. All of the words with the highest frequency start and/or end with a vowel. But at the same time, we don't see the curve we're looking for. Qualitatively, vowel placement seems to be a strong indicator for word frequency, but quantitatively scrabble score actually looked a little better.</p>
+
+    <p>One possible problem is that, when constructing a crossword, you'd never be choosing "any word with a -V- layout". You'd already have some of your crosses set, but probably not all, and maybe you'd be thinking "I need a three letter word that starts with BA and will set me up for an okay cross in the third letter." So rather than choosing any word from -V-, you'd really be choosing from a <em>subset</em> (because some letters are known) of the -V- (BAR, BAG) and -VV (BAO, BAE) pools.</p>
+
+    <p>Just to take a step back, let's reiterate our project. We've noticed that some words have an unusually high frequency in the puzzle. We've tried to fit that frequency to Zipf's law, and seen that our corpus is at best perhaps semi-zipfian both high and low frequency domains decrease frequency a little more slowly than zipf would predict, and the low range doesn't really have a great fit to a power law. We are trying to figure out what makes that characteristic curve. We've looked at similar explanations in the literature and found that word meaning possibly makes a difference. In our own corpus, that could relate to ease of cluing and ease of guessing, and is borne out by the fact that some of the weirder, less-normal-word-y fill has high <em>keyness</em>, but not necessarily high raw frequency. We've interrogated our own data and found that certain word and letter characteristics also play a role. Here's a preliminary list of factors.</p>
+
+    <h4>Factors in word frequency</h4>
+    <ul>
+      <li>Semantic specificity (Zipf's Law literature)</li>
+      <li>Word length (Brevity law) (possibly square because of affected area)</li>
+      <li>Letter content by some frequency score</li>
+      <li>Letter placement</li>
+      <li>Construction logic/patterns</li>
+    </ul>
+
+    <p>Our hope is to find some way to model all these factors, and to validate that model by reproducing our characteristic rank-frequency curve.</p>
+
+    <p>
+      Here's where I start brainstorming how to do that. There are a couple ways we could do this. Either
+        A. come up with some iterative model of generating a corpus from token/type restrictions, i.e. "we need a word of X length with Y letters/distribution"
+        B. come up with some metric that combines all of these, and show that it follows the same characteristic rank-metric curve.
+    </p>
 
     <p>
       A couple midnight thought notes:
-        0. MAKE MENTION OF official nyt rules, like max word count and rotational symmetry
-        1. Need to analyze what other things are factors in word frequency!
-          - letters
-          - scrab. score
-          - vowel placement
-          - ???
-        2. Then, once found ^those things, should see if we can simulate them to reconstruct zipf curve
-          - e.g. JUST sampling tokens (high 2-5) over types (high ~7)
-          - e.g. split into vowel placement categories & sample
-          - argument: probably SOME semantic factor, although maybe not bc there's some real bullshit out there, and then probably some letter/structure/length factor
-          - to do this properly, we should really take into account how constructers work?
-            - best way:
-              1. take a dictionary of words with en letter freq dist
-              2. pick some long words
-              3. auto-fill (???)
-            - but I'm not convinced this is enough of a _model_. We may want something a bit more distilled and mathematical?
-              - Maybe this is a graph problem?
-              - it's pretty clear that PARALLEL words end up dictating the grid in a lot of ways.
-              - Could we...
-            - model by letter frequency
-              1. build grid with word sizes based on xw word size distribution (controlled) OR compared to crossing difficulty vs word length?
-              2. fill in the grid according: for each square, pull a letter sample from en letter frequency distribution (do/don't take into account word length & position)
-              - Obviously the relationship between grid and size distribution is little more complex, but maybe we can show that they're pretty closely tied
-            - model by crossing difficulty
-              1. come up with a length vs crossing difficulty metric & distribution
-              2. pick the number of clues in the puzzle
-              3. sample answer length based on length vs difficulty distribution
-              4. for each answer, fill with letter distribution words
-            - THEN look at
-              - letter frequency
-              - vowel distribution
-              - word frequency
-              - word length
-        2.5. Difficulty of crossing
-          - We know it's harder to make crosses for longer words
-          - Maybe we can quantify the difficulty to cross a word as having a few factors:
-            1. Length of word
-              - Crossing with more words will alwyas be harder
-            2. Length of crosses
-              2A. Frequency -- there are the most 7 letter dictionary words, etc.
-              2B. Affected area -- the longer your crosses are, the more crosses THOSE crosses have to make
-            3. Letter distribution
-              - More common letters will be easier to cross
-        3. Clearly need to do some sort of letter content analysis
-          - for a start, try graphing en letter freq vs. xw letter freq vs. scrabble score
-          - try also grphing vowel placement
         7. Bad fill analysis
           A. Pick some bad fill words
           B. Get stats on them
@@ -612,7 +671,7 @@
   <section>
     <h2>Methodology notes</h2>
   </section>
-  <script src="js/lib/plotly-latest.min.js"></script>
+  <script src="js/lib/plotly-latest.min.js.br"></script>
   <script src="js/graph-loader.js"></script>
   <script src="js/table-loader.js"></script>
   <script src="js/graph-log-axis-checkbox.js"></script>

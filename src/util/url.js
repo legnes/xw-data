@@ -16,4 +16,8 @@ url.cleanNumber = (str, defaultVal) => {
   return isNaN(val) ? defaultVal : val;
 };
 
+url.cleanBoolean = (val) => {
+  return val === 'true';
+}
+
 module.exports = url;

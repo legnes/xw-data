@@ -1,8 +1,17 @@
 .DS_Store
+
+# application
 .env
 node_modules/
+
+# data
 puzzles/
 *.dump
 notes.md
+
+# script util dirs
 scripts/temp/
 scripts/cookies/
+
+# precompressed lib src
+src/public/js/lib/src/

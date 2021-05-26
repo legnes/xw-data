@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<%- include('./partials/head'); %>
+<body>
+  <%- include('./partials/header'); %>
+  <h2>About Crosswords and This Article</h2>
+
+  <p>Intro intro intro</p>
+
+  <% if (articles && articles.length > 0) { %>
+    <ul>
+      <% articles.forEach((article) => { %>
+        <li><a href="/<%= article %>"><%= article %></a></li>
+      <% }); %>
+    </ul>
+  <% } %>
+</body>
+</html>

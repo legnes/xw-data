@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<%- include('./partials/head', { title }); %>
+<body>
+  <%- include('./partials/header'); %>
+  <h2><%= title %></h2>
+  <p><em>This post is part of a series on <a href="/">crossword puzzles and language</a>.</em></p>
+  <% if (article) { %>
+    <%- include(`./articles/${article}`); %>
+  <% } %>
+  <%- include('./partials/scripts'); %>
+</body>
+</html>
