@@ -14,6 +14,7 @@ class TableLoader extends HTMLElement {
 
     // Content
     const shadowContainer = document.createElement('div');
+    shadowContainer.id = this.getAttribute('data-id');
     this.prepend(shadowContainer);
     const shadow = shadowContainer.attachShadow({mode: 'open'});
 

@@ -196,16 +196,16 @@ analysis.decorrelatedRankFrequencyAnalysis = (rows, opts = {}) => {
       y: highFrequencyFitLogFrequencies,
       type: 'scatter',
       mode: 'lines',
-      // name: `Zipf's law high frequency domain, k=${Math.exp(highFrequencyFit.equation[1]).toPrecision(3)} a=${-highFrequencyFit.equation[0].toPrecision(3)} r2=${highFrequencyFit.r2.toPrecision(3)}`
-      name: `k=${Math.exp(highFrequencyFit.equation[1]).toPrecision(2)} a=${-highFrequencyFit.equation[0].toPrecision(2)} r2=${highFrequencyFit.r2.toPrecision(2)}`
+      // name: `Zipf's law high frequency domain, k=${Math.exp(highFrequencyFit.equation[1]).toPrecision(3)} α=${-highFrequencyFit.equation[0].toPrecision(3)} r2=${highFrequencyFit.r2.toPrecision(3)}`
+      name: `α=${-highFrequencyFit.equation[0].toPrecision(2)} r2=${highFrequencyFit.r2.toPrecision(2)}`
     },
     lowFrequencyFit: {
       x: lowFrequencyLogRankRange,
       y: lowFrequencyFitLogFrequencies,
       type: 'scatter',
       mode: 'lines',
-      // name: `Zipf's law low frequency domain, k=${Math.exp(lowFrequencyFit.equation[1]).toPrecision(3)} a=${-lowFrequencyFit.equation[0].toPrecision(3)} r2=${lowFrequencyFit.r2.toPrecision(3)}`
-      name: `k=${Math.exp(lowFrequencyFit.equation[1]).toPrecision(2)} a=${-lowFrequencyFit.equation[0].toPrecision(2)} r2=${lowFrequencyFit.r2.toPrecision(2)}`
+      // name: `Zipf's law low frequency domain, k=${Math.exp(lowFrequencyFit.equation[1]).toPrecision(3)} α=${-lowFrequencyFit.equation[0].toPrecision(3)} r2=${lowFrequencyFit.r2.toPrecision(3)}`
+      name: `α=${-lowFrequencyFit.equation[0].toPrecision(2)} r2=${lowFrequencyFit.r2.toPrecision(2)}`
     },
     errors: {
       x: logRanks,

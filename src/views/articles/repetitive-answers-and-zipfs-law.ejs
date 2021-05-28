@@ -1,0 +1,92 @@
+<p>In this section we'll look into just how common the most common crossword answers really are. There's a <em>ton</em> of writing about Zipf's law out there, more than I could possibly read through. But I did get a lot out of <em>Zipf’s word frequency law in natural language: A critical review and future directions</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of Zipf's law -- different formulations, fields of applicability, some theorized explanations from the literature, and the shortcomings of those explanations.</p>
+
+<h3>Answer repetition</h3>
+
+<p>Certain words are especially useful when constructing a crossword, and they appear frequently in puzzles. Sometimes as solvers we'll complain that we see such "<a href="https://en.wikipedia.org/wiki/Crosswordese">crosswordese</a>" over and over again. There's no doubt certain answers show up a lot, and I know as well as anyone that it can be frustrating. But I think it's worth taking a look at <em>just how common</em> crosswordese really is.</p>
+
+<h3>Zipf's law</h3>
+
+<p>If crossword answers are like english, or really any language at all, the most common word should be much much more common than, say, the 100<sup>th</sup> most common word. Word frequency is distributed unequally. A very small fraction of the words in the dictionary make up a very large fraction of the words we speak or write.</p>
+
+<p>Let's say we have a language corpus whose most common word is THE, which shows up 120 times. For most languages, the next most common word in the corpus would only appear <em><sup>120</sup>&frasl;<sub>2</sub> =</em> 60 times. The third-place word will appear <em><sup>120</sup>&frasl;<sub>3</sub> =</em> 40 times, fourth-place <em><sup>120</sup>&frasl;<sub>4</sub> =</em> 30 times, and so on and so on.</p>
+
+<p>Or at least, that's what George Kingsley Zipf proposed in the 1930s. His idea, with some modifications, has not only stuck but spread. It's been used to describe word frequencies, city populations, wealth distribution, you name it.<!-- There's a lot of nuance and at times disagreement about what mathematical form it should take, how it should be visualized, how error analysis applies to it, and most of all, endlessly, what causes it. --> Anything you can <em>rank</em>. The most frequent word in a corpus has rank one, the second-most frequent word has rank two, third-place has rank three, and so on. Zipf's law says that the rank <em>r</em><sup>th</sup> most frequent word will have a frequency <em>f</em> that is a negative power law function of its rank. In other words:</p>
+
+<p><em>f(r) = <sup>k</sup>&frasl;<sub>r<sup>α</sup></sub></em></p>
+
+<p>for some normalizing constant <em>k</em>. For languages, you'd usually expect α to have a value around 1. Here's the rank-frequency graph for the top 100,000 most-frequent words in the english wikipedia corpus:</p>
+
+<graph-loader data-id="rankFrequencyEn" data-src="api/figures/rankFrequencyEn">
+  <graph-log-axis-checkbox data-checked="true"></graph-log-axis-checkbox>
+</graph-loader>
+
+<p>Great, we got an α close to one! And the frequencies look almost linear on logarithmic axes. That's a good sign too. If you take the Zipf equation</p>
+
+<p><em>f(r) = <sup>k</sup>&frasl;<sub>r<sup>α</sup></sub></em></p>
+
+<p>and apply logs, you get</p>
+
+<p><em>log(f(r)) = -αlog(r) + log(k)</em></p>
+
+<p>which is just a linear equation <em>y = mx + b</em> where:</p>
+
+<ul>
+  <li><em>y = log(frequency)</em></li>
+  <li><em>x = log(rank)</em></li>
+  <li><em>m = log(α)</em> and</li>
+  <li><em>b = log(k)</em></li>
+</ul>
+
+<p>It's a simple and common approach to fitting Zipf's law: run a linear regression on the log of the data. That's how we got the fit on the graph above. So easy!</p>
+
+<h3>Complications with zipf's law</h3>
+
+<p>Of course, it's not that easy. You may have noticed that the fit line doesn't actually match the data very well for the first thousand or so words. In fact, a simple power law doesn't quite cut it. There have been a host of proposed distributions for a more refined version of Zipf's law, among them log-normal, Yule-Simon, and Mandelbrot's generalization of Zipf's law <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> <a href="https://scholar.google.com/scholar_lookup?title=Word+frequency+distributions&author=R+Baayen&publication_year=2001&">[REF]</a>. Others hve proposed fitting <em>two separate power laws</em>, one for the high-rank domain (ranks one, two, three, etc.) and one for the low-rank domain <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">[REF]</a> <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">[REF]</a></em>.</p>
+
+<p>You may also have noticed that the fit line matches the last 98,000 or so words suspiciously well. That's probably in part because of inherent correlation in rank-frequency graphs like this one <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]?</a>. Since frequency is what actually <em>determines</em> rank, our plot of frequency vs. rank is <em>guaranteed</em> to monotonically descend. Maybe it just looks like something meaningful when nothing meaningful is going on.</p>
+
+<p>Here's the rank-frequency graph for the top 500,000 most-frequent words in the english wikipedia corpus, only this time decorrelated and with an adjusted fit. For more on how this works, check out "<a href="#statisticlNotes">Statistical notes</a>" down below.</p>
+
+<graph-loader data-id="decorrelatedRankFrequencyEn" data-src="api/figures/decorrelatedRankFrequencyEn"></graph-loader>
+
+<p>This is just what we'd expect from a near-Zipfian distribution. The high-rank domain on the left fits a power law function very well, with α near one. The low-rank domain on the right fits a steeper power law function, and begins to fan out due to statistical uncertainty.</p>
+
+<h3>Crossword rank-frequency</h3>
+
+<p>What does any of this have to do with crosswords? Let's take a look at the rank-frequency distribution:</p>
+
+<graph-loader data-id="decorrelatedRankFrequency" data-src="api/figures/decorrelatedRankFrequency"></graph-loader>
+
+<p>Now we're working with a lot less data, but even so it's a pretty bad fit to Zipf's law. Most notably, the high-rank domain falls off quite slowly, with an α far below one. There are two possible interpretatios. Either crosswords have a lot more repetition in their mid-rank words, or the high-rank words <em>aren't actually that frequent</em>, relatively speaking.</p>
+
+<p>Here are two things to consider. First, repeating an answer <em>within</em> a puzzle is frowned upon. In english, "the" could appear hundreds of times on a single page of a book, but crossword answers have a cap on usage density. Second, when you build a crossword, you're not <em>trying</em> to fill your grid with crosswordese. There's something about the way words and letters interact with the grid that just makes it hard to avoid sometimes, but with effort you can keep it to a minimum.</p>
+
+<p>With that in mind, I favor the latter interpretation, that high-rank words have relatively low frequencies. If crosswords were more like normal english, answers of ERA, AREA, ERE, and, ELI would actually be <em>way, way more common</em>. So let's take a moment to appreciate our constructors. Thank you for making our crosswords sub-Zipfian ❤️.</p>
+
+<h3>Semantics</h3>
+
+<p>It seems pretty likely that word meaning plays a role in Zipf's law. Here's one way to think about it. Some words are so vague that they aren't actually all that useful day-to-day. You don't go around saying "why did the entity cross the travelled way?". On the other hand, highly specific words that can be very useful are often not relevant. Words that apply in a medium range of contexts are more likely to be used often <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987">[REF]</a>.</p>
+
+<p>Another way to see how meaning affects frequency is by comparing words with related meanings. It turns out that in many languages, lower numbers are used more frequently than higher ones <a href="https://pubmed.ncbi.nlm.nih.gov/1591901/">[REF]</a>. We can compare crosswords to english with a special rank-frequency plot. To decorrelate the data, we can use ranks based on english frequency and frequencies drawn from the crossword corpus. The more monotonic the graph, the more similar numerical word ranks are between the two.</p>
+
+<graph-loader data-id="rankFrequencyNumericals" data-src="api/figures/rankFrequencyNumericals">
+  <graph-log-axis-checkbox></graph-log-axis-checkbox>
+</graph-loader>
+
+<p>When talking about crosswordese, we tend to make a big deal out of answer length, vowel counts, etc. But <em>meaning</em> -- things like semantic specificity -- must play a role too! Words like THIS, THEIR, and BEING are uncommon crossword answers in part because they're so darn bad to clue. It's the <em>puzzle</em> part of "crossword puzzle".</p>
+
+<h3 id="statisticlNotes">Statistical notes</h3>
+
+<p>Like I said, there's a lot of writing out there about Zipf's law. I wanted to mention a couple details that didn't fit in the main post above.</p>
+
+<p>First, a fun tie-in. It turns out you can formulate Zipf's law in relation to the joint probability mass function of type length and frequency <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">[REF]</a> <a href="https://arxiv.org/abs/1412.4577">[REF]</a>:</p>
+
+<p><em>Q(j) = kj<sup>-β</sup></em></p>
+
+<p>where <em>Q(j)</em> is the probability a given word is in the corpus <em>j</em> times, <em>k</em> is some constant, and <em>β</em> is about 2. This is exactly the same as the frequency marginal distribution discussed in the post on <a href="/common-answers-and-word-length#pmf">the brevity law</a>!</p>
+
+<p>Second, an excuse. I opted for using the two-domain power law to fit Zipf's law because it was easy with the regression library I'm using. In theory you could fit the Zipf-Mandelbrot equation by running regressions for multiple trial values of β and maximize some fit or likeliness function. If you want to learn more, there are some resources out there <a href="https://volweb.utk.edu/~scolli46/zipfmandelbrotmc.html">[REF]</a> <a href="https://www.researchgate.net/publication/220364507_Some_practical_aspects_of_fitting_and_testing_the_Zipf-Mandelbrot_model">[REF]</a>. Also I chose the domain split rank arbitrarily.</p>
+
+<p>Third, I wanted to explain a little more about how to decorrelate rank-frequency. Decorrelated data can only come from <em>two separate corpora</em>. If you plot rank from corpus A against frequency from corpus B, you're no longer guaranteed to get a monotonically-descending rank-frequency. That's how the numerical words comparison worked above. If you've only got one corpus, you have to randomly split it in two. In practice, for each word, you can use its original frequency as the characteristic <em>n</em> value of a binomial distribution with <em>p = 0.5</em>, then sample that distribution to get a value <em>V</em>. The word's new frequencies for your split corpora A and B are <em>V</em> and <em>original frequency - V</em>. It amounts to the same thing running through each instance of the word and assigning it to one or the other split corpus on a coin flip.</p>
+
+<p>If you're still reading, thanks for sticking it out all the way to the end! That's all for this post.</p>

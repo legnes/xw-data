@@ -37,6 +37,7 @@ class GraphLoader extends HTMLElement {
     const graphContainer = document.createElement('div');
     graphContainer.className = 'graph-container';
     graphContainer.id = this.getAttribute('data-id');
+    this.parentNode.insertBefore(graphContainer, this);
 
     // variables for reloading
     this.target = graphContainer
@@ -52,8 +53,6 @@ class GraphLoader extends HTMLElement {
       if (figure.layout) this.setLayout(figure.layout);
       if (figure.config) Object.assign(this.config, figure.config);
       this.renderData(figure);
-      this.parentNode.insertBefore(graphContainer, this);
-      // this.parentNode.removeChild(this);
       shadow.removeChild(loaderContainer);
     }
     button.addEventListener('click', handleButton);

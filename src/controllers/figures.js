@@ -434,7 +434,7 @@ GROUP BY answer;
       rows: data.rows.slice(0, 100),
       columns: [
         { label: 'answer', key: 'answer'},
-        { label: 'difference in relative frequencies', key: 'frequencyDiff'},
+        { label: 'difference in relative frequency', key: 'frequencyDiff'},
         { label: 'crossword frequency', key: 'xwFrequency'},
         { label: 'english corpus frequency', key: 'enFrequency'},
       ],
@@ -468,6 +468,7 @@ GROUP BY answer;
       const combinedTotal = xwTotal + enTotal;
       const xwNormalizedFrequency = xwFrequency / xwTotal;
       const enNormalizedFrequency = enFrequency/ enTotal;
+
       const logRatio = Math.log2(xwNormalizedFrequency / enNormalizedFrequency);
       const differenceCoefficient = (xwNormalizedFrequency - enNormalizedFrequency) / (xwNormalizedFrequency + enNormalizedFrequency);
       const xwExpectedValue = xwTotal * combinedFrequency / combinedTotal;
@@ -538,63 +539,60 @@ LIMIT 40;
 };
 
 figures.keynessPerYear = (req, res, next) => {
-  const queries = [promiseQuery(`
-SELECT
-  answer,
-  COUNT(*) frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
-GROUP BY answer;`
-  )];
-  for (let i = START_YEAR; i <= END_YEAR; i++) {
-    queries.push(promiseQuery(`
+  db.query(`
 SELECT
   answer,
   COUNT(*) frequency,
   DATE_TRUNC('year', p.date) as year
 FROM clues
 INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '${i}-01-01' AND '${i}-12-31'
-GROUP BY answer, year;`
-    ));
-  }
-  Promise.all(queries).then((results) => {
-    const totals = results.map((yearlyCounts) => yearlyCounts.reduce((total, yearlyCount) => (total + +yearlyCount.frequency), 0));
-    const allTimeCountsByWord = results.shift().reduce((countsByWord, wordCount) => {
-      countsByWord[wordCount.answer] = +wordCount.frequency;
-      return countsByWord;
-    }, {});
-    const allTimeTotal = totals.shift();
-    for (const yearIndex in results) {
-      const yearlyCounts = results[yearIndex];
-      for (const yearlyCount of yearlyCounts) {
-        const yearlyFrequency = +yearlyCount.frequency;
-        const yearlyTotal = +totals[yearIndex];
-        const allTimeFrequency = allTimeCountsByWord[yearlyCount.answer] || 1e-15;
-        const combinedFrequency = yearlyFrequency + allTimeFrequency;
-        const combinedTotal = yearlyTotal + allTimeTotal;
-        const yearlyNormalizedFrequency = yearlyFrequency / yearlyTotal;
-        const allTimeNormalizedFrequency = allTimeFrequency/ allTimeTotal;
-        const logRatio = Math.log2(yearlyNormalizedFrequency / allTimeNormalizedFrequency);
-        const differenceCoefficient = (yearlyNormalizedFrequency - allTimeNormalizedFrequency) / (yearlyNormalizedFrequency + allTimeNormalizedFrequency);
-        const yearlyExpectedValue = yearlyTotal * combinedFrequency / combinedTotal;
-        const allTimeExpectedValue = allTimeTotal * combinedFrequency / combinedTotal;
-        const logLikelihoodG2 = 2 * (yearlyFrequency * Math.log(yearlyFrequency / yearlyExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
-        const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
-        yearlyCount.allTimeFrequency = allTimeFrequency;
-        yearlyCount.logRatio = logRatio.toFixed(2);
-        yearlyCount.differenceCoefficient = differenceCoefficient.toFixed(2);
-        yearlyCount.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
-        yearlyCount.bayesFactor = bayesFactor.toFixed(2);
-        yearlyCount.year = new Date(yearlyCount.year).getFullYear()
-        // console.log(yearlyFrequency, yearlyTotal, allTimeFrequency, allTimeTotal, logLikelihoodG2, bayesFactor, logRatio);
-      }
-      results[yearIndex] = yearlyCounts.filter((result) => result.bayesFactor > 2).sort((a, b) => Math.abs(b.logRatio) - Math.abs(a.logRatio));
+WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
+GROUP BY answer, year;
+`, (err, data) => {
+    const allTimeWordCounts = {};
+    let allTimeTotal = 0;
+    const yearlyTotals = {};
+
+    for (const row of data.rows) {
+      const frequency = +row.frequency;
+      const year = new Date(row.year).getFullYear();
+
+      addInto(allTimeWordCounts, row.answer, frequency);
+      allTimeTotal += frequency;
+      addInto(yearlyTotals, year, frequency);
+
+      row.frequency = frequency;
+      row.year = year;
     }
 
+    for (const row of data.rows) {
+      const yearFrequency = row.frequency;
+      const yearTotal = yearlyTotals[row.year];
+      const allTimeFrequency = allTimeWordCounts[row.answer] || 1e-15;
+      const combinedFrequency = yearFrequency + allTimeFrequency;
+      const combinedTotal = yearTotal + allTimeTotal;
+      const yearNormalizedFrequency = yearFrequency / yearTotal;
+      const allTimeNormalizedFrequency = allTimeFrequency/ allTimeTotal;
+
+      const logRatio = Math.log2(yearNormalizedFrequency / allTimeNormalizedFrequency);
+      const differenceCoefficient = (yearNormalizedFrequency - allTimeNormalizedFrequency) / (yearNormalizedFrequency + allTimeNormalizedFrequency);
+      const yearExpectedValue = yearTotal * combinedFrequency / combinedTotal;
+      const allTimeExpectedValue = allTimeTotal * combinedFrequency / combinedTotal;
+      const logLikelihoodG2 = 2 * (yearFrequency * Math.log(yearFrequency / yearExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
+      const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+      row.allTimeFrequency = allTimeFrequency;
+      row.logRatio = logRatio.toFixed(2);
+      row.differenceCoefficient = differenceCoefficient.toFixed(2);
+      row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
+      row.bayesFactor = bayesFactor.toFixed(2);
+    }
+
+    const rows = data.rows.filter((row) => row.bayesFactor > 2)
+                          .sort(numSortBy('logRatio', true))
+                          .sort(numSortBy('year', false));
+
     const figure = {
-      rows: results.flat(),
+      rows,
       columns: [
         { label: 'year', key: 'year'},
         { label: 'answer', key: 'answer'},
@@ -610,6 +608,174 @@ GROUP BY answer, year;`
     res.json(figure);
   });
 };
+
+figures.rankFrequencyEn = (req, res, next) => {
+  let rows = WIKI_CORPUS.wordFrequencyRows;
+  rows = rows.sort((a, b) => (b.frequency - a.frequency)).slice(0, 100000);
+  const corpusSize = WIKI_CORPUS.totalWordTokens;
+
+  const ranks = [], frequencies = [], logFrequencySeries = [];
+  for (let i = 0, len = rows.length; i < len; i++) {
+    const rank = i + 1;
+    const frequency = +rows[i].frequency;
+    ranks.push(rank);
+    frequencies.push(frequency);
+    logFrequencySeries.push([ Math.log(rank), Math.log(frequency / corpusSize) ])
+  }
+  const fit = linear(logFrequencySeries, { precision: 12 });
+  const fitFrequencies = ranks.map(rank => (corpusSize * Math.exp(fit.predict(Math.log(rank))[1])));
+
+  const dataTrace = {
+    x: ranks,
+    y: frequencies,
+    text: rows.map(row => row.word),
+    type: 'scatter',
+    mode: 'lines',
+    name: `frequencies`
+  };
+
+  const fitTrace = {
+    x: ranks,
+    y: fitFrequencies,
+    type: 'scatter',
+    mode: 'lines',
+    name: `fit α=${-fit.equation[0].toPrecision(3)} r2=${fit.r2.toPrecision(3)}`
+  };
+
+  const layout = {
+    xaxis: { title: { text: 'rank' }},
+    yaxis: { title: { text: 'frequency' }}
+  };
+
+  const figure = { data: [ dataTrace, fitTrace ], layout };
+  res.json(figure)
+};
+
+figures.decorrelatedRankFrequencyEn = (req, res, next) => {
+  let rows = WIKI_CORPUS.wordFrequencyRows;
+  rows = rows.sort((a, b) => (b.frequency - a.frequency)).slice(0, 500000);
+  const {
+    rankFrequency,
+    highFrequencyFit,
+    lowFrequencyFit
+  } = analysis.decorrelatedRankFrequencyAnalysis(rows, { domainSplitRank: 500 });
+
+  const layout = {
+    xaxis: { title: { text: 'log rank' }},
+    yaxis: { title: { text: 'log frequency' }}
+  };
+
+  const figure = { data: [ rankFrequency, highFrequencyFit, lowFrequencyFit ], layout };
+  res.json(figure)
+};
+
+figures.decorrelatedRankFrequency = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer
+ORDER BY frequency DESC, answer;
+`, (err, data) => {
+    if (err) return next(err);
+    const {
+      rankFrequency,
+      highFrequencyFit,
+      lowFrequencyFit
+    } = analysis.decorrelatedRankFrequencyAnalysis(data.rows, { domainSplitRank: 500 });
+
+    const layout = {
+      xaxis: { title: { text: 'log rank' }},
+      yaxis: { title: { text: 'log frequency' }}
+    };
+
+    const figure = { data: [ rankFrequency, highFrequencyFit, lowFrequencyFit ], layout };
+    res.json(figure)
+  });
+};
+
+figures.rankFrequencyNumericals = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer
+ORDER BY frequency DESC, answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    const numberRows = english.NUMERICAL_WORDS.map((word) => ({ word, frequency: WIKI_CORPUS.wordFrequencies[word]})).sort(numSortBy('frequency', true));
+
+    const frequencies = data.rows.reduce((freqs, row) => {
+      if (english.NUMERICAL_WORDS.includes(row.answer)) {
+        freqs[row.answer] = +row.frequency;
+      }
+      return freqs;
+    }, {});
+
+    const dataTrace = {
+      x: numberRows.map((row, idx) => (idx + 1)),
+      y: numberRows.map((row) => frequencies[row.word]),
+      text: numberRows.map((row) => row.word),
+      type: 'scatter',
+      mode: 'markers+lines',
+    };
+
+    const layout = {
+      xaxis: { title: { text: 'english rank' }},
+      yaxis: { title: { text: 'crossword frequency' }}
+    };
+
+    const figure = { data: [ dataTrace ], layout };
+    res.json(figure)
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 figures.rankFrequency = (req, res, next) => {
   db.query(`
@@ -664,68 +830,10 @@ ORDER BY frequency DESC, answer;
       y: swadeshRows.map((row) => frequencies[row.word]),
       text: swadeshRows.map((row) => row.word),
       type: 'scatter',
-      mode: 'markers',
-    };
-
-    const figure = { data: [ dataTrace ], layout: {} };
-    res.json(figure)
-  });
-};
-
-figures.rankFrequencyNumericals = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer
-ORDER BY frequency DESC, answer;
-`, (err, data) => {
-    if (err) return next(err);
-
-    const numberRows = english.NUMERICAL_WORDS.map((word) => ({ word, frequency: WIKI_CORPUS.wordFrequencies[word]})).sort(numSortBy('frequency', true));
-
-    const frequencies = data.rows.reduce((freqs, row) => {
-      if (english.NUMERICAL_WORDS.includes(row.answer)) {
-        freqs[row.answer] = +row.frequency;
-      }
-      return freqs;
-    }, {});
-
-    const dataTrace = {
-      x: numberRows.map((row, idx) => (idx + 1)),
-      y: numberRows.map((row) => frequencies[row.word]),
-      text: numberRows.map((row) => row.word),
-      type: 'scatter',
       mode: 'markers+lines',
     };
 
     const figure = { data: [ dataTrace ], layout: {} };
-    res.json(figure)
-  });
-};
-
-figures.decorrelatedRankFrequency = (req, res, next) => {
-  db.query(`
-SELECT
-  answer,
-  COUNT(*) AS frequency
-FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer
-ORDER BY frequency DESC, answer;
-`, (err, data) => {
-    if (err) return next(err);
-    const {
-      rankFrequency,
-      highFrequencyFit,
-      lowFrequencyFit
-    } = analysis.decorrelatedRankFrequencyAnalysis(data.rows, { domainSplitRank: 500 });
-
-    const figure = { data: [ rankFrequency, highFrequencyFit, lowFrequencyFit ], layout: {} };
     res.json(figure)
   });
 };
@@ -751,55 +859,6 @@ ORDER BY frequency DESC, answer;
     const figure = { data: [ errors, highFrequencyZeroErrorLine, lowFrequencyZeroErrorLine ], layout: {} };
     res.json(figure)
   });
-};
-
-figures.rankFrequencyEn = (req, res, next) => {
-  let rows = WIKI_CORPUS.wordFrequencyRows;
-  rows = rows.sort((a, b) => (b.frequency - a.frequency));//.slice(0, 200000);
-  const corpusSize = WIKI_CORPUS.totalWordTokens;
-
-  const ranks = [], frequencies = [], logFrequencySeries = [];
-  for (let i = 0, len = rows.length; i < len; i++) {
-    const rank = i + 1;
-    const frequency = +rows[i].frequency;
-    ranks.push(rank);
-    frequencies.push(frequency);
-    logFrequencySeries.push([ Math.log(rank), Math.log(frequency / corpusSize) ])
-  }
-  // TODO: use logarithmic instead of linear???
-  const fit = linear(logFrequencySeries, { precision: 12 });
-  const fitFrequencies = ranks.map(rank => (corpusSize * Math.exp(fit.predict(Math.log(rank))[1])));
-
-  const dataTrace = {
-    x: ranks,
-    y: frequencies,
-    text: rows.map(row => row.word),
-    type: 'scatter',
-    mode: 'lines',
-    name: 'Raw frequencies'
-  };
-
-  const fitTrace = {
-    x: ranks,
-    y: fitFrequencies,
-    type: 'scatter',
-    mode: 'lines',
-    name: `Zipf's law fit, k=${Math.exp(fit.equation[1]).toPrecision(3)} a=${-fit.equation[0].toPrecision(3)} r2=${fit.r2.toPrecision(3)}`
-  };
-
-  const figure = { data: [ dataTrace, fitTrace ], layout: {} };
-  res.json(figure)
-};
-
-figures.decorrelatedRankFrequencyEn = (req, res, next) => {
-  const {
-    rankFrequency,
-    highFrequencyFit,
-    lowFrequencyFit
-  } = analysis.decorrelatedRankFrequencyAnalysis(WIKI_CORPUS.wordFrequencyRows, { domainSplitRank: 5000 });
-
-  const figure = { data: [ rankFrequency, highFrequencyFit, lowFrequencyFit ], layout: {} };
-  res.json(figure)
 };
 
 figures.decorrelatedRankFrequencyErrorEn = (req, res, next) => {
