@@ -32,7 +32,9 @@ class QueryParamForm extends HTMLFormElement {
         if (!(grandchild instanceof QueryParamInput)) continue;
         const queryParam = grandchild.getAttribute('data-query-param');
         const queryValue = grandchild.queryValue;
-        queryTerms.push(`${queryParam}=${queryValue}`);
+        if (queryValue !== null) {
+          queryTerms.push(`${queryParam}=${queryValue}`);
+        }
       }
     }
     return queryTerms.join('&');

@@ -1,4 +1,4 @@
-<p>Let's take a look at how word length plays a role in which answers get repeated.</p>
+<p>TODO: come up with a point! Let's take a look at how word length plays a role in which answers get repeated.</p>
 
 <h3>Frequent crossword Answers</h3>
 
@@ -58,7 +58,7 @@
 
 <p>You can hide and show different lines using the legend. One of Corral and Serra's key observations is that these conditional probability distributions are roughly the same shape. If I'm understanding right, they use a scaling analysis to come up with a number that describes how the shapes relate to one another. That number is one way to quantify the brevity law. Really I ought to run a scaling analysis on the crossword data too, but just by eyeballing it, things look a little wrong. In particular, the low-frequency domain scales differently than the high. As length increases, the y-intercept goes up, while the x-intercept goes down. This makes a lot of sense to me, and I think maybe the reason it isn't addressed in the paper is that they largely ignore the < 10 frequency domain. Anyway, I'd love to dig into this analysis a little more but I think it's outside our scope for now. Do reach out if you have thoughts!</p>
 
-<p>One last note: the authors also talk about the PMF's <em>marginal</em> distributions, which end up being pretty helpful for understanding what's going on with the brevity law. Marginals are the sum probability for each variable. The frequency marginal basically reduces to Zipf's Law, which you can read more about <a href="/repetitive-answers-and-zipfs-law#statisticalNotes">in its own post</a>! The length marginal is the sum of the PMF across all frequencies for each length. In other words, how likely it is to pick an answer of a given length:</p>
+<p>One last note: the authors also talk about the PMF's <em>marginal</em> distributions, which end up being pretty helpful for understanding what's going on with the brevity law. Marginals are the sum probability for each variable. The frequency marginal basically reduces to Zipf's Law, which you can read more about <a href="/how-common-is-era#statisticalNotes">in its own post</a>! The length marginal is the sum of the PMF across all frequencies for each length. In other words, how likely it is to pick an answer of a given length:</p>
 
 <graph-loader data-id="lengthFrequencyPmfLengthMarginal" data-src="api/figures/lengthFrequencyPmfLengthMarginal">
   <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
@@ -66,7 +66,7 @@
 
 <p>It turns out this is a pretty commonly examined distribution in its own right. But before we can talk about it, we need to define a couple of terms.</p>
 
-<h3>Tokens and types</h3>
+<h3 id="tokensAndTypes">Tokens and types</h3>
 
 <p>Ok so when we talk about "picking an answer" from the corpus, it's not actually so simple. You can count answers two different ways -- either the <em>total</em> number of answers with length, say, four, OR the number of different <em>distinct words</em> with length four that show up as answers. Do you count OLEO 245 times or just once? You'll hear a range of terms for these concepts, like word "occurrences" (total) vs. "dictionary" words (distinct), or "tokens" (total) vs. "types" (distinct). Here's a graph of tokens and types:</p>
 
@@ -101,3 +101,5 @@
 <p>Perhaps as we'd expect, almost all of these are phrases or proper nouns. It would seem that constructors, just like the rest of us, love Leonardo Da Vinci, Arturo Toscanini, and, of course, Grover Cleveland. Just goes to show that language is a little weird in crossword-land. Answers can be made up of many words, etc. And don't forget that a lot of the phenomena we've seen arise partly from the NYT's rules, which specify things like a minimum word count (incentivizing longer words) and diagonal symmetry (perhaps causing a more regular or characteristically shaped word length distribution).</p>
 
 <p>Anyway, that's all for now, thanks for sticking around til the end!</p>
+
+<p>TODO: mention nytxw rule max word count, vs. shorter = easier to cross?</p>

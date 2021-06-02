@@ -15,4 +15,20 @@ figure.DEFAULT_HISTOGRAM_2D = {
   showscale: false
 };
 
+figure.DEFAULT_HEATMAP = {
+  type: 'heatmap',
+  colorscale: [
+    ['0', 'rgb(0, 0, 0, 1)'],
+    ['0.2', 'rgb(10,136,186)'],
+    ['0.4', 'rgb(12,51,131)'],
+    ['0.6', 'rgb(242,211,56)'],
+    ['0.8', 'rgb(242,143,56)'],
+    ['1', 'rgb(217,30,30)']
+
+    // [0, '#000000'],
+    // [1, '#ffffff']
+  ],
+  showscale: false
+};
+
 module.exports = figure;

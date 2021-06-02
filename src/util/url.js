@@ -1,9 +1,9 @@
 const url = {};
 
-url.cleanText = (search) => {
+url.cleanSearchText = (query) => {
   const MAX_SEARCH_TERMS = 10;
   // TODO: add extra protections to this?
-  return decodeURI(search)
+  return decodeURI(query)
           .split(',')
           .map(str => str.replace(/\s/g, ''))
           .filter(str => (/^[\w\*]+$/.test(str)))
@@ -11,13 +11,22 @@ url.cleanText = (search) => {
           .map(str => str.toUpperCase().replace(/\*/g, '_'));
 };
 
-url.cleanNumber = (str, defaultVal) => {
-  let val = parseInt(str, 10);
+url.cleanOptionText = (query, options, defaultVal) => {
+  const text = decodeURI(query);
+  for (let i = 0, len = options.length; i < len; i++) {
+    const option = options[i];
+    if (text === option) return option;
+  }
+  return defaultVal;
+};
+
+url.cleanNumber = (query, defaultVal) => {
+  let val = parseInt(query, 10);
   return isNaN(val) ? defaultVal : val;
 };
 
-url.cleanBoolean = (val) => {
-  return val === 'true';
+url.cleanBoolean = (query) => {
+  return query === 'true';
 }
 
 module.exports = url;

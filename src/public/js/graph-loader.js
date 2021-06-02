@@ -9,6 +9,8 @@ class GraphLoader extends HTMLElement {
   constructor() {
     super();
 
+    this.isSquare = this.getAttribute('data-square') === 'true';
+
     // Content
     const shadowContainer = document.createElement('div');
     this.prepend(shadowContainer);
@@ -16,7 +18,7 @@ class GraphLoader extends HTMLElement {
 
     // style
     const style = document.createElement('style');
-    style.textContent = GraphLoader.style;
+    style.textContent = this.customStyle + GraphLoader.defaultStyle;
     shadow.appendChild(style);
 
     // loading container
@@ -41,8 +43,8 @@ class GraphLoader extends HTMLElement {
 
     // variables for reloading
     this.target = graphContainer
-    this.layout = { ...GraphLoader.layout };
-    this.config = { ...GraphLoader.config };
+    this.layout = { ...this.customLayout, ...GraphLoader.defaultLayout };
+    this.config = { ...GraphLoader.defaultConfig };
 
     // button click
     const handleButton = async () => {
@@ -81,14 +83,27 @@ class GraphLoader extends HTMLElement {
     Plotly.relayout(this.target, this.layout);
   }
 
-  static get width() { return 800; }
-  static get height() { return 400; }
+  get width() { return this.isSquare ? 512 : 800; }
+  get height() { return this.isSquare ? 512 : 400; }
 
-  static get layout() {
+  get customLayout() {
+    return {
+      width: this.width,
+      height: this.height
+    };
+  }
+
+  get customStyle() { return `
+.loader-container {
+  width: ${this.width}px;
+  height: ${this.height}px;
+}
+`;
+  }
+
+  static get defaultLayout() {
     return {
       autosize: false,
-      width: GraphLoader.width,
-      height: GraphLoader.height,
       margin: {
         l: 40,
         r: 10,
@@ -109,13 +124,13 @@ class GraphLoader extends HTMLElement {
     };
   }
 
-  static get config() {
+  static get defaultConfig() {
     return {
       // responsive: true
     };
   }
 
-  static get style() { return `
+  static get defaultStyle() { return `
 .loader-container {
   display: flex;
   flex-direction: row;

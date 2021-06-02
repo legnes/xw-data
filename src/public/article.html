@@ -23,6 +23,7 @@
     <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime">
       <form is="query-param-form">
         <label>search terms <input is="query-param-input" data-query-param="search" type="text" value="sdi,dsl"></label>
+        <!-- <label>search terms <input is="query-param-input" data-query-param="search" type="text" value="acai,ikea,slr"></label> -->
       </form>
     </graph-loader>
 
@@ -379,7 +380,7 @@
       </form>
     </table-loader>
 
-    <p>A word on interpretation. "Log ratio" and "difference coefficient" are our effect-size metrics. The log ratio is, as you'd guess, the log (base 2) of the relative frequencies. For every point of log ratio, a word appears twice as many times in one corpus or the other (relative to corpus size). A log ratio of 14 means a word showed up about 16,000 times as often. "Difference coefficient" is the difference over the sum of normalized frequencies. It ranges from -1 to 1, where the extremes mean a word only showed up in one corpus or another, and 0 means the relative frequencies are the same. Our many values of -1 and 1 are rounding errors for very very high differences. "Log likelihood G2" and "Bayes factor" are statistical metrics. A strong G<sup>2</sup> value is around 19, overwhelming around 23. A string BIC or Bayes factor is around 6, overwhelming around 10. Methodologically, these data filter out any values with a bayesFactor <= 2. There's also an input for filtering out words that occurred below a certain threshold number of times in the english corpus. This can be a helpful knob to tweak if you're looking for keyness of words that are definitely used, not just e.g. concatenated phrases.</p>
+    <p>A word on interpretation. "Log ratio" and "difference coefficient" are our effect-size metrics. The log ratio is, as you'd guess, the log (base 2) of the relative frequencies. For every point of log ratio, a word appears twice as many times in one corpus or the other (relative to corpus size). A log ratio of 14 means a word showed up about 16,000 times as often. "Difference coefficient" is the difference over the sum of normalized frequencies. It ranges from -1 to 1, where the extremes mean a word only showed up in one corpus or another, and 0 means the relative frequencies are the same. Our many values of -1 and 1 are rounding errors for very very high differences. "Log likelihood G2" and "Bayes factor" are statistical metrics. A strong G<sup>2</sup> value is around 19, overwhelming around 23. A strong BIC or Bayes factor is around 6, overwhelming around 10. Methodologically, these data filter out any values with a bayesFactor <= 2. There's also an input for filtering out words that occurred below a certain threshold number of times in the english corpus. This can be a helpful knob to tweak if you're looking for keyness of words that are definitely used, not just e.g. concatenated phrases.</p>
 
     <p>Anyway, the results look much better! We've gotten rid of almost all the words that only show up a handful of times in the crossword corpus, improving our statistical significance. You'll see words that don't show up in the english corpus very much (or at all), but that's because the english corpus is so big that we can be confident this <em>lack</em> is conspicuous/significant. We've also gotten rid of words that were showing up simply because they have high frequency in the crossword corpus. What we have left is a host of words that really <em>aren't english at all</em> -- they're borrowed, abbreviations, phrases, etc. If they raw frequency difference showed us some of the more boring crosswordese words, this analysis perhaps shows us some of the more egregious ones, things where you'd go "that's not even a word!", or "ATEE, come on!!!". These, to me, are some of the real feel-bad answers.</p>
 
@@ -565,8 +566,6 @@
     <graph-loader data-id="vowelCountFrequency" data-src="api/figures/vowelCountFrequency">
       <form is="query-param-form">
         <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="1" value="3"></label>
-        <label>sort by max frequency <input is="query-param-input" data-query-param="freqSort" type="checkbox"></label>
-        <label>log scale (needs reload) <input is="query-param-input" data-query-param="logScale" type="checkbox"></label>
       </form>
     </graph-loader>
 
@@ -586,7 +585,6 @@
       <form is="query-param-form">
         <label>word length <input is="query-param-input" data-query-param="wordLength" type="number" min="3" max="10" value="3"></label>
         <label>per-letter <input is="query-param-input" data-query-param="byPosition" type="checkbox"></label>
-        <label>sort by tokens:types <input is="query-param-input" data-query-param="tokenTypeSort" type="checkbox"></label>
       </form>
     </graph-loader>
 

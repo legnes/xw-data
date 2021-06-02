@@ -1,4 +1,4 @@
-<p>In this section we'll look into just how common the most common crossword answers really are. There's a <em>ton</em> of writing about Zipf's law out there, more than I could possibly read through. But I did get a lot out of <em>Zipf’s word frequency law in natural language: A critical review and future directions</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of Zipf's law -- different formulations, fields of applicability, some theorized explanations from the literature, and the shortcomings of those explanations.</p>
+<p>In this post we'll look into just how common the most common crossword answers really are. There's a <em>ton</em> of writing about Zipf's law out there, more than I could possibly read through. But I did get a lot out of <em>Zipf’s word frequency law in natural language: A critical review and future directions</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of Zipf's law -- different formulations, fields of applicability, some theorized explanations from the literature, and the shortcomings of those explanations.</p>
 
 <h3>Answer repetition</h3>
 
@@ -83,7 +83,7 @@
 
 <p><em>Q(j) = kj<sup>-β</sup></em></p>
 
-<p>where <em>Q(j)</em> is the probability a given word is in the corpus <em>j</em> times, <em>k</em> is some constant, and <em>β</em> is about 2. This is exactly the same as the frequency marginal distribution discussed in the post on <a href="/common-answers-and-word-length#pmf">the brevity law</a>!</p>
+<p>where <em>Q(j)</em> is the probability a given word is in the corpus <em>j</em> times, <em>k</em> is some constant, and <em>β</em> is about 2. This is exactly the same as the frequency marginal distribution discussed in the post on <a href="/short-answer-is#pmf">the brevity law</a>!</p>
 
 <p>Second, an excuse. I opted for using the two-domain power law to fit Zipf's law because it was easy with the regression library I'm using. In theory you could fit the Zipf-Mandelbrot equation by running regressions for multiple trial values of β and maximize some fit or likeliness function. If you want to learn more, there are some resources out there <a href="https://volweb.utk.edu/~scolli46/zipfmandelbrotmc.html">[REF]</a> <a href="https://www.researchgate.net/publication/220364507_Some_practical_aspects_of_fitting_and_testing_the_Zipf-Mandelbrot_model">[REF]</a>. Also I chose the domain split rank arbitrarily.</p>
 

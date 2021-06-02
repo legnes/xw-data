@@ -7,6 +7,8 @@ class QueryParamInput extends HTMLInputElement {
     switch (this.type) {
       case 'checkbox':
         return this.checked;
+      case 'radio':
+        return this.checked ? encodeURI(this.value) : null;
       case 'text':
         return encodeURI(this.value);
       case 'number':

@@ -141,6 +141,11 @@ function routes(app) {
   app.get('/api/figures/vowelPlacementFrequency', figures.vowelPlacementFrequency);
   app.get('/api/figures/mostFrequentAnswers', figures.mostFrequentAnswers);
   app.get('/api/figures/vowelsByLength', figures.vowelsByLength);
+  app.get('/api/figures/vowelPositions', figures.vowelPositions);
+  app.get('/api/figures/answerStartsGrid', figures.answerStartsGrid);
+  app.get('/api/figures/vowelsGrid', figures.vowelsGrid);
+  app.get('/api/figures/topLeftAnswers', figures.topLeftAnswers);
+  app.get('/api/figures/uniqueAnswersOverTime', figures.uniqueAnswersOverTime);
 
   // apiRoutes.forEach(({ path, controller }) => {
   //   app.get(`/api/${path}`, controller);

@@ -1,0 +1,93 @@
+<p>We take a look at new words to make the crossword and old favorites that no longer see use.</p>
+
+- how fast dictionary is growing
+  - accumulated births
+  - relate to heaps law
+  - show births over time
+  - talk to societal context influencing change
+
+- word births
+  - recent births
+  - popular births from each year
+  - relate to ways language change (abbrevs, borrows, etc.)
+
+- word deaths
+  - relate to ways language change (appropriateness, etc.)
+
+<h3>The crossword dictionary</h3>
+
+<p>Roughly the same number of unique answers appear in the crossword during any given month or year.</p>
+
+<graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime">
+  <form is="query-param-form">
+    <span>timescale:</span>
+    <label>years <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label>
+    <label>months <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label>
+    <label>days <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label>
+  </form>
+</graph-loader>
+
+<p>Those numbers owe their consistency in part to the crossword's regularity of size, number of answers, etc.</p>
+
+<p>Here is unique answers over time accumulated</p>
+
+<graph-loader data-id="uniqueAnswersOverTime" data-src="api/figures/uniqueAnswersOverTime"></graph-loader>
+
+<p>Here is where we talk about heaps herdans law</p>
+
+<p>Ok but how many new answers can we expect to see each, say, month?</p>
+
+<graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
+  <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
+  <form is="query-param-form">
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+    <span>timescale:</span>
+    <label>years <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label>
+    <label>months <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label>
+    <label>days <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label>
+  </form>
+</graph-loader>
+
+<p>Easily 5-10 new answers a day, which is nice! We'd sort of expect this to change based on societal factors, but it's hard to pick out. In general it's hard to read because of heaps/herdans law, i.e. because of slower growth as dictionary increases. Would a longer time period help? There are a couple ways we could account for this. One is to fit a power law according to heaps to the data and then compare to that. A better way would be to randomly shuffle the puzzles over time, take avg of shufflings, and compare actual to that.</p>
+
+<h3>Disappearing answers</h3>
+
+<p>Here are early deaths</p>
+
+<table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords">
+  <form is="query-param-form">
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+  </form>
+</table-loader>
+
+<p>I really don't know what to make of these. The most identifiable are probably uncomfortable words like RAPE, MASSA, and KKK. But the rest seem...like fine answers? There are older words in there like SPAKE, outdated things like WEEWILLIEWINKIE, but that should be fine for a puzzle. Some of them, like OSCEOLA, even seem useful! (Those are all I think at thresh 5, but words like ORALE and SHANA too). Even neologisms like IAMA, which "died out" in 2013. Around thresh 20 you start getting some bs words though like LVI, IFA, and OTE. We can see a few culture deaths though. ALAR hasn't been since 2018, and has been going down steadily over time. A few other examples of cultural ghosts: ORT, SDI, GSA. Although weirdly, GSA came up 9 times in 2015, and I checked and it's not because it suddenly means Gay-straight Alliance.</p>
+
+<p>You might be curious how long these words stuck around for. Here's lifespan:</p>
+
+<graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity">
+  <form is="query-param-form">
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+  </form>
+</graph-loader>
+
+<h3>New answers</h3>
+
+<p>Here are recent births</p>
+
+<table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords">
+  <form is="query-param-form">
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+  </form>
+</table-loader>
+
+<p>And here are top words introduced each year</p>
+
+<table-loader data-id="topNewWordsByYear" data-src="api/figures/topNewWordsByYear">
+  <form is="query-param-form">
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+  </form>
+</table-loader>
+
+<p>That's all!</p>
+
+
