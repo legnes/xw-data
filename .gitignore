@@ -13,5 +13,5 @@ notes.md
 scripts/temp/
 scripts/cookies/
 
-# precompressed lib src
-src/public/js/lib/src/
+# uncompressed public lib src
+src/lib/

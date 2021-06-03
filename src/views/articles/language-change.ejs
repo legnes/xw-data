@@ -1,22 +1,20 @@
-<p>We take a look at new words to make the crossword and old favorites that no longer see use.</p>
+<p>We take a look at new answers to make the crossword and old standards that no longer see use.</p>
 
-- how fast dictionary is growing
-  - accumulated births
-  - relate to heaps law
-  - show births over time
-  - talk to societal context influencing change
+<h3>The dictionary</h3>
 
-- word births
-  - recent births
-  - popular births from each year
-  - relate to ways language change (abbrevs, borrows, etc.)
+<p>It can be easy to harp on the answers we see over and over in the puzzle. But what about <em>new</em> answers? How fast is the crossword puzzle's dictionary growing?</p>
 
-- word deaths
-  - relate to ways language change (appropriateness, etc.)
+<graph-loader data-id="uniqueAnswersOverTime" data-src="api/figures/uniqueAnswersOverTime">
+  <graph-log-axis-checkbox></graph-log-axis-checkbox>
+</graph-loader>
 
-<h3>The crossword dictionary</h3>
+<p>This curve is a little remeniscent of Herdan's (or Heaps') law. Remember that a handful of answers appear in the puzzle very often, and a large number of words only appear once or twice. As we go through the corpus puzzle by puzzle, keeping track of which answers we've seen, we'd expect to come across a lot of the high-frequency answers pretty quickly, but for it to take a while for us to find all the low-frequency answers. That's essentially what Herdan's law is getting at. Qualitativley it says we'll find new answers very quickly at first, and then slower and more steadily later. Quantitatively, it says:</p>
 
-<p>Roughly the same number of unique answers appear in the crossword during any given month or year.</p>
+<p><em>V = kN<sup>h</sup></em></p>
+
+<p>where <em>V</em> is the size of the vocabulary, the number of unique answers we've come across, <em>N</em> is the size of the corpus, the total number of answers in all the puzzles we've looked at, and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1. It's worth noticing that Herdan's law applies to any subdivision of a corpus. So for example if we had a corpus of encyclopedia articles, we could look at unique words vs. total words <em>for each article separately</em>, rather than accumulating across articles <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a>. But subdividing over time works too!</p>
+
+<p>So if the pool of answers is steadily increasing, has the variety of answers gone up with it? Due to the NYT crossword's daily publication, regular sizing, and maximum number of answers in any given puzzle, its vocabulary shouldn't vary too wildly. But in theory constructors have more answers to choose from, right?</p>
 
 <graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime">
   <form is="query-param-form">
@@ -27,15 +25,7 @@
   </form>
 </graph-loader>
 
-<p>Those numbers owe their consistency in part to the crossword's regularity of size, number of answers, etc.</p>
-
-<p>Here is unique answers over time accumulated</p>
-
-<graph-loader data-id="uniqueAnswersOverTime" data-src="api/figures/uniqueAnswersOverTime"></graph-loader>
-
-<p>Here is where we talk about heaps herdans law</p>
-
-<p>Ok but how many new answers can we expect to see each, say, month?</p>
+<p>It doesn't seem like there's any strong trend. Partly that's because, just as answers are "born", they also "die out". Here are answer births and deaths over time.</p>
 
 <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
   <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
@@ -48,21 +38,23 @@
   </form>
 </graph-loader>
 
-<p>Easily 5-10 new answers a day, which is nice! We'd sort of expect this to change based on societal factors, but it's hard to pick out. In general it's hard to read because of heaps/herdans law, i.e. because of slower growth as dictionary increases. Would a longer time period help? There are a couple ways we could account for this. One is to fit a power law according to heaps to the data and then compare to that. A better way would be to randomly shuffle the puzzles over time, take avg of shufflings, and compare actual to that.</p>
+<p>This graph is a little hard to read because of Herdan's law -- the dictionary grows very quickly at first, and it decays very quickly for the same reason. It's hard to tell if birth and death rates have changed over time. One way to see through the steep curve is with random shufflings. If we were to shuffle up the puzzles, pretending they were published in a different order than they really were, we'd get a slightly different graph of answer births over time. If we repeatedly shuffled the puzzles and averaged their birth curves, we'd get a statistically "expected" birth curve. Then we could compare our <em>actual</em> curve to the expected one <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a> (similar analysis, TODO reread this) (TODO do this analysis?).</p>
 
-<h3>Disappearing answers</h3>
+<p>One reason we care about birth and death rates is that they tell us about our society. Languages change faster during wartime, and correlates to social and technological trends, local cultural factors, etc. <a href="https://www.nature.com/articles/srep00313">[REF]</a> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a>.</p>
 
-<p>Here are early deaths</p>
+<p>Another reason we care about the birth rate is that it tells us how often we see brand new answers cropping up in the puzzle. And it's a lot, easily 5-10 new answers a day! Let's take a look at some of the answers that have come and gone.</p>
+
+<h3>Answer deaths</h3>
+
+<p>Here's a list of once-common answers that disappeared some time ago.</p>
 
 <table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="3"></label>
   </form>
 </table-loader>
 
-<p>I really don't know what to make of these. The most identifiable are probably uncomfortable words like RAPE, MASSA, and KKK. But the rest seem...like fine answers? There are older words in there like SPAKE, outdated things like WEEWILLIEWINKIE, but that should be fine for a puzzle. Some of them, like OSCEOLA, even seem useful! (Those are all I think at thresh 5, but words like ORALE and SHANA too). Even neologisms like IAMA, which "died out" in 2013. Around thresh 20 you start getting some bs words though like LVI, IFA, and OTE. We can see a few culture deaths though. ALAR hasn't been since 2018, and has been going down steadily over time. A few other examples of cultural ghosts: ORT, SDI, GSA. Although weirdly, GSA came up 9 times in 2015, and I checked and it's not because it suddenly means Gay-straight Alliance.</p>
-
-<p>You might be curious how long these words stuck around for. Here's lifespan:</p>
+<p>There are a few interesting cases - ALAR and SDI haven't been in the news for decades, and evidently constructors stopped using MASSA and KKK for fill in 2002. But many are simply obscure trivia like BAUD, SARTO, and CEBU. A look at dying answers begs the question: how long do answers usually live for?</p>
 
 <graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity">
   <form is="query-param-form">
@@ -70,24 +62,39 @@
   </form>
 </graph-loader>
 
-<h3>New answers</h3>
+<h3>Answer births</h3>
 
-<p>Here are recent births</p>
+<p>Here's the flip side: most recent answers to be introduced.</p>
 
 <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="3"></label>
   </form>
 </table-loader>
 
-<p>And here are top words introduced each year</p>
+<p>And for another angle, here are the "top answers" from each year.</p>
 
 <table-loader data-id="topNewWordsByYear" data-src="api/figures/topNewWordsByYear">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="3"></label>
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="3"></label>
   </form>
 </table-loader>
 
+<p>Almost all of the ususal word birth patterns are represented. There are neologisms (DADBOD, BAE, SELFIE), loanwords (NIHAO, BENTO, ASANAS), acronyms (EGOT, RBG, IPAS), abbreviations (MICS, OLINE, APBIO), and portmanteaus/affixes (MATHLETE, ENEWS, BREXIT). Find your favorites!</p>
+
+<h3>Caveats</h3>
+
+<p>One thing to note is that the relationship between frequency distribution and Herdan's law is pretty complicated, and the mathematical form of Herdan's law is itself contested, so I oversimplified a lot in this article <a href="https://arxiv.org/abs/1412.4577">[REF]</a> <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a>.</p>
+
+<p>The only other thing to mention is that there's a <em>ton</em> of good reading on language change out there, I'll list some here.</p>
+
+<ul>
+  <li><a href="https://www.nature.com/articles/nature06176">High-frequency words change more slowly</a></li>
+  <li><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0019009">On shorter time scales, dissemination among users and applicability across topics reflects whether the word will survive. [words are pretty clumped among users and topics -- suggests a look at word clumping by author]</a></li>
+  <li><a href="https://www.nature.com/articles/srep00313">Languages change faster during wartime, and relate to social and technological trends, local cultural factors</a> (also mentioned <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">here</a>)</li>
+  <li><a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this is just a good paper</a></li>
+  <li><a href="https://www.nature.com/articles/srep00313">This paper</a> quantifiable birth and death rates average of the median lifetime relative use for words born/died each year.</li>
+  <li><a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this</a> fame by name frequency, e.g. age when fame.</li>
+</ul>
+
 <p>That's all!</p>
-
-
