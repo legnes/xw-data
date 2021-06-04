@@ -14,4 +14,46 @@ query.promiseQuery = (query) => {
   });
 };
 
+// TODO: add selection override?
+query.answerFrequencies = ({ where, having, orderBy, limit } = {}) => (`
+SELECT
+  answer,
+  LENGTH(answer) as length,
+  COUNT(*) AS frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id = p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+${where ? `AND ${where}` : ''}
+GROUP BY answer
+${having ? `HAVING ${having}` : ''}
+${orderBy ? `ORDER BY ${orderBy}` : ''}
+${limit ? `LIMIT ${limit}` : ''}
+;`);
+
+query.answerYears = ({ func, countThresh, limit, orderBy } = {}) => (`
+SELECT
+  answer,
+  ${func}(DATE_TRUNC('year', p.date)) AS year,
+  COUNT(*) AS occurrences
+FROM clues
+INNER JOIN puzzles p ON puzzle_id = p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY answer
+${countThresh ? `HAVING COUNT(*) >= ${countThresh}` : ''}
+ORDER BY ${orderBy || `${func}(p.date) ${func === 'MIN' ? 'DESC' : 'ASC'}`}
+${limit ? `LIMIT ${limit}` : ''}
+;`);
+
+query.answerTokensAndTypes = () => (`
+SELECT
+  LENGTH(answer) as length,
+  COUNT(DISTINCT answer) AS types,
+  COUNT(*) AS tokens
+FROM clues
+INNER JOIN puzzles p ON puzzle_id = p.id
+WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
+GROUP BY length
+ORDER BY length ASC;
+`);
+
 module.exports = query;

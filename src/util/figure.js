@@ -31,4 +31,14 @@ figure.DEFAULT_HEATMAP = {
   showscale: false
 };
 
+figure.DEFAULT_HEATMAP_LAYOUT = {
+  xaxis: { showticklabels: false, ticks: '' },
+  yaxis: { showticklabels: false, ticks: '' },
+};
+
+figure.axisLabels = (xLabel, yLabel) => ({
+  xaxis: { title: { text: xLabel }},
+  yaxis: { title: { text: yLabel }}
+})
+
 module.exports = figure;
