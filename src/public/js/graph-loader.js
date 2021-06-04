@@ -1,10 +1,3 @@
-// Based on:
-// https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define
-// https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements#using_the_lifecycle_callbacks
-// https://www.html5rocks.com/en/tutorials/webcomponents/customelements/
-// Loading spinner:
-// https://loading.io/css/
-//
 class GraphLoader extends HTMLElement {
   constructor() {
     super();
@@ -33,7 +26,12 @@ class GraphLoader extends HTMLElement {
 
     // loading spinner
     const spinner = document.createElement('div');
-    spinner.className = 'loading-spinner';
+    spinner.className = 'ld-sq-grid';
+    for (let i = 1; i <= 4; i++) {
+      const subspinner = document.createElement('div');
+      subspinner.className = `ld-sq ld-sq${i}`;
+      spinner.appendChild(subspinner);
+    }
 
     // graph container
     const graphContainer = document.createElement('div');
@@ -44,7 +42,7 @@ class GraphLoader extends HTMLElement {
     // variables for reloading
     this.target = graphContainer
     this.layout = { ...this.customLayout, ...GraphLoader.defaultLayout };
-    this.config = { ...GraphLoader.defaultConfig };
+    this.config = { ...this.customConfig, ...GraphLoader.defaultConfig };
 
     // button click
     const handleButton = async () => {
@@ -93,12 +91,19 @@ class GraphLoader extends HTMLElement {
     };
   }
 
-  get customStyle() { return `
+  get customStyle() {
+    return `
 .loader-container {
   width: ${this.width}px;
   height: ${this.height}px;
 }
 `;
+  }
+
+  get customConfig() {
+    return {
+      displayModeBar: !this.isSquare
+    };
   }
 
   static get defaultLayout() {
@@ -121,15 +126,28 @@ class GraphLoader extends HTMLElement {
       //   type: 'log',
       //   autorange: true
       // }
+
+      // http://mkweb.bcgsc.ca/colorblind/palettes.mhtml
+      colorway : ['#EF0096', '#00DCB5', '#68023F', '#008169', '#FFCFE2', '#003C86', '#9400E6', '#009FFA', '#FF71FD', '#7CFFFA', '#6A0213', '#008607', '#F60239', '#00E307', '#FFDC3D']
     };
   }
 
   static get defaultConfig() {
     return {
       // responsive: true
+      // scrollZoom: true,
+      // staticPlot: true,
+      showTips: false,
+      displaylogo: false,
+      modeBarButtonsToRemove: [
+        'hoverClosestCartesian', 'hoverCompareCartesian',
+        'zoom2d', 'pan2d', 'select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d', // 'autoScale2d',
+        'toggleHover', 'toImage', 'toggleSpikelines'
+      ],
     };
   }
 
+  // Loader css from https://tobiasahlin.com/spinkit/
   static get defaultStyle() { return `
 .loader-container {
   display: flex;
@@ -145,35 +163,30 @@ button {
   cursor: pointer;
 }
 
-.loading-spinner {
-  display: inline-block;
-  position: relative;
-  width: 80px;
-  height: 80px;
+.ld-sq-grid {
+  width: 40px;
+  height: 40px;
+  margin: 100px auto;
 }
-.loading-spinner:after {
-  content: " ";
-  display: block;
-  border-radius: 50%;
-  width: 0;
-  height: 0;
-  margin: 8px;
-  box-sizing: border-box;
-  border: 32px solid mediumaquamarine;
-  border-color: mediumaquamarine transparent mediumaquamarine transparent;
-  animation: loading-spinner 1.2s infinite;
+
+.ld-sq-grid .ld-sq {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #EF0096;
+  float: left;
+  animation: ld-sqGridScaleDelay 1.5s infinite ease-in-out;
 }
-@keyframes loading-spinner {
-  0% {
-    transform: rotate(0);
-    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
-  }
-  50% {
-    transform: rotate(900deg);
-    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-  }
-  100% {
-    transform: rotate(1800deg);
+
+.ld-sq-grid .ld-sq1 { animation-delay: 0.1s; }
+.ld-sq-grid .ld-sq2 { animation-delay: 0.3s; background-color: #000; }
+.ld-sq-grid .ld-sq3 { animation-delay: 0.0s; background-color: #000; }
+.ld-sq-grid .ld-sq4 { animation-delay: 0.2s; }
+
+@keyframes ld-sqGridScaleDelay {
+  0%, 5%, 65%, 100% {
+    transform: scale3D(1, 1, 1);
+  } 15%, 55% {
+    transform: scale3D(.8, .8, 1);
   }
 }
 `;

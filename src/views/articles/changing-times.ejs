@@ -18,10 +18,10 @@
 
 <graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime">
   <form is="query-param-form">
-    <span>timescale:</span>
-    <label>years <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label>
-    <label>months <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label>
-    <label>days <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label>
+    <span>timescale:</span><br />
+    <span>&emsp;</span><label>years<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label><br />
+    <span>&emsp;</span><label>months<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label><br />
+    <span>&emsp;</span><label>days<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label><br />
   </form>
 </graph-loader>
 
@@ -30,11 +30,11 @@
 <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
   <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
-    <span>timescale:</span>
-    <label>years <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label>
-    <label>months <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label>
-    <label>days <input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label>
+    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label><br />
+    <span>timescale:</span><br />
+    <span>&emsp;</span><label>years<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label><br />
+    <span>&emsp;</span><label>months<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label><br />
+    <span>&emsp;</span><label>days<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label><br />
   </form>
 </graph-loader>
 
