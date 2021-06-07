@@ -4,10 +4,10 @@ class GraphLoader extends HTMLElement {
 
     this.isSquare = this.getAttribute('data-square') === 'true';
 
-    // Content
+    // shadow dom
     const shadowContainer = document.createElement('div');
     this.prepend(shadowContainer);
-    const shadow = shadowContainer.attachShadow({mode: 'open'});
+    const shadow = shadowContainer.attachShadow({ mode: 'open' });
 
     // style
     const style = document.createElement('style');
@@ -147,7 +147,7 @@ class GraphLoader extends HTMLElement {
     };
   }
 
-  // Loader css from https://tobiasahlin.com/spinkit/
+  // Inspiration from https://tobiasahlin.com/spinkit/
   static get defaultStyle() { return `
 .loader-container {
   display: flex;
@@ -174,7 +174,7 @@ button {
   height: 18px;
   border: 1px solid #EF0096;
   float: left;
-  animation: ld-sqGridScaleDelay 1.5s infinite ease-in-out;
+  animation: squareScale 1.5s infinite ease-in-out;
 }
 
 .ld-sq-grid .ld-sq1 { animation-delay: 0.1s; }
@@ -182,7 +182,7 @@ button {
 .ld-sq-grid .ld-sq3 { animation-delay: 0.0s; background-color: #000; }
 .ld-sq-grid .ld-sq4 { animation-delay: 0.2s; }
 
-@keyframes ld-sqGridScaleDelay {
+@keyframes squareScale {
   0%, 5%, 65%, 100% {
     transform: scale3D(1, 1, 1);
   } 15%, 55% {

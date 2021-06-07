@@ -1,4 +1,4 @@
-<p>In this post, we'll be using keyness to differentiate crosswordese from bad fill. For more information on keyness, check out Costas Gabrielatos's phenomenal chapter <a href="https://core.ac.uk/download/pdf/227092349.pdf">[REF]</a> in Corpus Approaches to Discourse <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">[REF]</a>, edited by Charlotte Taylor and Anna Marchi. I owe pretty much everything in this post to Gabrielatos's explanation. The implementation is all my own; if you're looking to do something similar, I got a lot of help from <a href="http://ucrel.lancs.ac.uk/llwizard.html">this log-likelihood wizard</a> put out by Paul Rayson and UCREL at Lancaster University, as well as <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">this chapter</a> from Alvin Chen's National Taiwan Normal University course on corpus linguistics.</p>
+<p>In this post, we'll be using keyness to differentiate crosswordese from bad fill. For more information on keyness, check out Costas Gabrielatos's <a href="https://core.ac.uk/download/pdf/227092349.pdf">phenomenal chapter</a> <a href="#ref1">[1]</a> in <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">Corpus Approaches to Discourse</a> <a href="#ref2">[2]</a>, edited by Charlotte Taylor and Anna Marchi. I owe pretty much everything in this post to Gabrielatos's explanation. The implementation is all my own; if you're looking to do something similar, I got a lot of help from <a href="http://ucrel.lancs.ac.uk/llwizard.html">this log-likelihood wizard</a> put out by Paul Rayson and UCREL at Lancaster University, as well as <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">this chapter</a> from Alvin Chen's National Taiwan Normal University course on corpus linguistics.</p>
 
 <h3>Relative frequency</h3>
 
@@ -16,7 +16,7 @@
 
 <p>Words with <em>negative</em> values in the "difference in relative frequency" column are more common in english than they are in crosswords. That's pretty much the entire table right now. What we care about are words that have a <em>positive</em> difference, which you can see by checking the "only positive values" box and reloading the data. A group of likely crosswordese suspects pops right up: three-to-four-letters, vowel-heavy.</p>
 
-<p>(As an aside, you might think words like ERA that show up semi-medium-often-ish in normal english would have a lower relative frequency difference. So why is ERA topping the list? It's because word frequency is nonlinear. The most frequent words are disproportionately more common than less frequent words. If ERA is the most common crossword answer but only, say, the 1000<sup>th</sup> most common english word, its crossword relative frequency will dwarf its english relative frequency. Check out <a href="">the post on Zipf's law</a> for more!)</p>
+<p>(As an aside, you might think words like ERA that show up semi-medium-often-ish in normal english would have a lower relative frequency difference. So why is ERA topping the list? It's because word frequency is nonlinear. The most frequent words are disproportionately more common than less frequent words. If ERA is the most common crossword answer but only, say, the 1000<sup>th</sup> most common english word, its crossword relative frequency will dwarf its english relative frequency. Check out <a href="/how-common-is-era">the post on Zipf's law</a> for more!)</p>
 
 <p>Also, a note about the reference corpus: I'm using a frequency list of <a href="https://github.com/IlyaSemenov/wikipedia-word-frequency">english words from wikipedia articles</a> scraped in 2019. It'll produce different results than, say, a corpus of newspaper articles or of science fiction novels. Likely its style is pretty formal but with a lot of variation. It'll also probably skew towards people, places, institutions, acronyms, and in general the kind of thing you'd write a wikipedia article about.</p>
 
@@ -66,6 +66,11 @@
 
 <table-loader data-id="keynessPerYear" data-src="api/figures/keynessPerYear"></table-loader>
 
-<p>Notice that the statistical metrics are a lot lower, which makes sense because the sample sizes are a lot smaller. So it's not exactly a statistical fact that ANAGRAMS were super trendy in 2014 or that 2016 got really into ROMCOMs. But it's a fun way to look at cultural trends and to track the spread of neologisms. For more, check out the <a href="">post on language change!</a></p>
+<p>Notice that the statistical metrics are a lot lower, which makes sense because the sample sizes are a lot smaller. So it's not exactly a statistical fact that ANAGRAMS were super trendy in 2014 or that 2016 got really into ROMCOMs. But it's a fun way to look at cultural trends and to track the spread of neologisms. For more, check out the <a href="/changing-times">post on language change!</a></p>
 
 <p>Any caveats? That's all for this post.</p>
+
+<h3>References</h3>
+
+<p id="ref1">[1] <a href="https://core.ac.uk/download/pdf/227092349.pdf">Gabrielatos, Costas. “Chapter 12 : Keyness Analysis : nature , metrics and techniques.” (2017).</a></p>
+<p id="ref2">[2] <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">Taylor, C., and A., Marchi. "Corpus Approaches to Discourse: A Critical Review".Taylor & Francis, 2018.</a></p>

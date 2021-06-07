@@ -22,13 +22,13 @@
 
 <h3>Word frequency</h3>
 
-<p>A number of quantitative linguistic observations relate to word frequency. After all, when you've got a big collection of language, one of the easiest ways to chop it up is by word. And one of the easiest things to do with a whole bunch of words is to count them! It's a lot harder to try and tag things like part of speech, harder still to quantify linguistic contexts. And then there's feature scale -- you could look at syllables or clauses or sentences or...yikes. Still, we shouldn't totally discount the usefulness of word frequency. After all, people have written whole books about it! <a href="https://books.google.com/books/about/Word_Frequency_Studies.html?id=OkDy0RJOwiAC">[REF]</a> <a href="https://www.springer.com/gp/book/9780792370178">[REF]</a>. And it just so happens that word - or answer - frequency is exactly what we're interested in!</p>
+<p>A number of quantitative linguistic observations relate to word frequency. After all, when you've got a big collection of language, one of the easiest ways to chop it up is by word. And one of the easiest things to do with a whole bunch of words is to count them! It's a lot harder to try and tag things like part of speech, harder still to quantify linguistic contexts. And then there's feature scale -- you could look at syllables or clauses or sentences or...yikes. Still, we shouldn't totally discount the usefulness of word frequency. After all, people have written whole books about it! <a href="#ref1">[1]</a> <a href="#ref2">[2]</a>. And it just so happens that word - or answer - frequency is exactly what we're interested in!</p>
 
 <h3>Brevity law</h3>
 
 <p>The brevity law advises (qualitatively) that common words tend to be shorter. Check out the table up above and you'll see that the most common words are all three or four letters long. You can play around with the "minimum answer length" input to see how the frequency drops off as length goes up.</p>
 
-<p>A common way to measure tendencies is using a correlation test <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">[REF]</a>?. First, we plot every distinct answer's length vs its frequency:</p>
+<p>A common way to measure tendencies is using a correlation test <a href="#ref3">[3]</a>. First, we plot every distinct answer's length vs its frequency:</p>
 
 <graph-loader data-id="lengthFrequency" data-src="api/figures/lengthFrequency"></graph-loader>
 
@@ -50,7 +50,7 @@
 
 <h3 id="pmf">The Probability Mass Function</h3>
 
-<p>I'm going to take a quick detour through the weeds. If you're not interested, feel free to jump forward to the next heading! As I was looking into word length and frequency, I came across <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">a 2019 paper</a> with a new suggestion about how to quantify the brevity law. It was written by Álvaro Corral and Isabel Serra at the Centre de Recerca Matematica in Barcelona <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">[REF]</a>. They go through a pretty daunting (to me) analysis that culminates in a formulation of the brevity law in terms of conditional distributions of the probability mass function of type length and frequency. To break that down a little, (joint) probability mass is just the likelihood of choosing a word with a given length and frequency. So like, "what fraction of answers are five letters long and appear in 12 puzzles?" If that sounds like the histogram above, it should -- the histogram is basically a binned PMF. The "conditional" PMF in this case means the likelihood of choosing a word of a given frequency, where you're choosing from all words of a <em>particular length</em>. So like, "what fraction of 5-letter words appear in 12 puzzles?" For crosswords, they look like this:</p>
+<p>I'm going to take a quick detour through the weeds. If you're not interested, feel free to jump forward to the next heading! As I was looking into word length and frequency, I came across <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">a 2019 paper</a> with a new suggestion about how to quantify the brevity law. It was written by Álvaro Corral and Isabel Serra at the Centre de Recerca Matematica in Barcelona <a href="#ref3">[3]</a>. They go through a pretty daunting (to me) analysis that culminates in a formulation of the brevity law in terms of conditional distributions of the probability mass function of type length and frequency. To break that down a little, (joint) probability mass is just the likelihood of choosing a word with a given length and frequency. So like, "what fraction of answers are five letters long and appear in 12 puzzles?" If that sounds like the histogram above, it should -- the histogram is basically a binned PMF. The "conditional" PMF in this case means the likelihood of choosing a word of a given frequency, where you're choosing from all words of a <em>particular length</em>. So like, "what fraction of 5-letter words appear in 12 puzzles?" For crosswords, they look like this:</p>
 
 <graph-loader data-id="lengthFrequencyPmfLengthConditionals" data-src="api/figures/lengthFrequencyPmfLengthConditionals">
   <graph-log-axis-checkbox data-checked="true"></graph-log-axis-checkbox>
@@ -76,7 +76,7 @@
 
 <p>Remember that the PMF earlier was the "probability mass function of <em>type</em> length and frequency?" It used <em>types</em>, distinct words. And hey, the length marginal distribution from earlier looks exactly like the "types" curve here (if it's hard to make out, try hiding the "tokens" curve by clicking on it in the legend). It says, for example, that there have been more <em>distinct</em> seven-letter answers than any other length. The "tokens" curve, on the other hand, counts duplicates multiple times. It peaks at four, meaning the NYT crossword asks you for a four-letter answer more often than any other length.</p>
 
-<p>These two curves show up a fair amount in the literature. According to some papers, they should both fit a lognormal distribution <a href="https://academic.oup.com/biomet/article-abstract/45/1-2/222/264683?redirectedFrom=fulltext">[REF]</a> <a href=" https://royalsocietypublishing.org/doi/10.1098/rsos.191023">[REF]</a>, although others contest this <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">[REF]</a>. Linguists were running this kind of analysis in 1958 <a href="https://www.sciencedirect.com/science/article/pii/S0019995858902298">[REF]</a> and still running it in 2012 <a href="https://arxiv.org/pdf/1207.2334.pdf">[REF]</a>. Here's how crosswords compare to a reference English corpus:</p>
+<p>These two curves show up a fair amount in the literature. According to some papers, they should both fit a lognormal distribution <a href="#ref4">[4]</a> <a href=" #ref5">[5]</a>, although others contest this <a href="#ref3">[3]</a>. Linguists were running this kind of analysis in 1958 <a href="#ref6">[6]</a> and still running it in 2012 <a href="#ref7">[7]</a>. Here's how crosswords compare to a reference English corpus:</p>
 
 <graph-loader data-id="lengthTypesAndTokensCombined" data-src="api/figures/lengthTypesAndTokensCombined">
   <graph-log-axis-checkbox data-axes="y+y2"></graph-log-axis-checkbox>
@@ -103,3 +103,13 @@
 <p>Anyway, that's all for now, thanks for sticking around til the end!</p>
 
 <p>TODO: mention nytxw rule max word count, vs. shorter = easier to cross?</p>
+
+<h3>References</h3>
+
+<p id="ref1">[1] <a href="https://books.google.com/books/about/Word_Frequency_Studies.html?id=OkDy0RJOwiAC">Popescu, I.I., G., Altmann, R., Kohler, P., Grzybek, and B.D., Jayaram. Word Frequency Studies. Mouton de Gruyter, 2009.</a></p>
+<p id="ref2">[2] <a href="https://www.springer.com/gp/book/9780792370178">Baayen, R. Harald. Word Frequency Distributions. Springer Netherlands, 2001.</a></p>
+<p id="ref3">[3] <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">Corral, Álvaro; Serra, Isabel. 2020. "The Brevity Law as a Scaling Law, and a Possible Origin of Zipf’s Law for Word Frequencies" Entropy 22, no. 2: 224. https://doi.org/10.3390/e22020224</a></p>
+<p id="ref4">[4] <a href="https://academic.oup.com/biomet/article-abstract/45/1-2/222/264683">HERDAN, G.. "THE RELATION BETWEEN THE DICTIONARY DISTRIBUTION AND THE OCCURRENCE DISTRIBUTION OF WORD LENGTH AND ITS IMPORTANCE FOR THE STUDY OF QUANTITATIVE LINGUISTICS".Biometrika 45, no.1-2 (1958): 222-228.</a></p>
+<p id="ref5">[5] <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.191023">Torre Iván G., Luque Bartolo, Lacasa Lucas, Kello Christopher T. and Hernández-Fernández Antoni. 2019. On the physical origin of linguistic laws and lognormality in speech. R. Soc. open sci.6191023191023</a></p>
+<p id="ref6">[6] <a href="https://www.sciencedirect.com/science/article/pii/S0019995858902298">G.A. Miller, E.B. Newman, & E.A. Friedman (1958). Length-frequency statistics for written English. Information and Control, 1(4), 370-389.</a></p>
+<p id="ref7">[7] <a href="https://arxiv.org/pdf/1207.2334.pdf">Reginald D. Smith. "Distinct word length frequencies: distributions and symbol entropies." (2012).</a></p>

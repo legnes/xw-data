@@ -12,7 +12,7 @@
 
 <p><em>V = kN<sup>h</sup></em></p>
 
-<p>where <em>V</em> is the size of the vocabulary, the number of unique answers we've come across, <em>N</em> is the size of the corpus, the total number of answers in all the puzzles we've looked at, and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1. It's worth noticing that Herdan's law applies to any subdivision of a corpus. So for example if we had a corpus of encyclopedia articles, we could look at unique words vs. total words <em>for each article separately</em>, rather than accumulating across articles <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a>. But subdividing over time works too!</p>
+<p>where <em>V</em> is the size of the vocabulary, the number of unique answers we've come across, <em>N</em> is the size of the corpus, the total number of answers in all the puzzles we've looked at, and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1. It's worth noticing that Herdan's law applies to any subdivision of a corpus. So for example if we had a corpus of encyclopedia articles, we could look at unique words vs. total words <em>for each article separately</em>, rather than accumulating across articles <a href="#ref1">[1]</a>. But subdividing over time works too!</p>
 
 <p>So if the pool of answers is steadily increasing, has the variety of answers gone up with it? Due to the NYT crossword's daily publication, regular sizing, and maximum number of answers in any given puzzle, its vocabulary shouldn't vary too wildly. But in theory constructors have more answers to choose from, right?</p>
 
@@ -38,9 +38,9 @@
   </form>
 </graph-loader>
 
-<p>This graph is a little hard to read because of Herdan's law -- the dictionary grows very quickly at first, and it decays very quickly for the same reason. It's hard to tell if birth and death rates have changed over time. One way to see through the steep curve is with random shufflings. If we were to shuffle up the puzzles, pretending they were published in a different order than they really were, we'd get a slightly different graph of answer births over time. If we repeatedly shuffled the puzzles and averaged their birth curves, we'd get a statistically "expected" birth curve. Then we could compare our <em>actual</em> curve to the expected one <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a> (similar analysis, TODO reread this) (TODO do this analysis?).</p>
+<p>This graph is a little hard to read because of Herdan's law -- the dictionary grows very quickly at first, and it decays very quickly for the same reason. It's hard to tell if birth and death rates have changed over time. One way to see through the steep curve is with random shufflings. If we were to shuffle up the puzzles, pretending they were published in a different order than they really were, we'd get a slightly different graph of answer births over time. If we repeatedly shuffled the puzzles and averaged their birth curves, we'd get a statistically "expected" birth curve. Then we could compare our <em>actual</em> curve to the expected one <a href="#ref1">[1]</a> (similar analysis, TODO reread this) (TODO do this analysis?).</p>
 
-<p>One reason we care about birth and death rates is that they tell us about our society. Languages change faster during wartime, and correlates to social and technological trends, local cultural factors, etc. <a href="https://www.nature.com/articles/srep00313">[REF]</a> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a>.</p>
+<p>One reason we care about birth and death rates is that they tell us about our society. Languages change faster during wartime, and correlates to social and technological trends, local cultural factors, etc. <a href="#ref2">[2]</a> <a href="#ref3">[3]</a>.</p>
 
 <p>Another reason we care about the birth rate is that it tells us how often we see brand new answers cropping up in the puzzle. And it's a lot, easily 5-10 new answers a day! Let's take a look at some of the answers that have come and gone.</p>
 
@@ -84,17 +84,16 @@
 
 <h3>Caveats</h3>
 
-<p>One thing to note is that the relationship between frequency distribution and Herdan's law is pretty complicated, and the mathematical form of Herdan's law is itself contested, so I oversimplified a lot in this article <a href="https://arxiv.org/abs/1412.4577">[REF]</a> <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">[REF]</a>.</p>
+<p>One thing to note is that the relationship between frequency distribution and Herdan's law is pretty complicated, and the mathematical form of Herdan's law is itself contested, so I oversimplified a lot in this article <a href="https://arxiv.org/abs/1412.4577">[REF]</a> <a href="#ref1">[1]</a>.</p>
 
-<p>The only other thing to mention is that there's a <em>ton</em> of good reading on language change out there, I'll list some here.</p>
-
-<ul>
-  <li><a href="https://www.nature.com/articles/nature06176">High-frequency words change more slowly</a></li>
-  <li><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0019009">On shorter time scales, dissemination among users and applicability across topics reflects whether the word will survive. [words are pretty clumped among users and topics -- suggests a look at word clumping by author]</a></li>
-  <li><a href="https://www.nature.com/articles/srep00313">Languages change faster during wartime, and relate to social and technological trends, local cultural factors</a> (also mentioned <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">here</a>)</li>
-  <li><a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this is just a good paper</a></li>
-  <li><a href="https://www.nature.com/articles/srep00313">This paper</a> quantifiable birth and death rates average of the median lifetime relative use for words born/died each year.</li>
-  <li><a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">this</a> fame by name frequency, e.g. age when fame.</li>
-</ul>
+<p>The only other thing to mention is that there's plenty of other good reading out there about language change. One issue with the crossword corpus is its relatively short time scale. One paper discusses how to look at patterns of language change within/among young, highly volatile online communities <a href="#ref4">[4]</a>. For the complete opposite -- a consideration of massive amounts of data over extremely long timescales, a bunch of researchers got together and published a great paper when Google Books was first released <a href="#ref5">[5]</a>.</p>
 
 <p>That's all!</p>
+
+<h3>References</h3>
+
+<p id="ref1">[1] <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">Chacoma A. and Zanette D. H. 2020. Heaps’ Law and Heaps functions in tagged texts: evidences of their linguistic relevance. R. Soc. open sci.7200008200008</a></p>
+<p id="ref2">[2] <a href="https://www.nature.com/articles/srep00313">Petersen, A., Tenenbaum, J., Havlin, S. et al. Statistical Laws Governing Fluctuations in Word Use from Word Birth to Word Death. Sci Rep 2, 313 (2012). https://doi.org/10.1038/srep00313</a></p>
+<p id="ref3">[3] <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">Piantadosi, Steven T. “Zipf's word frequency law in natural language: a critical review and future directions.” Psychonomic bulletin & review vol. 21,5 (2014): 1112-30. doi:10.3758/s13423-014-0585-6</a></p>
+<p id="ref4">[4] <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0019009">Altmann EG, Pierrehumbert JB, Motter AE (2011) Niche as a Determinant of Word Fate in Online Groups. PLoS ONE 6(5): e19009.</a></p>
+<p id="ref5">[5] <a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">Michel, Jean-Baptiste, Yuan Kui, Shen, Aviva Presser, Aiden, Adrian, Veres, Matthew K., Gray, , Joseph P., Pickett, Dale, Hoiberg, Dan, Clancy, Peter, Norvig, Jon, Orwant, Steven, Pinker, Martin A., Nowak, and Erez Lieberman, Aiden. "Quantitative Analysis of Culture Using Millions of Digitized Books".Science 331, no.6014 (2011): 176–182.</a></p>

@@ -44,7 +44,8 @@ function routes(app) {
   app.get('/api/figures/mostRecentNewWords', figures.mostRecentNewWords);
   app.get('/api/figures/oldestDeadWords', figures.oldestDeadWords);
   app.get('/api/figures/topNewWordsByYear', figures.topNewWordsByYear);
-  app.get('/api/figures/wordLongevity', figures.wordLongevity);
+  app.get('/api/figures/frequencyOverTime', figures.frequencyOverTime);
+  // app.get('/api/figures/wordLongevity', figures.wordLongevity);
 
   app.get('/', (req, res, next) => res.render('index', { articles: articles.map(article => dashCaseToWords(article)) }));
 

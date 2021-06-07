@@ -2,14 +2,11 @@ class TableLoader extends HTMLElement {
   constructor() {
     super();
 
-    // Attributes
-    // const dataSrc = this.getAttribute('data-src');
-
-    // Content
+    // shadow dom
     const shadowContainer = document.createElement('div');
     shadowContainer.id = this.getAttribute('data-id');
     this.prepend(shadowContainer);
-    const shadow = shadowContainer.attachShadow({mode: 'open'});
+    const shadow = shadowContainer.attachShadow({ mode: 'open' });
 
     // style
     const style = document.createElement('style');
@@ -145,14 +142,13 @@ class TableLoader extends HTMLElement {
     const dataSrc = this.getAttribute('data-src');
     const response = await fetch(dataSrc);
     const data = await response.json();
-    // console.log(data);
     return data;
   }
 
   static get width() { return 800; }
   static get height() { return 400; }
 
-  // Loader css from https://tobiasahlin.com/spinkit/
+  // Inspiration from https://tobiasahlin.com/spinkit/
   static get style() { return `
 .loader-container {
   display: flex;
@@ -201,7 +197,7 @@ button {
   height: 18px;
   border: 1px solid #EF0096;
   float: left;
-  animation: ld-sqGridScaleDelay 1.5s infinite ease-in-out;
+  animation: squareScale 1.5s infinite ease-in-out;
 }
 
 .ld-sq-grid .ld-sq1 { animation-delay: 0.1s; background-color: #000; }
@@ -209,7 +205,7 @@ button {
 .ld-sq-grid .ld-sq3 { animation-delay: 0.0s; }
 .ld-sq-grid .ld-sq4 { animation-delay: 0.2s; }
 
-@keyframes ld-sqGridScaleDelay {
+@keyframes squareScale {
   0%, 5%, 65%, 100% {
     transform: scale3D(1, 1, 1);
   } 15%, 55% {

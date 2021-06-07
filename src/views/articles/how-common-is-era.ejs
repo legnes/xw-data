@@ -1,4 +1,4 @@
-<p>In this post we'll look into just how common the most common crossword answers really are. There's a <em>ton</em> of writing about Zipf's law out there, more than I could possibly read through. But I did get a lot out of <em>Zipf’s word frequency law in natural language: A critical review and future directions</em> <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of Zipf's law -- different formulations, fields of applicability, some theorized explanations from the literature, and the shortcomings of those explanations.</p>
+<p>In this post we'll look into just how common the most common crossword answers really are. There's a <em>ton</em> of writing about Zipf's law out there, more than I could possibly read through. But I did get a lot out of <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">this article</a> <a href="#ref1">[1]</a> by Steven T. Piantadosi, head of the computation and language lab at UC Berkeley. It gives a great breakdown of Zipf's law -- different formulations, fields of applicability, some theorized explanations from the literature, and the shortcomings of those explanations.</p>
 
 <h3>Answer repetition</h3>
 
@@ -41,9 +41,9 @@
 
 <h3>Complications with zipf's law</h3>
 
-<p>Of course, it's not that easy. You may have noticed that the fit line doesn't actually match the data very well for the first thousand or so words. In fact, a simple power law doesn't quite cut it. There have been a host of proposed distributions for a more refined version of Zipf's law, among them log-normal, Yule-Simon, and Mandelbrot's generalization of Zipf's law <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]</a> <a href="https://scholar.google.com/scholar_lookup?title=Word+frequency+distributions&author=R+Baayen&publication_year=2001&">[REF]</a>. Others hve proposed fitting <em>two separate power laws</em>, one for the high-rank domain (ranks one, two, three, etc.) and one for the low-rank domain <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">[REF]</a> <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">[REF]</a></em>.</p>
+<p>Of course, it's not that easy. You may have noticed that the fit line doesn't actually match the data very well for the first thousand or so words. In fact, a simple power law doesn't quite cut it. There have been a host of proposed distributions for a more refined version of Zipf's law, among them log-normal, Yule-Simon, and Mandelbrot's generalization of Zipf's law <a href="#ref1">[1]</a> <a href="#ref2">[2]</a>. Others hve proposed fitting <em>two separate power laws</em>, one for the high-rank domain (ranks one, two, three, etc.) and one for the low-rank domain <a href="ref3">[3]</a> <a href="#ref4">[4]</a>.</p>
 
-<p>You may also have noticed that the fit line matches the last 98,000 or so words suspiciously well. That's probably in part because of inherent correlation in rank-frequency graphs like this one <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">[REF]?</a>. Since frequency is what actually <em>determines</em> rank, our plot of frequency vs. rank is <em>guaranteed</em> to monotonically descend. Maybe it just looks like something meaningful when nothing meaningful is going on.</p>
+<p>You may also have noticed that the fit line matches the last 98,000 or so words suspiciously well. That's probably in part because of inherent correlation in rank-frequency graphs like this one <a href="#ref1">[1]</a>. Since frequency is what actually <em>determines</em> rank, our plot of frequency vs. rank is <em>guaranteed</em> to monotonically descend. Maybe it just looks like something meaningful when nothing meaningful is going on.</p>
 
 <p>Here's the rank-frequency graph for the top 500,000 most-frequent words in the english wikipedia corpus, only this time decorrelated and with an adjusted fit. For more on how this works, check out "<a href="#statisticlNotes">Statistical notes</a>" down below.</p>
 
@@ -65,9 +65,9 @@
 
 <h3>Semantics</h3>
 
-<p>It seems pretty likely that word meaning plays a role in Zipf's law. Here's one way to think about it. Some words are so vague that they aren't actually all that useful day-to-day. You don't go around saying "why did the entity cross the travelled way?". On the other hand, highly specific words that can be very useful are often not relevant. Words that apply in a medium range of contexts are more likely to be used often <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987">[REF]</a>.</p>
+<p>It seems pretty likely that word meaning plays a role in Zipf's law. Here's one way to think about it. Some words are so vague that they aren't actually all that useful day-to-day. You don't go around saying "why did the entity cross the travelled way?". On the other hand, highly specific words that can be very useful are often not relevant. Words that apply in a medium range of contexts are more likely to be used often <a href="#ref5">[5]</a>.</p>
 
-<p>Another way to see how meaning affects frequency is by comparing words with related meanings. It turns out that in many languages, lower numbers are used more frequently than higher ones <a href="https://pubmed.ncbi.nlm.nih.gov/1591901/">[REF]</a>. We can compare crosswords to english with a special rank-frequency plot. To decorrelate the data, we can use ranks based on english frequency and frequencies drawn from the crossword corpus. The more monotonic the graph, the more similar numerical word ranks are between the two.</p>
+<p>Another way to see how meaning affects frequency is by comparing words with related meanings. It turns out that in many languages, lower numbers are used more frequently than higher ones <a href="#ref6">[6]</a>. We can compare crosswords to english with a special rank-frequency plot. To decorrelate the data, we can use ranks based on english frequency and frequencies drawn from the crossword corpus. The more monotonic the graph, the more similar numerical word ranks are between the two.</p>
 
 <graph-loader data-id="rankFrequencyNumericals" data-src="api/figures/rankFrequencyNumericals">
   <graph-log-axis-checkbox></graph-log-axis-checkbox>
@@ -79,14 +79,26 @@
 
 <p>Like I said, there's a lot of writing out there about Zipf's law. I wanted to mention a couple details that didn't fit in the main post above.</p>
 
-<p>First, a fun tie-in. It turns out you can formulate Zipf's law in relation to the joint probability mass function of type length and frequency <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">[REF]</a> <a href="https://arxiv.org/abs/1412.4577">[REF]</a>:</p>
+<p>First, a fun tie-in. It turns out you can formulate Zipf's law in relation to the joint probability mass function of type length and frequency <a href="ref3">[3]</a> <a href="#ref7">[7]</a>:</p>
 
 <p><em>Q(j) = kj<sup>-β</sup></em></p>
 
 <p>where <em>Q(j)</em> is the probability a given word is in the corpus <em>j</em> times, <em>k</em> is some constant, and <em>β</em> is about 2. This is exactly the same as the frequency marginal distribution discussed in the post on <a href="/short-answer-is#pmf">the brevity law</a>!</p>
 
-<p>Second, an excuse. I opted for using the two-domain power law to fit Zipf's law because it was easy with the regression library I'm using. In theory you could fit the Zipf-Mandelbrot equation by running regressions for multiple trial values of β and maximize some fit or likeliness function. If you want to learn more, there are some resources out there <a href="https://volweb.utk.edu/~scolli46/zipfmandelbrotmc.html">[REF]</a> <a href="https://www.researchgate.net/publication/220364507_Some_practical_aspects_of_fitting_and_testing_the_Zipf-Mandelbrot_model">[REF]</a>. Also I chose the domain split rank arbitrarily.</p>
+<p>Second, an excuse. I opted for using the two-domain power law to fit Zipf's law because it was easy with the regression library I'm using. In theory you could fit the Zipf-Mandelbrot equation by running regressions for multiple trial values of β and maximize some fit or likeliness function. If you want to learn more, there are some resources out there <a href="#ref8">[8]</a> <a href="#ref8">[9]</a>. Also I chose the domain split rank arbitrarily.</p>
 
 <p>Third, I wanted to explain a little more about how to decorrelate rank-frequency. Decorrelated data can only come from <em>two separate corpora</em>. If you plot rank from corpus A against frequency from corpus B, you're no longer guaranteed to get a monotonically-descending rank-frequency. That's how the numerical words comparison worked above. If you've only got one corpus, you have to randomly split it in two. In practice, for each word, you can use its original frequency as the characteristic <em>n</em> value of a binomial distribution with <em>p = 0.5</em>, then sample that distribution to get a value <em>V</em>. The word's new frequencies for your split corpora A and B are <em>V</em> and <em>original frequency - V</em>. It amounts to the same thing running through each instance of the word and assigning it to one or the other split corpus on a coin flip.</p>
 
 <p>If you're still reading, thanks for sticking it out all the way to the end! That's all for this post.</p>
+
+<h3>References</h3>
+
+<p id="ref1">[1] <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">Piantadosi, Steven T. “Zipf's word frequency law in natural language: a critical review and future directions.” Psychonomic bulletin & review vol. 21,5 (2014): 1112-30. doi:10.3758/s13423-014-0585-6</a></p>
+<p id="ref2">[2] <a href="https://scholar.google.com/scholar_lookup?title=Word+frequency+distributions&author=R+Baayen&publication_year=2001&">Baayen, R. Harald. Word frequency distributions. Vol. 18. Springer Science & Business Media, 2002.</a></p>
+<p id="ref3">[3] <a href="https://www.tandfonline.com/doi/abs/10.1076/jqul.8.3.165.4101">Ramon Ferrer i Cancho & Ricard V. Solé (2001) Two Regimes in the Frequency of Words and the Origins of Complex Lexicons: Zipf’s Law Revisited∗, Journal of Quantitative Linguistics, 8:3, 165-173, DOI: 10.1076/jqul.8.3.165.4101</a> </p>
+<p id="ref4">[4] <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">Corral, Álvaro; Serra, Isabel. 2020. "The Brevity Law as a Scaling Law, and a Possible Origin of Zipf’s Law for Word Frequencies" Entropy 22, no. 2: 224. https://doi.org/10.3390/e22020224</a></p>
+<p id="ref5">[5] <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0181987">Lestrade S (2017) Unzipping Zipf’s law. PLoS ONE 12(8): e0181987. https://doi.org/10.1371/journal.pone.0181987</a></p>
+<p id="ref6">[6] <a href="https://pubmed.ncbi.nlm.nih.gov/1591901">Dehaene S, Mehler J. Cross-linguistic regularities in the frequency of number words. Cognition. 1992 Apr;43(1):1-29. doi: 10.1016/0010-0277(92)90030-l. PMID: 1591901.</a></p>
+<p id="ref7">[7] <a href="https://arxiv.org/abs/1412.4577">Font-Clos, Francesc, and Álvaro, Corral. "Log-Log Convexity of Type-Token Growth in Zipf's Systems".Phys. Rev. Lett. 114 (2015): 238701.</a></p>
+<p id="ref8">[8] <a href="https://volweb.utk.edu/~scolli46/zipfmandelbrotmc.html">Collins-Elliott, Stephen A. 2019. "Fitting a Zipf-Mandelbrot Distribution Using Monte Carlo Least Squares".</a></p>
+<p id="ref9">[9] <a href="https://www.researchgate.net/publication/220364507_Some_practical_aspects_of_fitting_and_testing_the_Zipf-Mandelbrot_model">Izsak, Janos. (2006). Some practical aspects of fitting and testing the Zipf-Mandelbrot model. Scientometrics. 67. 107-120. 10.1007/s11192-006-0052-x.</a></p>

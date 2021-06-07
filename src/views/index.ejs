@@ -3,9 +3,35 @@
 <%- include('./partials/head'); %>
 <body>
   <%- include('./partials/header'); %>
-  <h2>About Crosswords and This Article</h2>
+  <h2>About this blog</h2>
 
-  <p>Intro intro intro</p>
+  <p>Welcome! This is the home page of a blog about crossword puzzles and language.</p>
+
+  <p>This blog might be for you if you're a casual solver or constructor of crossword puzzles. It'll look at things like common answers, bad fill, patterns in the grid, and change over time. Hopefully you'll come away with some new ideas borrowed from linguistics and backed up by data!</p>
+
+  <p>If you're a linguist or a statistician, you may find some things oversimplified. I'm not an expert, but I'd love to hear from you if you are! And to the seasoned crossword aces, maybe the posts here will confirm what you already know about how words (mis)behave when you box them in.</p>
+
+  <h3>Further reading</h3>
+
+  <p>If you're interested in crosswords and data, there are a lot of great resources to find! For more on how crosswords reflect our society, and on writing more equitable puzzles, check out this <a href="https://pudding.cool/2020/11/crossword/">great read</a> by Michelle McGhee with Russell Goldenberg and Jan Diehm for The Pudding. For a <em>ton</em> of great crossword-specific history, stats, and content, check out <a href="https://www.xwordinfo.com/">xwordinfo.com</a>. They also have a trove of crossword data from different puzzle types and including NYT crossword data from before 1993 (the "pre-Shortz era"), all the way back to 1942. There's also <a href="https://xd.saul.pw/">xd.saul.pw</a> by Saul Pwanson, where you can find three decades and counting of crossword data spanning something like 25 different publishers.</p>
+
+  <h3>Data sources</h3>
+
+  <p>The crossword data in this blog come from the New York Times Crossword daily puzzles published between 1993 and 2021.</p>
+
+  <p>The english language data mostly come from a <a href="https://github.com/IlyaSemenov/wikipedia-word-frequency">frequency list of english wikipedia words gathered in 2019</a>.</p>
+
+  <h3>Graphs and tables</h3>
+
+  <p>This blog will feature a lot of graphs or charts like the one below of most common answers. To save on data, they won't come preloaded. Click the button to load in the data as you read.</p>
+
+  <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers">
+    <form is="query-param-form">
+      <label>min answer length <input is="query-param-input" data-query-param="lengthThresh" type="number" value="3"></label>
+    </form>
+  </table-loader>
+
+  <h3>Posts</h3>
 
   <% if (articles && articles.length > 0) { %>
     <ul>
@@ -14,5 +40,11 @@
       <% }); %>
     </ul>
   <% } %>
+
+  By <a href="https://legnes.github.io/my/">Sam Engel</a>
+
+  <script src="js/table-loader.js"></script>
+  <script src="js/query-param-input.js"></script>
+  <script src="js/query-param-form.js"></script>
 </body>
 </html>

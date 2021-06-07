@@ -220,6 +220,7 @@ figures.lengthTypesAndTokensCombined = (req, res, next) => {
   db.query(answerTokensAndTypes(), (err, data) => {
     if (err) return next(err);
 
+    // TODO: speed this up?
     const countsByLength = {};
     for (const [answer, frequency] of Object.entries(WIKI_CORPUS.wordFrequencies)) {
       const length = answer.length;
@@ -1137,6 +1138,61 @@ ORDER BY lifespan_months DESC;
         }
       }],
       layout: axisLabels('lifespan (years)', 'number answers')
+    });
+  });
+};
+
+figures.frequencyOverTime = (req, res, next) => {
+  const MAX_RESULT_TERMS = 6;
+  const searchTerms = cleanSearchText(req.query.search);
+  if (searchTerms.length < 1) return next(new Error('Missing search terms!'));
+
+  db.query(`
+SELECT
+  answer,
+  DATE_TRUNC('year', p.date) AS date_bin,
+  COUNT(*) as frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id=p.id
+WHERE ${searchTerms.map(str => (`answer LIKE '${str}'`)).join(' OR ')}
+GROUP BY date_bin, answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    // TODO: clean this up
+    const answerRows = analysis.groupRowsBy(data.rows, 'answer');
+    const answerSums = analysis.sumRowGroupsBy(data.rows, 'answer', 'frequency');
+
+    const dateRange = [ START_YEAR - 1, END_YEAR + 1 ];
+    const years = Array.from({ length: END_YEAR - START_YEAR + 1 }, (val, idx) => (idx + START_YEAR));
+
+    const traces = Object.entries(answerRows)
+                    .sort(([a], [b]) => answerSums[b] - answerSums[a])
+                    .slice(0, MAX_RESULT_TERMS)
+                    .sort(([a], [b]) => (searchTerms.indexOf(a) - searchTerms.indexOf(b)))
+                    .map(([answer, rows]) => {
+      let firstYear = END_YEAR + 2;
+      const yearCounts = rows.reduce((counts, row) => {
+        const year = new Date(row.date_bin).getFullYear();
+        if (year < firstYear) firstYear = year;
+        counts[year] = +row.frequency;
+        return counts;
+      }, {});
+
+      const answerYears = years.slice(years.indexOf(firstYear));
+
+      return {
+        x: answerYears,
+        y: answerYears.map(year => (yearCounts[year] || 0)),
+        mode: 'lines',
+        line: { shape: 'spline' },
+        name: answer
+      };
+    });
+
+    res.json({
+      data: traces,
+      layout: { xaxis: { range: dateRange }}
     });
   });
 };
