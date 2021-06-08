@@ -57,6 +57,7 @@ class TableLoader extends HTMLElement {
       shadow.removeChild(loaderContainer);
       this.renderData(figure);
       shadow.appendChild(tableContainer);
+      if (typeof figureLoadEvent !== 'undefined') this.dispatchEvent(figureLoadEvent);
     }
     button.addEventListener('click', handleButton);
   }

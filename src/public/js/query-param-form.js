@@ -8,9 +8,10 @@ class QueryParamForm extends HTMLFormElement {
     submit.type = 'submit';
     submit.value = 'reload';
     this.appendChild(submit);
+    this.submit = submit;
 
     this.addEventListener('submit', async () => {
-      submit.setAttribute('disabled', true);
+      this.setDisabled(true);
       try {
         const figure = await this.loadFigure();
         this.parentNode.renderData(figure);
@@ -18,25 +19,36 @@ class QueryParamForm extends HTMLFormElement {
         // console.log(e);
       } finally {
         // TODO: loading spinner?
-        submit.removeAttribute('disabled');
+        this.setDisabled(false);
       }
     });
   }
 
-  get queryString() {
-    // TODO: make more robust!
-    const queryTerms = [];
+  forEachInput(callback) {
+    // TODO: support arbitrary child structure
     for (const child of this.childNodes) {
       if (child.tagName !== 'LABEL') continue;
       for (const grandchild of child.childNodes) {
         if (!(grandchild instanceof QueryParamInput)) continue;
-        const queryParam = grandchild.getAttribute('data-query-param');
-        const queryValue = grandchild.queryValue;
-        if (queryValue !== null) {
-          queryTerms.push(`${queryParam}=${queryValue}`);
-        }
+        callback(grandchild);
       }
     }
+  }
+
+  setDisabled(disabled) {
+    this.submit.disabled = !!disabled;
+    this.forEachInput(input => { input.disabled = !!disabled; });
+  }
+
+  get queryString() {
+    const queryTerms = [];
+    this.forEachInput(input => {
+      const queryParam = input.getAttribute('data-query-param');
+      const queryValue = input.queryValue;
+      if (queryValue !== null) {
+        queryTerms.push(`${queryParam}=${queryValue}`);
+      }
+    });
     return queryTerms.join('&');
   }
 
@@ -53,11 +65,16 @@ class QueryParamForm extends HTMLFormElement {
 
   connectedCallback() {
     if (this.isConnected) {
-      // TODO: propagte changes before initial data load?
-      // alterntively, disable until initial load
       this.parentNode.setAttribute('data-src', this.dataUrl);
+      // Disable until initial load
+      // TODO: propagte changes before initial data load?
+      if (typeof figureLoadEvent !== 'undefined') this.setDisabled(true);
+      this.parentNode.addEventListener('figureload', () => {
+        this.setDisabled(false);
+      });
     }
   }
 }
 
+const figureLoadEvent = new Event('figureload');
 customElements.define('query-param-form', QueryParamForm, { extends: 'form' });

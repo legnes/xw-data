@@ -54,6 +54,7 @@ class GraphLoader extends HTMLElement {
       if (figure.config) Object.assign(this.config, figure.config);
       this.renderData(figure);
       shadow.removeChild(loaderContainer);
+      if (typeof figureLoadEvent !== 'undefined') this.dispatchEvent(figureLoadEvent);
     }
     button.addEventListener('click', handleButton);
   }
@@ -70,7 +71,7 @@ class GraphLoader extends HTMLElement {
   }
 
   setLayout(layout) {
-    // TODO: make more robust
+    // TODO: Add real nesting assign?
     for (const [key, val] of Object.entries(layout)) {
       this.layout[key] = Object.assign(this.layout[key] || {}, val);
     }
