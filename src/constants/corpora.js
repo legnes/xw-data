@@ -1,8 +1,9 @@
+const zlib = require('zlib');
 const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
 
-const WIKI_CORPUS_PATH = path.join(__dirname, '../../enwiki-20190320-words-frequency.txt');
+const WIKI_CORPUS_PATH = path.join(__dirname, '../../enwiki-20190320-words-frequency.txt.br');
 
 // TODO:
 // Corpora take up a lot of memory. Consider other approaches, like redis or traditional database
@@ -16,7 +17,8 @@ const createEmptyCorpus = () => ({
 });
 
 async function parseCorpus(outCorpus, path) {
-  const readStream = fs.createReadStream(path);
+  const readBrotli = zlib.createBrotliDecompress();
+  const readStream = fs.createReadStream(path).pipe(readBrotli);
 
   const lineReader = readline.createInterface({
     input: readStream,
