@@ -14,8 +14,6 @@ function routes(app) {
   app.get('/api/figures/mostFrequentAnswers', figures.mostFrequentAnswers);
   app.get('/api/figures/lengthFrequency', figures.lengthFrequency);
   app.get('/api/figures/lengthFrequencyCorrelations', figures.lengthFrequencyCorrelations);
-  app.get('/api/figures/lengthFrequencyEn', figures.lengthFrequencyEn);
-  app.get('/api/figures/lengthFrequencyCorrelationsEn', figures.lengthFrequencyCorrelationsEn);
   app.get('/api/figures/lengthFrequencyPmfLengthConditionals', figures.lengthFrequencyPmfLengthConditionals);
   app.get('/api/figures/lengthFrequencyPmfLengthMarginal', figures.lengthFrequencyPmfLengthMarginal);
   app.get('/api/figures/lengthTypesAndTokens', figures.lengthTypesAndTokens);

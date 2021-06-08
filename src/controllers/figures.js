@@ -83,44 +83,6 @@ figures.lengthFrequencyCorrelations = (req, res, next) => {
   });
 };
 
-figures.lengthFrequencyEn = (req, res, next) => {
-  res.json({
-    data: [{
-      x: Object.entries(WIKI_CORPUS.wordFrequencies).map(([word, frequency]) => word.length),
-      y: Object.entries(WIKI_CORPUS.wordFrequencies).map(([word, frequency]) => Math.log10(frequency)),
-      ...DEFAULT_HISTOGRAM_2D
-    }],
-    layout: axisLabels('answer length', 'frequency (log 10 scale)')
-  });
-};
-
-figures.lengthFrequencyCorrelationsEn = (req, res, next) => {
-  const rows = Object.entries(WIKI_CORPUS.wordFrequencies).map(([answer, frequency]) => ({ answer, frequency, length: answer.length }));
-  const lengthRanks = analysis.rankRowGroupCounts(rows, 'length');
-  const frequencyRanks = analysis.rankRowGroupCounts(rows, 'frequency');
-  rows.forEach((row) => {
-    row.logFrequency = Math.log(+row.frequency);
-    row.lengthRank = lengthRanks[row.length];
-    row.frequencyRank = frequencyRanks[row.frequency];
-  });
-
-  const correlationResults = [
-    { keyX: 'length', keyY: 'frequency' , name: 'Pearson', variables: 'Length vs Frequency' },
-    { keyX: 'length', keyY: 'logFrequency', name: 'Pearson', variables: 'Length vs Log Frequency' },
-    { keyX: 'lengthRank', keyY: 'frequencyRank', name: 'Spearman (rank Pearson)', variables: 'Length vs Frequency' },
-  ].map(test => analysis.runCorrelationTest(rows, test));
-
-  res.json({
-    rows: correlationResults,
-    columns: [
-      { label: 'test name', key: 'name'},
-      { label: 'test variables', key: 'variables'},
-      { label: 'correlation coefficient', key: 'coeff'},
-      { label: 'fisher transformation z score', key: 'zScore'}
-    ],
-  });
-};
-
 figures.lengthFrequencyPmfLengthConditionals = (req, res, next) => {
   db.query(answerFrequencies(), (err, data) => {
     if (err) return next(err);
@@ -220,17 +182,16 @@ figures.lengthTypesAndTokensCombined = (req, res, next) => {
   db.query(answerTokensAndTypes(), (err, data) => {
     if (err) return next(err);
 
-    // TODO: speed this up?
-    const countsByLength = {};
-    for (const [answer, frequency] of Object.entries(WIKI_CORPUS.wordFrequencies)) {
+    const enData = {};
+    for (let [answer, frequency] of WIKI_CORPUS.data) {
       const length = answer.length;
-      const counts = countsByLength[length] || {
+      const counts = enData[length] || {
         tokens: 0,
         types: 0
       };
       counts.tokens += frequency;
       counts.types++;
-      countsByLength[length] = counts;
+      enData[length] = counts;
     }
 
     const lengths = data.rows.map(row => row.length);
@@ -254,7 +215,7 @@ figures.lengthTypesAndTokensCombined = (req, res, next) => {
 
     const tokensTraceEn = {
       x: lengths,
-      y: lengths.map(length => countsByLength[length] ? countsByLength[length].tokens : 0),
+      y: lengths.map(length => enData[length] ? enData[length].tokens : 0),
       type: 'scatter',
       mode: 'markers+lines',
       name: 'en tokens',
@@ -263,7 +224,7 @@ figures.lengthTypesAndTokensCombined = (req, res, next) => {
 
     const typesTraceEn = {
       x: lengths,
-      y: lengths.map(length => countsByLength[length] ? countsByLength[length].types : 0),
+      y: lengths.map(length => enData[length] ? enData[length].types : 0),
       type: 'scatter',
       mode: 'markers+lines',
       name: 'en types',
@@ -313,10 +274,10 @@ figures.relativeFrequencyDifference = (req, res, next) => {
     if (err) return next(err);
 
     const xwTotal = analysis.sumBy(data.rows, 'frequency');
-    const enTotal = WIKI_CORPUS.totalWordTokens;
+    const enTotal = WIKI_CORPUS.totalTokens;
     for (row of data.rows) {
       row.xwFrequency = +row.frequency;
-      row.enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 0;
+      row.enFrequency = WIKI_CORPUS.data.get(row.answer) || 0;
       row.xwRelativeFrequency = row.xwFrequency / xwTotal;
       row.enRelativeFrequency = row.enFrequency / enTotal;
       row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency).toFixed(5);
@@ -346,10 +307,10 @@ figures.keyness = (req, res, next) => {
     if (err) return next(err);
 
     const xwTotal = data.rows.reduce((total, row) => (total + +row.frequency), 0);
-    const enTotal = WIKI_CORPUS.totalWordTokens;
+    const enTotal = WIKI_CORPUS.totalTokens;
     for (row of data.rows) {
       const xwFrequency = +row.frequency;
-      const enFrequency = WIKI_CORPUS.wordFrequencies[row.answer] || 1e-15;
+      const enFrequency = WIKI_CORPUS.data.get(row.answer) || 1e-15;
       const combinedFrequency = xwFrequency + enFrequency;
       const combinedTotal = xwTotal + enTotal;
       const xwNormalizedFrequency = xwFrequency / xwTotal;
@@ -491,15 +452,12 @@ GROUP BY answer, year;
 };
 
 figures.rankFrequencyEn = (req, res, next) => {
-  let rows = WIKI_CORPUS.wordFrequencyRows.slice();
-  rows.sort(numSortBy('frequency', true));
-  rows.length = 100000;
-  const corpusSize = WIKI_CORPUS.totalWordTokens;
-
-  const ranks = [], frequencies = [], logFrequencySeries = [];
-  for (let i = 0, len = rows.length; i < len; i++) {
-    const rank = i + 1;
-    const frequency = +rows[i].frequency;
+  const corpusSize = WIKI_CORPUS.totalTokens;
+  const words = [], ranks = [], frequencies = [], logFrequencySeries = [];
+  let rank = 0;
+  for (let [word, frequency] of WIKI_CORPUS.data) {
+    if (++rank > 100000) break;
+    words.push(word);
     ranks.push(rank);
     frequencies.push(frequency);
     logFrequencySeries.push([ Math.log(rank), Math.log(frequency / corpusSize) ])
@@ -510,7 +468,7 @@ figures.rankFrequencyEn = (req, res, next) => {
   const dataTrace = {
     x: ranks,
     y: frequencies,
-    text: rows.map(row => row.word),
+    text: words,
     type: 'scatter',
     mode: 'lines',
     name: `frequencies`
@@ -531,9 +489,12 @@ figures.rankFrequencyEn = (req, res, next) => {
 };
 
 figures.decorrelatedRankFrequencyEn = (req, res, next) => {
-  let rows = WIKI_CORPUS.wordFrequencyRows.slice();
-  rows.sort(numSortBy('frequency', true));
-  rows.length = 500000;
+  const rows = [];
+  let i = 0;
+  for (let [word, frequency] of WIKI_CORPUS.data) {
+    if (++i > 500000) break;
+    rows.push({ word, frequency });
+  }
 
   const {
     rankFrequency,
@@ -570,7 +531,7 @@ figures.rankFrequencyNumericals = (req, res, next) => {
 
     const numberRows = english.NUMERICAL_WORDS.map((word) => ({
       word,
-      enFrequency: WIKI_CORPUS.wordFrequencies[word]
+      enFrequency: WIKI_CORPUS.data.get(word)
     })).sort(numSortBy('enFrequency', true));
 
     const numWordLookup = english.NUMERICAL_WORDS.reduce((lookup, word) => {
