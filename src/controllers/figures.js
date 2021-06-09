@@ -390,7 +390,6 @@ SELECT
   DATE_TRUNC('year', p.date) as year
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3000-01-01'
 GROUP BY answer, year;
 `, (err, data) => {
     const allTimeWordCounts = {};
@@ -772,8 +771,6 @@ figures.vowelsByLength = (req, res, next) => {
 SELECT
   answer
 FROM clues
-INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
 ${countTokens ? '' : 'GROUP BY answer'};
 `, (err, data) => {
     if (err) return next(err);
@@ -797,8 +794,7 @@ SELECT
   grid_index
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-AND p.width = ${PUZZLE_DIMENSION}
+WHERE p.width = ${PUZZLE_DIMENSION}
 AND p.height = ${PUZZLE_DIMENSION};
 `, (err, data) => {
     if (err) return next(err);
@@ -864,6 +860,7 @@ figures.topLeftAnswers = (req, res, next) => {
   const PUZZLE_DIMENSION = 15;
 
   db.query(answerFrequencies({
+    joinPuzzles: true,
     where:`p.width = ${PUZZLE_DIMENSION} AND p.height = ${PUZZLE_DIMENSION} AND (grid_index = ${gridIndex} OR grid_index = ${gridIndex * PUZZLE_DIMENSION})`,
     orderBy: 'frequency DESC',
     limit: 30
@@ -917,7 +914,6 @@ SELECT
   MIN(DATE_TRUNC('month', p.date)) AS month_introduced
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
 GROUP BY answer
 ORDER BY month_introduced;
 `, (err, data) => {
@@ -1119,7 +1115,7 @@ SELECT
   DATE_TRUNC('year', p.date) AS date_bin,
   COUNT(*) as frequency
 FROM clues
-INNER JOIN puzzles p ON puzzle_id=p.id
+INNER JOIN puzzles p ON puzzle_id = p.id
 WHERE ${searchTerms.map(str => (`answer LIKE '${str}'`)).join(' OR ')}
 GROUP BY date_bin, answer;
 `, (err, data) => {
@@ -1172,8 +1168,6 @@ GROUP BY date_bin, answer;
 // FROM crosses
 // INNER JOIN clues c1 ON clue1_id=c1.id
 // INNER JOIN clues c2 ON clue2_id=c2.id
-// INNER JOIN puzzles p ON c1.puzzle_id = p.id
-// WHERE p.date BETWEEN '1000-01-01'AND '3020-01-01'
 // GROUP BY c1.answer, c2.answer
 // ORDER BY count DESC, c1.answer, c2.answer
 // LIMIT 100;

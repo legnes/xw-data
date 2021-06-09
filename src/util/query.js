@@ -15,15 +15,14 @@ query.promiseQuery = (query) => {
 };
 
 // TODO: add selection override?
-query.answerFrequencies = ({ where, having, orderBy, limit } = {}) => (`
+query.answerFrequencies = ({ where, having, orderBy, limit, joinPuzzles } = {}) => (`
 SELECT
   answer,
   LENGTH(answer) as length,
   COUNT(*) AS frequency
 FROM clues
-INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-${where ? `AND ${where}` : ''}
+${joinPuzzles ? 'INNER JOIN puzzles p ON puzzle_id = p.id' : ''}
+${where ? `WHERE ${where}` : ''}
 GROUP BY answer
 ${having ? `HAVING ${having}` : ''}
 ${orderBy ? `ORDER BY ${orderBy}` : ''}
@@ -37,7 +36,6 @@ SELECT
   COUNT(*) AS occurrences
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
 GROUP BY answer
 ${countThresh ? `HAVING COUNT(*) >= ${countThresh}` : ''}
 ORDER BY ${orderBy || `${func}(p.date) ${func === 'MIN' ? 'DESC' : 'ASC'}`}
@@ -50,8 +48,6 @@ SELECT
   COUNT(DISTINCT answer) AS types,
   COUNT(*) AS tokens
 FROM clues
-INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
 GROUP BY length
 ORDER BY length ASC;
 `);
