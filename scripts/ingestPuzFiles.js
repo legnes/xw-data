@@ -42,13 +42,6 @@ const CROSSES_COLUMNS = [
   'clue2_id',
 ];
 
-const CLUE_WORDS_COLUMNS = [
-  'clue_id',
-  'answer',
-  'clue_word',
-  'text_index',
-];
-
 function buildRawInsert(tableName, columns, objs, returning) {
   if (!Array.isArray(objs)) objs = [objs];
   return `
@@ -87,18 +80,6 @@ async function ingestPuzzle(puzzle) {
     const cluesQueryRes = await db.query(cluesQuery);
     puzzle.clues.forEach((clue, idx) => { clue._id = cluesQueryRes.rows[idx].id });
 
-    const clueWords = puzzle.clues.reduce((words, clue) => {
-      Array.prototype.push.apply(words, clue.text.split(' ').map((clueWord, idx) => ({
-        clueId: clue._id,
-        answer: clue.answer,
-        clue_word: clueWord.toUpperCase().replace(/[!?",\.\*]/g, ''),
-        textIndex: idx
-      })));
-      return words;
-    }. []);
-    const clueWordsQuery = buildRawInsert('clue_words', CLUE_WORDS_COLUMNS, clueWords);
-    await db.query(clueWordsQuery);
-
     const crosses = puzzle.clues.reduce((xs, clue) => {
       Array.prototype.push.apply(xs, clue.crosses.map(cross => ({
         clue1Id: clue._id,
@@ -118,9 +99,11 @@ async function ingestPuzzle(puzzle) {
 function ingestPuzzleFile(filePath) {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, async (err, data) => {
+      if (err) return reject(err);
       try {
         const nytId = filePath.match(/.+_([0-9]+).puz/)[1];
         const puzzle = Puzzle.fromPuzFile(data);
+        if (!puzzle) throw new Error(`could not parse puzzle file ${filePath}`);
         puzzle.nytId = nytId;
         await ingestPuzzle(puzzle);
         resolve();
@@ -136,7 +119,11 @@ const puzPaths = fs.readdirSync(PUZ_DIR);
 (async () => {
   for (let i = 0; i < puzPaths.length; i++) {
     if (puzPaths[i].indexOf('.DS_Store') > -1) continue;
-    await ingestPuzzleFile(path.resolve(PUZ_DIR, puzPaths[i]));
+    try {
+      await ingestPuzzleFile(path.resolve(PUZ_DIR, puzPaths[i]));
+    } catch (e) {
+      console.log(e);
+    }
   }
   db.end();
 })();
