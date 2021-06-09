@@ -8,7 +8,11 @@ const articles = fs.readdirSync(path.join(__dirname, 'views/articles'))
                     .filter(filename => (
                       !path.extname(filename) &&
                       !(process.env.NODE_ENV === 'production' && filename.match(/^unpublished-/)))
-                    );
+                    )
+                    .map(filename => ({
+                      title: dashCaseToWords(filename),
+                      filename
+                    }));
 
 function routes(app) {
   app.get('/api/figures/mostFrequentAnswers', figures.mostFrequentAnswers);
@@ -43,15 +47,12 @@ function routes(app) {
   app.get('/api/figures/oldestDeadWords', figures.oldestDeadWords);
   app.get('/api/figures/topNewWordsByYear', figures.topNewWordsByYear);
   app.get('/api/figures/frequencyOverTime', figures.frequencyOverTime);
-  // app.get('/api/figures/wordLongevity', figures.wordLongevity);
+  app.get('/api/figures/wordLongevity', figures.wordLongevity);
 
-  app.get('/', (req, res, next) => res.render('index', { articles: articles.map(article => dashCaseToWords(article)) }));
+  app.get('/', (req, res, next) => res.render('index', { articles }));
 
   articles.forEach(article => {
-    app.get(`/${article}`, (req, res, next) => res.render('article-template', {
-      title: dashCaseToWords(article),
-      article
-    }));
+    app.get(`/${article.filename}`, (req, res, next) => res.render('article-template', article));
   });
 }
 

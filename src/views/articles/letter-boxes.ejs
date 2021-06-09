@@ -1,8 +1,8 @@
-<p>In this post we'll see how the actual letters that make up crossword answers, in particular their vowels, channel the fill into certain predictable patterns.</p>
+<p>Common letters are really important for making crossword puzzles fit together. But not just when you're finishing off a corner of the grid. From the very first clue you write, the letters you choose are secretly shunting your fill into predictable patterns.</p>
 
 <h3>Vowel placement</h3>
 
-<p>If you take a look at <a href="/short-answer-is#mostFrequentAnswers">the most common crossword answers</a>, it's obvious that vowels are pretty important. All of the most frequently-repeated answers are chock full of As. Es, Os, and Is. Here's a graph showing vowel usage:</p>
+<p>If you take a look at <a href="/short-answer-is#mostFrequentAnswers">the most common crossword answers</a>, it's obvious that vowels are pretty significant. All of the most frequently-repeated answers are chock full of As, Es, Os, and Is (throughout this post, I'm going to be ignoring Y -- I want to look at vowels as a factor in answer repetition, and Y doesn't really show up in the most common answers). Here's a graph showing vowel usage, ignoring Y and controlling for length (which <a href="/short-answer-is">we know affects frequency</a>).</p>
 
 <graph-loader data-id="vowelCountFrequency" data-src="api/figures/vowelCountFrequency">
   <form is="query-param-form">
@@ -10,15 +10,13 @@
   </form>
 </graph-loader>
 
-<p>Each crossword answer has a certain number of vowels, shown on the x-axis, and has appeared a certain number of times in the puzzle, shown on the y-axis. Color represents how many answers there are with a given vowel count and frequency. Controlling for length, which <a href="/short-answer-is">we know affects frequency</a>, a pattern emerges. The low-frequency answers are concentrated around some middling number of vowels, often two to four. The high-frequency answers follow a similar distribution, but pushed a little bit towards more vowels. Which means the highest-frequency answers usually have one or two more vowels than is typical for their length.</p>
+<p>This is a histogram showing how many answers have <em>x</em> number of vowels and <em>y</em> frequency. The highest-frequency answers usually have one or two more vowels than is typical for their length.</p>
 
-<h3>Revenge of the grid</h3>
-
-<p>What actually makes these answers so...voweluable? It has to do with how the grid works, specifically the <a href="https://www.nytimes.com/puzzles/submissions/crossword">"interlocking" stipulation</a>. Some crossword traditions, namely the British style, encourage more spaced-out block squares. What you get is a grid where about half the letters in each answer are <em>uncrossed</em> by another answer, because they're sandwiched between two block squares. A seven-letter answer will only have three or four crosses. If you have all the crosses and still can't guess the answer, well, you're out of luck. American-style crosswords, on the other hand, generally stipulate that <em>every letter must be crossed</em>. That way, you have to be stumped by <em>two</em> answers, and intersecting ones at that, before you're really stuck.</p>
+<p>What actually makes these high-frequency answers so...voweluable? It has to do with how the grid works, specifically the <a href="https://www.nytimes.com/puzzles/submissions/crossword#:~:text=interlock">"interlocking" stipulation</a>. Some crossword traditions, namely the British style, encourage more spaced-out block squares. What you get is a grid where about half the letters in each answer are <em>uncrossed</em> by another answer, because they're sandwiched between two block squares. A seven-letter answer will only have three or four crosses. If you've filled in all four crosses and still can't guess the answer, well, you're out of luck. American-style crosswords, on the other hand, generally stipulate that <em>every letter must be crossed</em>. That way, you have to be stumped by <em>two</em> answers, and intersecting ones at that, before you're really stuck.</p>
 
 <p>Imagine you're writing a puzzle, and you need to choose an answer for 1-Across, the top left of the grid. Maybe you choose EXHORT. In a British-style crossword, you'd block off the squares under the second, fourth, and sixth letters. Now you just have to cross E, H, and R. This is great news because you were really dreading coming up with a word that started with X!</p>
 
-<p>In an American-style puzzle, the grid gives you fewer places to hide inconvenient letters. You're stuck using every V, J, and Q. And as it turns out, vowels are especially bad. You need them all over the place to form actual words, but often they make for inconvenient crosses. Take a look at the distribution of vowels in crossword answers:</p>
+<p>In an American-style puzzle, the grid gives you fewer places to hide inconvenient letters. You're stuck using every V, Q, and J. Vowels are especially bad. You need them all over the place to form actual words, but often they make for inconvenient crosses. Take a look at the distribution of vowels in crossword answers.</p>
 
 <graph-loader data-id="vowelPlacement" data-src="api/figures/vowelPlacement">
   <form is="query-param-form">
@@ -27,53 +25,57 @@
   </form>
 </graph-loader>
 
-<p>Each data point is a vowel distribution. For example, <code>--V</code> means a word that has two consonants then a vowel, like PHO. The x-axis represents the crossword "dictionary" -- how many possible answers there are for any given vowel distribution. The y-axis shows how many times an answer in the puzzle has used a certain vowel distribution (it's our old friend <a href="/short-answer-is#tokensAndTypes">tokens vs. types</a>). Let's say there are 100 three-letter words in the dictionary, and over the course of a year we use 1000 three-letter answers in our puzzles. Each three-letter word would be repeated on average ten times.</p>
+<p>Each data point is a vowel distribution. For example, <code>--V</code> represents words that have two consonants followed by a vowel, like PHO. The x-axis shows what fraction of <em>possible</em> three-letter answers have a <code>--V</code> distribution. It says how many <code>--V</code> words there are in the dictionary. The y-axis shows what fraction of <em>actual</em> answers had a <code>--V</code> distributions. It says how often <code>--V</code> words showed up in the puzzle (it's our old friend <a href="/short-answer-is#tokensAndTypes">types vs. tokens</a>).</p>
 
-<p>Check out <code>-V-</code>. The graph tells us that about a third of the 1000 three-letter puzzle answers have a consonant-vowel-consonant distribution. That's 333. It also says that, coincidentally, about a third of the 100 possible three-letter words to choose from have that same distribution. That's 33. We're choosing 333 answers from 33 possible words. So average repetition among <code>-V-</code> answers is 10, just what we'd expect if letter distribution among answers were even.</p>
+<p>Let's say there are 100 three-letter words in the dictionary, and over the course of a year we use 1000 three-letter answers in our puzzles. Each three-letter word would be repeated on average ten times. Now look at <code>-V-</code>. The graph tells us that about a third of the 1000 three-letter puzzle answers have a consonant-vowel-consonant distribution. That's 333. It also says that, coincidentally, about a third of the 100 possible three-letter words to choose from have that same distribution. That's 33. We're choosing 333 answers from 33 possible words. So average repetition among <code>-V-</code> answers is 10, just what we'd expect if letter distribution didn't affect frequency.</p>
 
-<p>Now look at <code>V-V</code>. It looks like 18%, or 180, of our 1000 answers have a <code>V-V</code> distribution, but we're only choosing from 8%, or 8, of the 100 words in our dictionary. On average, answers with <code>V-V</code> distribution have to get repeated 22 times!</p>
+<p>But check out <code>V-V</code>. It looks like 18%, or 180, of our 1000 answers have a <code>V-V</code> distribution, but we're only choosing from 8%, or eight, of the 100 words in our dictionary. On average, those eight <code>V-V</code> answers have to get repeated 22 times!</p>
 
-<p>Distributions above the line have higher-than-average repetition. For any given length of word, distributions that start and end with vowels are above the line. What's going on here is that when you're constructing an American-style crossword and you choose PAELLA for 1-Across, you've now got to come up with three words that start with vowels. Probably the theme answer you already filled in three squares below has some vowels in it too, so one or two of those three might have to <em>end</em> with vowels as well. But there are only a handful of words like that to choose from! That's why 18 of the top 20 <a href="/short-answer-is#mostFrequentAnswers">most common crossword answers</a> start <em>and</em> end with A, E, I, or O.</p>
+<p>In other words, distributions above the line have higher-than-average repetition. For every answer length, distributions that start and end with vowels are above the line.</p>
+
+<p>What's going on here is that when you're constructing an American-style crossword and you put PAELLA in 1-Across, you've now got to come up with three crosses that start with vowels. Worse yet when you put in your theme answer THERMOPYLAE a few rows below it, suddenly two downs need to start <em>and end</em> with vowels. But there are really only a handful of words like that to choose from! That's why 18 of the top 20 <a href="/short-answer-is#mostFrequentAnswers">most common crossword answers</a> start <em>and</em> end with A, E, I, or O. It's supply and demand!</p>
 
 <h3>Filling is hard</h3>
 
-<p>Here's another way to think about it. Remember, you're building a puzzle and choosing an answer for 1-Across. How many vowels will the answer have?</p>
+<p>Here's another way to think about it. Again, you're building a puzzle and choosing an answer for 1-Across. How many vowels will the answer have? It depends on answer length, of course. Say you pick a five-letter answer.</p>
 
 <graph-loader data-id="vowelsByLength" data-src="api/figures/vowelsByLength"></graph-loader>
 
-<p>It depends on answer length, of course, but say you pick an answer with two vowels. You've now committed yourself to finding two <em>down</em> answers that <em>start</em> with vowels. What percent of answers have a vowel in any given letter position (assuming the answer you choose is long enough)?</p>
+<p>According to the graph above, five letter answers are most likely to have two vowels. Maybe you pick REORG. You've now committed yourself to finding two <em>down</em> answers that <em>start</em> with vowels. How many possible answers start with a vowel?</p>
 
 <graph-loader data-id="vowelPositions" data-src="api/figures/vowelPositions"></graph-loader>
 
-<p>It should come as no surprise that relatively few answers start with a vowel. It's the same old story -- there's a high demand and low supply.</p>
+<p>This is a graph showing the percent of distinct answers that have a vowel in any given letter position (assuming the answer is long enough). It should come as no surprise that relatively few answers start with a vowel. The E and the O in REORG will probably be tough to cross.</p>
 
-<p>Now imagine you're picking another across answer, and you want to put it somewhere below 1-Across. The graph says there's about a 36% chance that 1-Across and the new answer <em>both</em> have vowels in the second position. If they do, suddenly your options for 2-Down are looking tough! Say you put the new across in the second row, just below 1-Across. Now 2-Down has to start with two consecutive vowels, which doesn't feel good. So maybe you put the new across a few squares below 1-Across, in the fourth row, and you move on to the downs. If you want the downs to have length four, then 2-Down has to start and end with vowels, which is <em>also</em> hard to fill! So you start thinking about maybe moving it up a row and oh geez now your head is hurting and it's time for a break. Just by choosing those two answers together, you've established a lot about the fill and/or the shape of the northwest corner.</p>
+<p>Now imagine you're picking another across answer, and you want to put it somewhere below 1-Across. The graph says there's about a <em>60% * 60% =</em> 36% chance that 1-Across and the new answer <em>both</em> have vowels in the second position. If they do, suddenly your options for 2-Down are looking tough! Let's say you choose TENOR and you try to put it in the second row, just below REORG. Now 2-Down has to start with EE, which doesn't feel good. So maybe you put TENOR lower, in the fourth row. If you're aiming for four-letter downs, that would make 2-Down start and end with Es, which is <em>also</em> hard to fill! So you're left with no choice but to move TENOR up to row three. The two acrosses you've chosen, simply because of their vowel distributions, have locked in the fill and shape of the northwest corner.</p>
 
 <h3>The grid speaks</h3>
 
-<p>Don't believe me? Here's a heatmap of where vowels appear in 15x15 puzzles:</p>
+<p>Don't believe me? Here's a heatmap of where vowels appear in 15x15 puzzles.</p>
 
 <graph-loader data-id="vowelsGrid" data-src="api/figures/vowelsGrid" data-square="true"></graph-loader>
 
-<p>There's your headache, clear as day in the northwest corner. We know that vowels often show up in an answer's second letter. And the second letters of 1-Across and 1-Down have the highest vowel frequency in the grid! There's almost never a block square in the top left corner, meaning two answers start there in almost every puzzle. We can look at where in the grid answers start:</p>
+<p>There's your northwest corner! We know that about 60% of answers have a vowel in the second letter. And the second letters of 1-Across and 1-Down have the highest vowel frequency in the grid. That's because almost every puzzle has 1-A and 1-D starting in the top left square. Here's a heat map showing where answers start.</p>
 
 <graph-loader data-id="answerStartsGrid" data-src="api/figures/answerStartsGrid" data-square="true"></graph-loader>
 
-<p>Of course answers start most frequently in the top row and left-most column. We can look at the words that go in those positions:</p>
+<p>Of course answers start most consistently in the top row and left-most column. Of those, 1-A and 1-D probably get chosen first most of the time, and it affects the starting letters of all the other answers. Here's a table of answers that begin in the Nth square of the north and west edges.</p>
 
 <table-loader data-id="topLeftAnswers" data-src="api/figures/topLeftAnswers">
   <form is="query-param-form">
-    <label>row/column <input is="query-param-input" data-query-param="gridIndex" type="number" value="2" min="1" max="15"></label>
+    <label>square of north/west edges <input is="query-param-input" data-query-param="gridIndex" type="number" value="1" min="1" max="15"></label>
   </form>
 </table-loader>
 
-<p>In the top left corner (row/column 1), a number of common words start with a consonant followed by a vowel: PAPA, HAHA, CASH, SPAM, BASH. In the second column and row, the most frequent words all start with vowels, and them have vowels in the third letter position. Because of the rarity of answers that start with vowels, these 2nd position 1st-row/column answers have much much higher frequencies, they're reused way more often, than the common answers in any other 1st-row/column position.</p>
+<p>Square 1 is the first square of the north and west edges. That's the top left square of the grid, which is usually the start of 1-A and 1-D. Square 2 means the <em>second</em> squares of the north and west edges. Those are usually the squares that start 2-D and 14-A, respectively.</p>
 
-<p>So what can you do about your headache? Well first of all, you can try to avoid using vowels in positions that will have to be the start of other answers. This is no easy task, but if you can concentrate your low-vowel words on the top row and left column, you'll be doing yourself a favor crosswordese-wise. Second of all, if possible, try to pick answers that stagger vowel usage so they don't fall into common patterns. Third of all, try anchoring somewhere other than 1-A and 1-D early on in the fill process and working from there, to break the pattern in the corners.</p>
+<p>Looking at the table, 1-A/1-D often start with a consonant followed by a vowel: PAPA, HAHA, CASH, BASH. Those vowels fall in the second edge squares, the ones that usually start 2-D/14-A. As a result, 2-D/14-A (square 2 in the table) almost all start with vowels. And because not many words start with vowels, 2-D/14-A answers are repeated way more often than answers in other grid positions.</p>
 
-<h3>Valuable letters</h3>
+<p>So what can you do to avoid locking up the corners? Well first of all, you can try to use fewer vowels on the edge of the grid. Second of all, if possible, try to pick answers that stagger vowel usage so they don't fall into common patterns. Third of all, consider anchoring your fill in the middle of the grid and putting a block square in the northwest to break the pattern in the corners.</p>
 
-<p>Of course, vowels aren't the only letters to see heavy use in the crossword. Letter frequencies in english are <a href="https://en.wikipedia.org/wiki/Letter_frequency">well documented</a>. Here's a comparison, where letters above the line are proportionally overused in crosswords.</p>
+<h3>Other valuable letters</h3>
+
+<p>Of course, vowels aren't the only letters to see heavy use in the crossword. Letter frequencies in english are <a href="https://en.wikipedia.org/wiki/Letter_frequency">well documented</a>. Here's a comparison of letter usage in crosswords to english, where letters above the line are proportionally overused in crosswords.</p>
 
 <graph-loader data-id="letterCounts" data-src="api/figures/letterCounts">
   <form is="query-param-form">
@@ -81,9 +83,7 @@
   </form>
 </graph-loader>
 
-<p>There are E and A, above the line like we'd expect. But I is below -- are vowels less important than we thought? It seems likely to me that words like THE and I, which appear with high frequency in english but not in the crossword, account for T, H, and I seeming to appear less in crosswords. Letters like S, R, and L, all above the line, show up all over the most frequent crossword answers, although I don't have a great reason to account for why.</p>
-
-<p>As a merely interesting side note, we can plot answer frequency against scrabble score:</p>
+<p>Noticeably E and A are above the line. But H, I, and T are all below. My guess is that extemely common english words like I and THE account for this discrepancy. In general, common crossword answers tend to use common letters. Here's scrabble score plotted against frequency.</p>
 
 <graph-loader data-id="letterScoreFrequency" data-src="api/figures/letterScoreFrequency">
   <form is="query-param-form">
@@ -93,19 +93,4 @@
   </form>
 </graph-loader>
 
-<h3>Caveats</h3>
-
-<p>One pretty important note is that I'm not counting Y as a vowel. It shows up pretty low on the letter frequency chart, so I figured it'd be safe to ignore when looking at distribution of valuable letters.</p>
-
-<p>Another really important note is that I'm not tracking error through any of this, which makes it pretty hand-wavy.</p>
-
-<p>You may have noticed the "per-letter" checkmark under the vowel distribution graph. It collapses the vowel distributions into letter positions -- does the first letter have a vowel? the second?</p>
-
-<!-- <h3>References</h3> -->
-
-<!-- <p id="ref1">[1] <a href=""></a></p> -->
-<!-- <p id="ref2">[2] <a href=""></a></p> -->
-<!-- <p id="ref3">[3] <a href=""></a></p> -->
-<!-- <p id="ref4">[4] <a href=""></a></p> -->
-<!-- <p id="ref5">[5] <a href=""></a></p> -->
-<!-- <p id="ref6">[6] <a href=""></a></p> -->
+<p>Thanks for reading!</p>

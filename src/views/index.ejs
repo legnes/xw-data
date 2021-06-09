@@ -7,9 +7,7 @@
 
   <p>Welcome! This is the index page of a blog about crossword puzzles, data, and language.</p>
 
-  <p>If you're a casual solver or constructor of crossword puzzles, this blog might be for you! It talks about things like common answers, bad answers, trendy answers, and the grid. Hopefully you'll come away with some new ideas backed up by data!</p>
-
-  <p>If you're a linguist or a statistician, you may find some things oversimplified. I'm not an expert. I'd love to hear from you if you are! And to the seasoned crossword aces out there, maybe these posts will confirm what you already know about how words behave (and misbehave) when you box them in.</p>
+  <p>If you're a casual solver or constructor of crossword puzzles, this blog might be for you. We'll look at common answers, bad answers, trendy answers, the grid, and more. Hopefully you'll come away with some new ideas backed up by data. If you're a linguist or a statistician, you may find some things oversimplified. I'm not an expert. I'd love to hear from you if you are! And to the seasoned crossword aces out there, maybe these posts will confirm what you already know about how words behave (and misbehave) when you box them in.</p>
 
   <h3>Further reading</h3>
 
@@ -25,18 +23,14 @@
 
   <p>This blog will feature a lot of graphs or charts like the one below. To save on data, they won't come preloaded. Click the button to load in the data as you read. Try it out on this table of common answers:</p>
 
-  <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers">
-    <form is="query-param-form">
-      <label>min answer length <input is="query-param-input" data-query-param="lengthThresh" type="number" value="3"></label>
-    </form>
-  </table-loader>
+  <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers"></table-loader>
 
   <h3>Posts</h3>
 
   <% if (articles && articles.length > 0) { %>
     <ul>
       <% articles.forEach((article) => { %>
-        <li><a href="/<%= article %>"><%= article %></a></li>
+        <li><a href="/<%= article.filename %>"><%= article.title %></a></li>
       <% }); %>
     </ul>
   <% } %>
@@ -44,7 +38,5 @@
   By <a href="https://legnes.github.io/my/">Sam Engel</a>
 
   <script src="js/table-loader.js"></script>
-  <script src="js/query-param-input.js"></script>
-  <script src="js/query-param-form.js"></script>
 </body>
 </html>

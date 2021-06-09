@@ -712,8 +712,10 @@ figures.letterCounts = (req, res, next) => {
 
 figures.letterScoreFrequency = (req, res, next) => {
   const wordLength = cleanNumber(req.query.wordLength, 3);
-  const scrabbleScore = cleanBoolean(req.query.scrabbleScore);
-  const logScale = cleanBoolean(req.query.logScale);
+  const useScrabbleScore = true;
+  const logScale = false;
+  // const useScrabbleScore = cleanBoolean(req.query.scrabbleScore);
+  // const logScale = cleanBoolean(req.query.logScale);
 
   db.query(answerFrequencies({
     where: `LENGTH(answer) = ${wordLength}`
@@ -721,7 +723,7 @@ figures.letterScoreFrequency = (req, res, next) => {
     if (err) return next(err);
 
     data.rows.forEach(row => {
-      row.letterScore = scrabbleScore ? analysis.scrabbleScore(row.answer) : analysis.letterFrequencyScore(row.answer);
+      row.letterScore = useScrabbleScore ? analysis.scrabbleScore(row.answer) : analysis.letterFrequencyScore(row.answer);
     });
 
     res.json({
@@ -944,7 +946,7 @@ ORDER BY month_introduced;
         type: 'scatter',
         mode: 'lines'
       }],
-      layout: axisLabels('years', 'cumulative unique answers')
+      layout: axisLabels(`years since ${START_YEAR}`, 'cumulative unique answers')
     });
   });
 };
@@ -1045,7 +1047,7 @@ figures.oldestDeadWords = (req, res, next) => {
 };
 
 figures.topNewWordsByYear = (req, res, next) => {
-  const countThresh = cleanNumber(req.query.thresh, 2);
+  const countThresh = 4; //cleanNumber(req.query.thresh, 2);
   const MAX_WORDS_PER_YEAR = 10;
 
   db.query(answerYears({
@@ -1063,8 +1065,11 @@ figures.topNewWordsByYear = (req, res, next) => {
       yearWords.length = Math.min(yearWords.length, MAX_WORDS_PER_YEAR);
     }
 
+    const rows = Object.values(wordsByYear).flat();
+    rows.sort(numSortBy('year', true));
+
     res.json({
-      rows: Object.values(wordsByYear).flat(),
+      rows: rows,
       columns: [
         { label: 'year', key: 'year'},
         { label: 'answer', key: 'answer'},
@@ -1120,7 +1125,6 @@ GROUP BY date_bin, answer;
 `, (err, data) => {
     if (err) return next(err);
 
-    // TODO: clean this up
     const answerRows = analysis.groupRowsBy(data.rows, 'answer');
     const answerSums = analysis.sumRowGroupsBy(data.rows, 'answer', 'frequency');
 
@@ -1128,13 +1132,14 @@ GROUP BY date_bin, answer;
     const years = Array.from({ length: END_YEAR - START_YEAR + 1 }, (val, idx) => (idx + START_YEAR));
 
     const traces = Object.entries(answerRows)
-                    .sort(([a], [b]) => answerSums[b] - answerSums[a])
-                    .slice(0, MAX_RESULT_TERMS)
-                    .sort(([a], [b]) => (searchTerms.indexOf(a) - searchTerms.indexOf(b)))
+                    .sort(([a], [b]) => (answerSums[b] - answerSums[a]))  // sort by lifetime usage for wildcards and cutoff
+                    .slice(0, MAX_RESULT_TERMS)                           // only use the highest lifetime usage results
+                    .sort(([a], [b]) => (searchTerms.indexOf(a) - searchTerms.indexOf(b)))  // re-sort by search order
                     .map(([answer, rows]) => {
+      // build a trace for each answer
       let firstYear = END_YEAR + 2;
-      const yearCounts = rows.reduce((counts, row) => {
-        const year = new Date(row.date_bin).getFullYear();
+      const occurrencesByYear = rows.reduce((counts, row) => {
+        const year = row.date_bin.getFullYear();
         if (year < firstYear) firstYear = year;
         counts[year] = +row.frequency;
         return counts;
@@ -1144,7 +1149,7 @@ GROUP BY date_bin, answer;
 
       return {
         x: answerYears,
-        y: answerYears.map(year => (yearCounts[year] || 0)),
+        y: answerYears.map(year => (occurrencesByYear[year] || 0)),
         mode: 'lines',
         line: { shape: 'spline' },
         name: answer

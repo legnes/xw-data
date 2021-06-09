@@ -4,9 +4,9 @@
 <body>
   <%- include('./partials/header'); %>
   <h2><%= title %></h2>
-  <p><em>This post is part of a series on <a href="/">crossword puzzles and language</a>.</em></p>
-  <% if (article) { %>
-    <%- include(`./articles/${article}`); %>
+  <p><em>This post is part of a series on <a href="/">crossword puzzles, data, and language</a>.</em></p>
+  <% if (filename) { %>
+    <%- include(`./articles/${filename}`); %>
   <% } %>
   <%- include('./partials/scripts'); %>
 </body>
