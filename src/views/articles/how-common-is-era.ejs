@@ -45,7 +45,7 @@
 
 <p>You may also have noticed that the fit line matches the last 98,000 or so words suspiciously well. That's probably in part because of inherent correlation in rank-frequency graphs like this one <a href="#ref1">[1]</a>. Since frequency is what actually <em>determines</em> rank, our plot of frequency vs. rank is <em>guaranteed</em> to monotonically descend. How do we know if we're looking at a meaningful trend?</p>
 
-<p>Here's the rank-frequency graph for the top 500,000 most-frequent words in the english wikipedia corpus, only this time decorrelated and with an adjusted fit. For more on how this works, check out "<a href="#statisticlNotes">statistical notes</a>" down below.</p>
+<p>Here's the rank-frequency graph for the top 500,000 most-frequent words in the english wikipedia corpus, only this time decorrelated and with an adjusted fit. For more on how this works, check out "<a href="#statisticalNotes">statistical notes</a>" down below.</p>
 
 <graph-loader data-id="decorrelatedRankFrequencyEn" data-src="api/figures/decorrelatedRankFrequencyEn"></graph-loader>
 
@@ -75,7 +75,7 @@
 
 <p>We could run a Spearman test to be sure, but it looks like there's a slight correlation. Answer length, vowel counts, etc. all play a role in answer frequency, but it's easy to forget that <em>meaning</em> does too. Words like THIS, THEIR, and BEING are uncommon crossword answers in part because they're so darn bad to clue. A good puzzle, like good trivia, will use semantic specificity to its advantage.</p>
 
-<h3 id="statisticlNotes">Statistical notes</h3>
+<h3 id="statisticalNotes">Statistical notes</h3>
 
 <p>There's a lot of writing out there about Zipf's law. I wanted to mention a couple details that didn't fit in the main post above.</p>
 
