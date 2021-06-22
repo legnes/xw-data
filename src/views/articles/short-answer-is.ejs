@@ -2,7 +2,7 @@
 
 <h3>Frequent crossword Answers</h3>
 
-<p>No matter which crossword publisher you like best, odds are that after you solve a handful of puzzles, you'll start noticing repeated answers. Probably they're short, vowel-heavy words like ERA, ORE, and ALOE. These are the most commonly-used crossword puzzle answers.</p>
+<p>No matter which crossword publisher you like best, odds are that after you solve a handful of puzzles, you'll start noticing repeated answers. Probably they're short, vowel-heavy words like ERA, ORE, and ALOE. Here are the most commonly-used crossword puzzle answers.</p>
 
 <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers">
   <form is="query-param-form">
@@ -10,7 +10,7 @@
   </form>
 </table-loader>
 
-<p>These repeated answers depend a lot on their makeup as <em>words</em>, regardless of if they're linguistically or conceptually obscure. They get called names like "<a href="https://www.nytimes.com/2018/06/13/crosswords/how-to-make-a-crossword-fill.html#:~:text=bad%20fill">bad fill</a>" and "<a href="https://en.wikipedia.org/wiki/Crosswordese">crosswordese</a>". In this post, we'll take a look at how answer length affects repetition.</p>
+<p>Repeated answers owe their popularity to their makeup as <em>words</em>. They get called names like "<a href="https://www.nytimes.com/2018/06/13/crosswords/how-to-make-a-crossword-fill.html#:~:text=bad%20fill">bad fill</a>" and "<a href="https://en.wikipedia.org/wiki/Crosswordese">crosswordese</a>". It doesn't matter if they're linguistically or conceptually obscure as long as they're useful. In this post, we'll take a look at one of the most useful traits a word can have: brevity.</p>
 
 <h3>Linguistic laws</h3>
 
@@ -22,9 +22,9 @@
 
 <h3>Brevity law</h3>
 
-<p>The brevity law advises (qualitatively) that common words tend to be shorter. Check out the table up above and you'll see that the most common words are all three or four letters long. You can play around with the "minimum answer length" input to see how the frequency drops off as length goes up.</p>
+<p>The brevity law advises (qualitatively) that common words tend to be shorter. Check out the table up above and you'll see that the most common crossword answers are all three or four letters long. You can play around with the "minimum answer length" input to see how the frequency drops off as length goes up.</p>
 
-<p>A common way to measure tendencies is using a correlation test <a href="#ref3">[3]</a>. First, we plot every distinct answer's length vs its frequency:</p>
+<p>A common way to measure this kind of qualitative tendency is using a correlation test <a href="#ref3">[3]</a>. First, you plot every distinct answer's length vs its frequency:</p>
 
 <graph-loader data-id="lengthFrequency" data-src="api/figures/lengthFrequency"></graph-loader>
 
@@ -36,7 +36,7 @@
 
 <h3 id="pmf">The probability mass function</h3>
 
-<p>I'm going to take a quick detour through the weeds. If you're not interested, feel free to jump forward to the next heading! As I was looking into word length and frequency, I came across <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">a 2019 paper</a> with a new suggestion about how to quantify the brevity law. It was written by Álvaro Corral and Isabel Serra at the Centre de Recerca Matemàtica in Barcelona <a href="#ref3">[3]</a>. They go through a pretty daunting (to me) analysis that culminates in a formulation of the brevity law in terms of conditional distributions of the probability mass function of type length and frequency. To break that down a little, (joint) probability mass is just the likelihood of choosing a word with a given length and frequency. So like, "what fraction of answers are five letters long and appear in 12 puzzles?" If that sounds like the histogram above, it should -- the histogram is basically a binned PMF. The "conditional" PMF in this case means the likelihood of choosing a word of a given frequency, where you're choosing from all words of a <em>particular length</em>. So like, "what fraction of 5-letter words appear in 12 puzzles?" For crosswords, they look like this:</p>
+<p>I'm going to take a quick detour through the weeds. If you're not interested, feel free to jump forward to the next heading! As I was looking into word length and frequency, I came across <a href="https://www.mdpi.com/1099-4300/22/2/224/htm">a 2019 paper</a> with a new suggestion about how to quantify the brevity law. It was written by Álvaro Corral and Isabel Serra at the Centre de Recerca Matemàtica in Barcelona <a href="#ref3">[3]</a>. They go through a pretty daunting (to me) analysis that culminates in a formulation of the brevity law in terms of conditional distributions of the probability mass function of type length and frequency. To break that down a little, (joint) probability mass is just the likelihood of choosing a word with a given length and frequency. So like, "what fraction of answers are five letters long and appear in 12 puzzles?" If that sounds like the histogram above, it should -- the histogram is basically a binned PMF. The "conditional" PMF in this case means the likelihood of choosing a word of a given frequency, where you're choosing from all words of a <em>particular length</em>. So like, "what fraction of five-letter words appear in 12 puzzles?" For crosswords, they look like this:</p>
 
 <graph-loader data-id="lengthFrequencyPmfLengthConditionals" data-src="api/figures/lengthFrequencyPmfLengthConditionals">
   <graph-log-axis-checkbox data-checked="true"></graph-log-axis-checkbox>

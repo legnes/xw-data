@@ -55,7 +55,7 @@
 
 <graph-loader data-id="vowelsGrid" data-src="api/figures/vowelsGrid" data-square="true"></graph-loader>
 
-<p>There's your northwest corner! We know that about 60% of answers have a vowel in the second letter. And the second letters of 1-Across and 1-Down have the highest vowel frequency in the grid. That's because almost every puzzle has 1-A and 1-D starting in the top left square. Here's a heat map showing where answers start.</p>
+<p>There's your northwest corner! We know that about 60% of answers in the dictionary have a vowel in the second letter. And the second letters of 1-Across and 1-Down have the highest vowel frequency in the grid. That's because almost every puzzle has 1-A and 1-D starting in the top left square. Here's a heat map showing where answers start.</p>
 
 <graph-loader data-id="answerStartsGrid" data-src="api/figures/answerStartsGrid" data-square="true"></graph-loader>
 
@@ -93,4 +93,8 @@
   </form>
 </graph-loader>
 
-<p>Thanks for reading!</p>
+<p>An answer's scrabble score is a helpful metric because it takes into account answer length and letter "difficulty". We know that both affect answer frequency, and scrabble score helps show how they interact. Still, it's not the full story. We just saw how hard vowels can be to accommodate in the grid, yet they only have a scrabble score of one. What would a crossword-specific letter scoring system look like?</p>
+
+<h3>Caveats</h3>
+
+<p>Unlike most of the other posts in crossword corpus, I haven't based the analysis here on any literature to speak of. Intuition and interpreataion flow largely unfiltered right from the data. As a result, I've skimped out on error propagation and statistical significance checks. I didn't want to leave that grain of salt unmentioned, but hopefully the numbers here were interesting all the same!</p>
