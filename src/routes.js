@@ -48,12 +48,15 @@ function routes(app) {
   app.get('/api/figures/topNewWordsByYear', figures.topNewWordsByYear);
   app.get('/api/figures/frequencyOverTime', figures.frequencyOverTime);
   app.get('/api/figures/wordLongevity', figures.wordLongevity);
+  app.get('/api/figures/usageStats', figures.usageStats);
 
   app.get('/', (req, res, next) => res.render('index', { articles }));
 
   articles.forEach(article => {
     app.get(`/${article.filename}`, (req, res, next) => res.render('article-template', article));
   });
+
+  app.get('/answer-stats', (req, res, next) => res.render('answer-stats'));
 }
 
 module.exports = routes;

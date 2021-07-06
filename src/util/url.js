@@ -1,7 +1,7 @@
 const url = {};
 
 url.cleanSearchText = (query) => {
-  const MAX_SEARCH_TERMS = 10;
+  const MAX_SEARCH_TERMS = 6;
   // TODO: add extra protections to this?
   return decodeURI(query)
           .split(',')

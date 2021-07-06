@@ -63,6 +63,7 @@ class TableLoader extends HTMLElement {
   }
 
   renderData(figure) {
+    this.tryResetSortConfig(figure);
     this.figure = figure;
     // Will be skipped if sort config isn't initialized
     this.sortData();
@@ -107,6 +108,15 @@ class TableLoader extends HTMLElement {
         dataRow.appendChild(dataCell);
       }
       this.table.appendChild(dataRow);
+    }
+  }
+
+  tryResetSortConfig(newFigure) {
+    // If columns have changed, reset sort
+    if (this.figure && this.figure.columns && newFigure.columns &&
+        this.figure.columns.length !== newFigure.columns.length) {
+      this.sortConfig.columnIdx = -1;
+      this.sortConfig.isAscending = false;
     }
   }
 

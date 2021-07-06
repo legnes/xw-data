@@ -354,27 +354,48 @@ figures.keyness = (req, res, next) => {
 };
 
 figures.answerClues = (req, res, next) => {
-  const searchTerm = cleanSearchText(req.query.search)[0];
-  if (!searchTerm) return next(new Error('Missing search term!'));
+  const MAX_RESULT_TERMS = 6;
+  const MAX_RESULTS = 500;
+  const searchTerms = cleanSearchText(req.query.search);
+  if (searchTerms.length < 1) return next(new Error('Missing search terms!'));
 
   db.query(`
 SELECT
+  answer,
   DATE_TRUNC('year', p.date) AS year,
   text AS clue
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE answer='${searchTerm}'
-ORDER BY p.date DESC
-LIMIT 40;
+WHERE ${searchTerms.map(str => (`answer LIKE '${str}'`)).join(' OR ')}
+ORDER BY RANDOM()
+LIMIT ${MAX_RESULTS};
 `, (err, data) => {
     if (err) return next(err);
 
     data.rows.forEach(row => { row.year = row.year.getFullYear(); });
     data.rows.sort(sortBy('clue', true));
 
+    let foundMultipleAnswers = false;
+    if (data.rows.length > 0) {
+      const firstAnswer = data.rows[0].answer;
+      for (let i = 1, len = data.rows.length; i < len; i++) {
+        if (firstAnswer !== data.rows[i].answer) {
+          foundMultipleAnswers = true;
+          break;
+        }
+      }
+    }
+
+    const columns = [];
+    if (foundMultipleAnswers) {
+      data.rows.sort(sortBy('answer', true));
+      columns.push({ label: 'answer', key: 'answer' });
+    }
+
     res.json({
       rows: data.rows,
       columns: [
+        ...columns,
         { label: 'clue', key: 'clue'},
         { label: 'year', key: 'year'},
       ]
@@ -948,7 +969,7 @@ ORDER BY month_introduced;
 };
 
 figures.countBirthsDeathsOverTime = (req, res, next) => {
-  const lifetimeUsageThreshold = cleanNumber(req.query.thresh, 1);
+  const usageThreshold = cleanNumber(req.query.thresh, 1);
   const timeBin = cleanOptionText(req.query.timescale, ['year', 'month', 'day'], 'month');
 
   const queries = [
@@ -964,7 +985,7 @@ FROM (
   INNER JOIN puzzles p ON puzzle_id = p.id
   WHERE p.date BETWEEN '${START_YEAR + 1}-01-01' AND '${END_YEAR - 1}-12-31'
   GROUP BY answer
-  HAVING COUNT(*) >= ${lifetimeUsageThreshold}
+  HAVING COUNT(*) >= ${usageThreshold}
 ) answers_by_month_introduced
 GROUP BY time_bin
 ORDER BY time_bin;
@@ -981,7 +1002,7 @@ FROM (
   INNER JOIN puzzles p ON puzzle_id = p.id
   WHERE p.date BETWEEN '${START_YEAR + 1}-01-01' AND '${END_YEAR - 1}-12-31'
   GROUP BY answer
-  HAVING COUNT(*) >= ${lifetimeUsageThreshold}
+  HAVING COUNT(*) >= ${usageThreshold}
 ) answers_by_month_introduced
 GROUP BY time_bin
 ORDER BY time_bin;
@@ -1076,7 +1097,7 @@ figures.topNewWordsByYear = (req, res, next) => {
 };
 
 figures.wordLongevity = (req, res, next) => {
-  const lifetimeUsageThreshold = cleanNumber(req.query.thresh, 1);
+  const usageThreshold = cleanNumber(req.query.thresh, 1);
 
   db.query(`
 SELECT
@@ -1086,7 +1107,7 @@ FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
 WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
 GROUP BY answer
-HAVING COUNT(*) >= ${lifetimeUsageThreshold}
+HAVING COUNT(*) >= ${usageThreshold}
 ORDER BY lifespan_months DESC;
 `, (err, data) => {
     if (err) return next(err);
@@ -1128,8 +1149,8 @@ GROUP BY date_bin, answer;
     const years = Array.from({ length: END_YEAR - START_YEAR + 1 }, (val, idx) => (idx + START_YEAR));
 
     const traces = Object.entries(answerRows)
-                    .sort(([a], [b]) => (answerSums[b] - answerSums[a]))  // sort by lifetime usage for wildcards and cutoff
-                    .slice(0, MAX_RESULT_TERMS)                           // only use the highest lifetime usage results
+                    .sort(([a], [b]) => (answerSums[b] - answerSums[a]))  // sort by usage for wildcards and cutoff
+                    .slice(0, MAX_RESULT_TERMS)                           // only use the highest usage results
                     .sort(([a], [b]) => (searchTerms.indexOf(a) - searchTerms.indexOf(b)))  // re-sort by search order
                     .map(([answer, rows]) => {
       // build a trace for each answer
@@ -1155,6 +1176,37 @@ GROUP BY date_bin, answer;
     res.json({
       data: traces,
       layout: { xaxis: { range: dateRange }}
+    });
+  });
+};
+
+figures.usageStats = (req, res, next) => {
+  const MAX_RESULT_TERMS = 6;
+  const searchTerms = cleanSearchText(req.query.search);
+  if (searchTerms.length < 1) return next(new Error('Missing search terms!'));
+
+  db.query(`
+SELECT
+  answer,
+  MIN(DATE_TRUNC('year', p.date)) AS year_introduced,
+  COUNT(*) as frequency
+FROM clues
+INNER JOIN puzzles p ON puzzle_id = p.id
+WHERE ${searchTerms.map(str => (`answer LIKE '${str}'`)).join(' OR ')}
+GROUP BY answer;
+`, (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach(row => { row.year_introduced = row.year_introduced.getFullYear(); });
+    data.rows.sort(numSortBy('frequency', true));
+
+    res.json({
+      rows: data.rows,
+      columns: [
+        { label: 'answer', key: 'answer'},
+        { label: 'year introduced', key: 'year_introduced'},
+        { label: 'all-time occurrences', key: 'frequency'},
+      ]
     });
   });
 };

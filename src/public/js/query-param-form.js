@@ -3,6 +3,7 @@ class QueryParamForm extends HTMLFormElement {
     super();
 
     this.action = 'javascript:void(0);';
+    this.parentLoaded = false;
 
     const submit = document.createElement('input');
     submit.type = 'submit';
@@ -40,21 +41,18 @@ class QueryParamForm extends HTMLFormElement {
     this.forEachInput(input => { input.disabled = !!disabled; });
   }
 
-  get queryString() {
-    const queryTerms = [];
+  get dataUrl() {
+    const dataSrc = this.parentNode.getAttribute('data-src');
+    const dataUrl = new URL(dataSrc, window.location.origin);
+    const dataParams = dataUrl.searchParams;
     this.forEachInput(input => {
       const queryParam = input.getAttribute('data-query-param');
       const queryValue = input.queryValue;
       if (queryValue !== null) {
-        queryTerms.push(`${queryParam}=${queryValue}`);
+        dataParams.set(queryParam, queryValue);
       }
     });
-    return queryTerms.join('&');
-  }
-
-  get dataUrl() {
-    const dataSrc = this.parentNode.getAttribute('data-src').split('?')[0];
-    return `${dataSrc}?${this.queryString}`;
+    return dataUrl.pathname + dataUrl.search;
   }
 
   async loadFigure() {
@@ -63,13 +61,20 @@ class QueryParamForm extends HTMLFormElement {
     return data;
   }
 
+  preUpdate() {
+    if (!this.parentLoaded) {
+      this.parentNode.setAttribute('data-src', this.dataUrl);
+    }
+  }
+
   connectedCallback() {
     if (this.isConnected) {
-      this.parentNode.setAttribute('data-src', this.dataUrl);
+      this.preUpdate();
       // Disable until initial load
-      // TODO: propagte changes before initial data load?
+      // TODO: propagate changes before initial data load?
       if (typeof figureLoadEvent !== 'undefined') this.setDisabled(true);
       this.parentNode.addEventListener('figureload', () => {
+        this.parentLoaded = true;
         this.setDisabled(false);
       });
     }

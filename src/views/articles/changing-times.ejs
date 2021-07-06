@@ -6,7 +6,7 @@
 
 <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="3"></label>
+    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="3"></label>
   </form>
 </table-loader>
 
@@ -22,7 +22,7 @@
 
 <table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="10"></label>
+    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="10"></label>
   </form>
 </table-loader>
 
@@ -32,7 +32,7 @@
 
 <graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity">
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
   </form>
 </graph-loader>
 
@@ -68,7 +68,7 @@
 <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
   <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
   <form is="query-param-form">
-    <label>lifetime usage threshold <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label><br />
+    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label><br />
     <span>timescale:</span><br />
     <span>&emsp;</span><label>years<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label><br />
     <span>&emsp;</span><label>months<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label><br />
@@ -94,7 +94,7 @@
 
 <p id="ref1">[1] <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">Chacoma A. and Zanette D. H. 2020. Heaps’ Law and Heaps functions in tagged texts: evidences of their linguistic relevance. R. Soc. open sci.7200008200008</a></p>
 <p id="ref2">[2] <a href="https://www.nature.com/articles/srep00313">Petersen, A., Tenenbaum, J., Havlin, S. et al. Statistical Laws Governing Fluctuations in Word Use from Word Birth to Word Death. Sci Rep 2, 313 (2012). https://doi.org/10.1038/srep00313</a></p>
-<p id="ref3">[3] <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4176592/">Piantadosi, Steven T. “Zipf's word frequency law in natural language: a critical review and future directions.” Psychonomic bulletin & review vol. 21,5 (2014): 1112-30. doi:10.3758/s13423-014-0585-6</a></p>
+<p id="ref3">[3] <a href="http://colala.berkeley.edu/papers/piantadosi2014zipfs.pdf">Piantadosi, Steven T. “Zipf's word frequency law in natural language: a critical review and future directions.” Psychonomic bulletin & review vol. 21,5 (2014): 1112-30. doi:10.3758/s13423-014-0585-6</a></p>
 <p id="ref4">[4] <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0019009">Altmann EG, Pierrehumbert JB, Motter AE (2011) Niche as a Determinant of Word Fate in Online Groups. PLoS ONE 6(5): e19009.</a></p>
 <p id="ref5">[5] <a href="https://arxiv.org/abs/1412.4577">Font-Clos, Francesc, and Álvaro, Corral. "Log-Log Convexity of Type-Token Growth in Zipf’s Systems".Physical Review Letters 114, no.23 (2015).</a></p>
 <p id="ref6">[6] <a href="http://www.uvm.edu/pdodds/research/papers/others/2010/michel2010a.pdf">Michel, Jean-Baptiste, Yuan Kui, Shen, Aviva Presser, Aiden, Adrian, Veres, Matthew K., Gray, , Joseph P., Pickett, Dale, Hoiberg, Dan, Clancy, Peter, Norvig, Jon, Orwant, Steven, Pinker, Martin A., Nowak, and Erez Lieberman, Aiden. "Quantitative Analysis of Culture Using Millions of Digitized Books".Science 331, no.6014 (2011): 176–182.</a></p>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<%- include('./partials/head', { title: 'Answer Stats' }); %>
+<body>
+  <%- include('./partials/header'); %>
+  <h2>Answer Stats</h2>
+
+  <p>This page lets you search for detailed stats about crossword answers. Explore data for any answers you want using the text boxes underneath each figure. Type in an answer or list of answers and press "reload" to see the results. The list should be comma-separated, like <code>one,two,three</code>. You can include <code>*</code> to create a pattern: <code>d*wn</code> will get both <code>down</code> and <code>dawn</code>. You can search up to six answers at a time.</p>
+
+  <h3 id="overview">Usage overview</h3>
+
+  <table-loader data-id="usageStats" data-src="api/figures/usageStats">
+    <form is="query-param-form">
+      <label>search <input is="query-param-input" data-query-param="search" type="text" value="clue"></label>
+    </form>
+  </table-loader>
+
+  <p>This table shows an overview of answer usage for the whole corpus.</p>
+
+  <h3 id="usage">Usage over time</h3>
+
+  <graph-loader data-id="frequencyOverTime" data-src="api/figures/frequencyOverTime">
+    <form is="query-param-form">
+      <label>search <input is="query-param-input" data-query-param="search" type="text" value="clue"></label>
+    </form>
+  </graph-loader>
+
+  <p>This graph shows how often an answer appeared each year. For more frequency-over-time data, check out Google Books's <a href="https://books.google.com/ngrams">n-gram viewer</a>!</p>
+
+  <h3 id="clues">Common clues</h3>
+
+  <table-loader data-id="answerClues" data-src="api/figures/answerClues">
+    <form is="query-param-form">
+      <label>search <input is="query-param-input" data-query-param="search" type="text" value="clue"></label>
+    </form>
+  </table-loader>
+
+  <p>This table shows a random selection of at most 500 clues whose answers matched the search.</p>
+
+  <script src="js/graph-loader.js"></script>
+  <script src="js/table-loader.js"></script>
+  <script src="js/query-param-input.js"></script>
+  <script src="js/query-param-form.js"></script>
+  <script>
+    const searchTerm = new URL(window.location.href).searchParams.get('search');
+    if (searchTerm) {
+      const inputs = document.getElementsByTagName('INPUT');
+      const forms = document.getElementsByTagName('FORM');
+
+      for (let input of inputs) {
+        if (!(input instanceof QueryParamInput)) continue;
+        input.value = searchTerm;
+      }
+
+      for (let form of forms) {
+        if (!(form instanceof QueryParamForm)) continue;
+        form.preUpdate();
+      }
+    }
+  </script>
+  <script src="js/graph-log-axis-checkbox.js"></script>
+  <script src="js/lib/plotly-latest.min.js.br"></script>
+</body>
+</html>

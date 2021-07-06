@@ -25,6 +25,8 @@
 
   <table-loader data-id="mostFrequentAnswers" data-src="api/figures/mostFrequentAnswers"></table-loader>
 
+  <p>For most tables like the one above, you can click on a column header to sort the table by that column. Click again to switch between descending and ascending. You'll also come across some graphs. You can zoom into graphs by click-and-dragging over a region. To zoom back out, either double-click or click on the "autoscale" icon in the top right.</p>
+
   <h3>Posts</h3>
 
   <% if (articles && articles.length > 0) { %>
@@ -34,6 +36,12 @@
       <% }); %>
     </ul>
   <% } %>
+
+  <h3>Other Visuals</h3>
+
+  <ul>
+    <li><a href="/answer-stats?search=czar,tsar">Answer Stats</a></li>
+  </ul>
 
   By <a href="https://legnes.github.io/my/">Sam Engel</a>
 
