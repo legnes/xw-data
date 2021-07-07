@@ -3,11 +3,13 @@ const path = require('path');
 const figures = require('./controllers/figures');
 const { dashCaseToWords } = require('./util/base');
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 const articles = fs.readdirSync(path.join(__dirname, 'views/articles'))
                     .map(filename => path.basename(filename, '.ejs'))
                     .filter(filename => (
                       !path.extname(filename) &&
-                      !(process.env.NODE_ENV === 'production' && filename.match(/^unpublished-/)))
+                      !(IS_PRODUCTION && filename.match(/^unpublished-/)))
                     )
                     .map(filename => ({
                       title: dashCaseToWords(filename),
@@ -53,10 +55,18 @@ function routes(app) {
   app.get('/', (req, res, next) => res.render('index', { articles }));
 
   articles.forEach(article => {
-    app.get(`/${article.filename}`, (req, res, next) => res.render('article-template', article));
+    app.get(`/${article.filename}`, forceHttps, (req, res, next) => res.render('article-template', article));
   });
 
-  app.get('/answer-stats', (req, res, next) => res.render('answer-stats'));
+  app.get('/answer-stats', forceHttps, (req, res, next) => res.render('answer-stats'));
 }
+
+const forceHttps = (req, res, next) => {
+  if (IS_PRODUCTION && req.header('x-forwarded-proto') !== 'https') {
+    res.redirect(`https://${req.header('host')}${req.url}`);
+  } else {
+    next();
+  }
+};
 
 module.exports = routes;
