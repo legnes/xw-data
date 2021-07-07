@@ -472,38 +472,46 @@ GROUP BY answer, year;
 };
 
 figures.rankFrequencyEn = (req, res, next) => {
+  const MAX_RANK = 100000;
+  const maxRank = Math.min(cleanNumber(req.query.maxRank, MAX_RANK), MAX_RANK);
+  const noFit = cleanBoolean(req.query.noFit);
+
   const corpusSize = WIKI_CORPUS.totalTokens;
   const words = [], ranks = [], frequencies = [], logFrequencySeries = [];
   let rank = 0;
   for (let [word, frequency] of WIKI_CORPUS.data) {
-    if (++rank > 100000) break;
+    if (++rank > maxRank) break;
     words.push(word);
     ranks.push(rank);
     frequencies.push(frequency);
-    logFrequencySeries.push([ Math.log(rank), Math.log(frequency / corpusSize) ])
+    if (!noFit) {
+      logFrequencySeries.push([ Math.log(rank), Math.log(frequency / corpusSize) ])
+    }
   }
-  const fit = linear(logFrequencySeries, { precision: 12 });
-  const fitFrequencies = ranks.map(rank => (corpusSize * Math.exp(fit.predict(Math.log(rank))[1])));
 
-  const dataTrace = {
+  const data = [{
     x: ranks,
     y: frequencies,
     text: words,
     type: 'scatter',
     mode: 'lines',
     name: `frequencies`
-  };
+  }];
 
-  const fitTrace = {
-    x: ranks,
-    y: fitFrequencies,
-    type: 'scatter',
-    mode: 'lines',
-    name: `fit α=${-fit.equation[0].toPrecision(3)} r2=${fit.r2.toPrecision(3)}`
-  };
+  if (!noFit) {
+    const fit = linear(logFrequencySeries, { precision: 12 });
+    const fitFrequencies = ranks.map(rank => (corpusSize * Math.exp(fit.predict(Math.log(rank))[1])));
+    data.push({
+      x: ranks,
+      y: fitFrequencies,
+      type: 'scatter',
+      mode: 'lines',
+      name: `fit α=${-fit.equation[0].toPrecision(3)} r2=${fit.r2.toPrecision(3)}`
+    });
+  }
 
   res.json({
-    data: [ dataTrace, fitTrace ],
+    data,
     layout: axisLabels('rank', 'frequency')
   })
 };
@@ -546,34 +554,43 @@ figures.decorrelatedRankFrequency = (req, res, next) => {
 };
 
 figures.rankFrequencyNumericals = (req, res, next) => {
-  db.query(answerFrequencies(), (err, data) => {
+  db.query(answerFrequencies({
+    where: english.NUMERICAL_WORDS.map(str => (`answer = '${str}'`)).join(' OR ')
+  }), (err, data) => {
     if (err) return next(err);
 
-    const numberRows = english.NUMERICAL_WORDS.map((word) => ({
-      word,
-      enFrequency: WIKI_CORPUS.data.get(word)
-    })).sort(numSortBy('enFrequency', true));
-
-    const numWordLookup = english.NUMERICAL_WORDS.reduce((lookup, word) => {
-      lookup[word] = true;
-      return lookup;
-    }, {});
-
-    // If this is too slow, can filter in the query
-    const xwFrequencies = data.rows.reduce((frequencies, row) => {
-      if (numWordLookup[row.answer]) frequencies[row.answer] = +row.frequency;
-      return frequencies;
+    const frequencyByAnswer = data.rows.reduce((dict, row) => {
+      dict[row.answer] = row.frequency;
+      return dict;
     }, {});
 
     res.json({
       data: [{
-        x: numberRows.map((row, idx) => (idx + 1)),
-        y: numberRows.map((row) => xwFrequencies[row.word]),
-        text: numberRows.map((row) => row.word),
+        x: english.NUMERICAL_WORD_VALUES,
+        y: english.NUMERICAL_WORDS.map((word) => WIKI_CORPUS.data.get(word)),
+        text: english.NUMERICAL_WORDS,
         type: 'scatter',
         mode: 'markers+lines',
+        name: 'english'
+      }, {
+        x: english.NUMERICAL_WORD_VALUES,
+        y: english.NUMERICAL_WORDS.map((word) => frequencyByAnswer[word] || 0),
+        text: english.NUMERICAL_WORDS,
+        type: 'scatter',
+        mode: 'markers+lines',
+        name: 'crosswords',
+        yaxis: 'y2',
+        // visible: 'legendonly'
       }],
-      layout: axisLabels('english rank', 'crossword frequency')
+      layout: {
+        xaxis: { title: { text: 'cardinality' }},
+        yaxis: { title: { text: 'english frequency' }},
+        yaxis2: {
+          title : { text: 'crossword frequency' },
+          overlaying: 'y',
+          side: 'right' ,
+        }
+      }
     });
   });
 };
