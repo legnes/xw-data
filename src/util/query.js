@@ -29,16 +29,17 @@ ${orderBy ? `ORDER BY ${orderBy}` : ''}
 ${limit ? `LIMIT ${limit}` : ''}
 ;`);
 
-query.answerYears = ({ func, countThresh, limit, orderBy } = {}) => (`
+query.answerDates = ({ trunc, minCount, maxCount, orderBy, limit } = {}) => (`
 SELECT
   answer,
-  ${func}(DATE_TRUNC('year', p.date)) AS year,
+  MIN(DATE_TRUNC('${trunc}', p.date)) AS first_date,
+  MAX(DATE_TRUNC('${trunc}', p.date)) AS last_date,
   COUNT(*) AS occurrences
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
 GROUP BY answer
-${countThresh ? `HAVING COUNT(*) >= ${countThresh}` : ''}
-ORDER BY ${orderBy || `${func}(p.date) ${func === 'MIN' ? 'DESC' : 'ASC'}`}
+HAVING COUNT(*) >= ${typeof minCount !== 'undefined' ? minCount : 0} AND COUNT(*) <= ${typeof maxCount !== 'undefined' ? maxCount : 10000}
+${orderBy ? `ORDER BY ${orderBy}` : ''}
 ${limit ? `LIMIT ${limit}` : ''}
 ;`);
 

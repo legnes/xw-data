@@ -51,7 +51,7 @@
 
 <p>You may also have noticed that the fit line matches the last 98,000 or so words suspiciously well. That's probably in part because of inherent correlation in rank-frequency graphs like this one <a href="#ref1">[1]</a>. The y-axis shows rank of a word's frequency while the x-axis shows...well...the word's frequency. Frequency is actually <em>determining</em> rank, so the plot of frequency vs. rank is guaranteed to monotonically descend. It's like if you sorted some numbers in descending order and then said "woah, it looks like these numbers go down!". How do you know if you're looking at a meaningful trend?</p>
 
-<p>The answer is to decorrelate the data -- you need two compare two separate corpora against each other. For more on how decorrelation works, check out "<a href="#statisticalNotes">statistical notes</a>" down below.</p>
+<p>The answer is to decorrelate the data -- you need to compare two separate corpora against each other. For more on how decorrelation works, check out the <a href="#statisticalNotes">statistical notes</a> down below.</p>
 
 <p>Here's the rank-frequency graph for the top 500,000 most-frequent words in the english wikipedia corpus, only this time decorrelated and with an adjusted fit.</p>
 
@@ -69,23 +69,23 @@
 
 <p>Here are two things to consider. First, repeating an answer <em>within</em> a puzzle is frowned upon. In english, "the" could appear hundreds of times on a single page of a book, but crossword answers have a cap on usage density. Second, when you build a crossword, you're not <em>trying</em> to fill your grid with crosswordese. The way words and letters interact with the grid makes it hard to avoid sometimes, but with effort you can keep it to a minimum.</p>
 
-<p>I favor the interpretation that high-rank words have relatively low frequencies compared to Zipf's law. If crosswords were more like normal english, answers of ERA, AREA, and ERE, would actually be <em>way, way more common</em>. So the next time you're feeling IRE over yet another ELI, just take a deep breath remember that puzzles are sub-Zipfian!</p>
+<p>I favor the interpretation that high-rank words have relatively low frequencies compared to Zipf's law. If crosswords were more like normal english, answers of <a href="/answer-stats?search=era,area,ere">ERA, AREA, and ERE</a>, would actually be <em>way, way more common</em>. So the next time you're feeling <a-xw>IRE</a-xw> over yet another <a-xw>ELI</a-xw>, just take a deep breath remember that puzzles are sub-Zipfian!</p>
 
-<p>On the other hand, even though repetition in crosswords happens less often than repetition in english, it's somehow more noticeable. It rankles. I think gilding common answers with flexibile cluing can go a long way to reducing the unpleasant taste of repetition. It's the "spoonful of sugar" that helps crosswordese go down (or across). For more on cluing and feel-bad answers, check out the post on <a href="/check-the-answer-key">keyness</a>.</p>
+<p>On the other hand, even though repetition in crosswords happens less often than repetition in english, it's somehow more noticeable. It rankles. I think gilding common answers with flexibile cluing can go a long way to reducing the unpleasantness of repetition. It's the "spoonful of sugar" that helps crosswordese go down (or across). For more on cluing and feel-bad answers, check out the post on <a href="/check-the-answer-key">keyness</a>.</p>
 
 <h3>Semantics</h3>
 
 <p>It seems pretty likely that word meaning plays a role in Zipf's law. Think about it this way: some words are so vague that they aren't actually all that useful day-to-day. You don't go around saying "why did the entity cross the travelled way?". On the other hand, highly specific words, though occasionally very useful, are often not relevant. Words that apply in a medium range of contexts are more likely to be used often <a href="#ref5">[5]</a>. In part, you can think of Zipf's law as an observation about how often you need to communicate certain concepts.</p>
 
-<p>One way to see how semantics affects frequency is to look at groups of very similar words -- words whose only difference is their meaning -- and compare their frequencies. A great example is number words (ONE, TWO, THREE...). It sounds kind of crazy but in many languages, frequency vs. <em>cardinality</em> follows a power law with α ≈ 2 <a href="#ref6">[6]</a>. Check it out.</p>
+<p>One way to see how semantics affects frequency is to look at groups of very similar words -- words whose only difference is their meaning -- and compare their frequencies. A great example is number words ("one", "two", "three"...). It sounds kind of crazy but in many languages, frequency vs. <em>cardinality</em> follows a power law with α ≈ 2 <a href="#ref6">[6]</a>.</p>
 
 <graph-loader data-id="rankFrequencyNumericals" data-src="api/figures/rankFrequencyNumericals">
   <graph-log-axis-checkbox data-axes="x+y+y2" data-checked="true"></graph-log-axis-checkbox>
 </graph-loader>
 
-<p>The pattern is pretty clear for the english data. Numbers TWO through NINE follow a power law very closely. There's a trough until NINETEEN because, come on, who writes out the teens? But Zipf's law picks back up again at TWENTY and holds reasonably well. Some exceptions are the nice round numbers TEN, FIFTY, and HUNDRED. You might also notice ONE looking a little low -- I wonder if that's because its meaning is shared with AN and A?</p>
+<p>The pattern is pretty clear for the english data. Numbers "two" through "nine" follow a power law very closely. There's a trough until "nineteen" because, come on, who writes out the teens? But Zipf's law picks back up again at "twenty" and holds reasonably well. Some exceptions are the nice round numbers "ten", "fifty", and "hundred". You might also notice "one" looking a little low -- I wonder if that's because its meaning is shared with "an" and "a"?</p>
 
-<p>Looking at the crossword data, things are more all over the place. But there's something really interesting: a clear power law from ONE to FIVE. That includes THREE, which is relatively longer than the others, and FIVE, with its tough-to-cross V. You might expect answer usage to be determined entirely by things like <a href="/short-answer-is">word length</a> and <a href="/letter-boxes">vowel count</a>, but meaning definitely plays a role too! Just think about words like THIS, THEIR, and BEING. They're uncommon in crosswords partly because they're so darn bad to clue. A good puzzle, like good trivia, will use semantic specificity to its advantage.</p>
+<p>Looking at the crossword data, things are more all over the place. But there's one interesting feature: a clear power law from <a href="/answer-stats?search=one,two,three,four,five">ONE to FIVE</a>. That includes THREE, which is relatively longer than the others, and FIVE, with its tough-to-cross V. You might expect answer usage to be determined entirely by things like <a href="/short-answer-is">word length</a> and <a href="/letter-boxes">vowel count</a>, but meaning definitely plays a role too! Just think about words like <a href="/answer-stats?search=this,their,being">THIS, THEIR, and BEING</a>. They're relatively uncommon in crosswords partly because they're so darn bad to clue. A good puzzle, like good trivia, will use semantic specificity to its advantage.</p>
 
 <h3 id="statisticalNotes">Statistical notes</h3>
 

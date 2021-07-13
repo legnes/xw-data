@@ -229,45 +229,49 @@ analysis.decorrelatedRankFrequencyAnalysis = (rows, opts = {}) => {
 
 analysis.isProbablyTheSameAuthor = (a, b) => {
   if (!a || !b) return false;
-  const [fullNameA, willShortzA] = a.split(' / ');
-  const [fullNameB, willShortzB] = b.split(' / ');
-  if (!willShortzA || !willShortzB) return false;
-  const namesA = fullNameA.split(' ');
-  const namesB = fullNameB.split(' ');
-  const usedIndices = {};
-  for (const nameA of namesA) {
-    // for (const idxB in namesB) {
-    //   if (usedIndices[idxB]) continue;
-    //   const nameB = namesB[idxB];
-    //   if (nameB.toUpperCase() === nameA.toUpperCase()) {
-    //     usedIndices[idxB] = true;
-    //     continue;
-    //   }
-    // }
-    let nameMatchIdx = namesB.findIndex((nameB, idx) => (
-      !usedIndices[idx] &&
-      nameB.toUpperCase() === nameA.toUpperCase()
-    ));
+  try {
+    const [fullNameA, willShortzA] = a.split(' / ');
+    const [fullNameB, willShortzB] = b.split(' / ');
+    if (!willShortzA || !willShortzB) return false;
+    const namesA = fullNameA.split(' ');
+    const namesB = fullNameB.split(' ');
+    const usedIndices = {};
+    for (const nameA of namesA) {
+      // for (const idxB in namesB) {
+      //   if (usedIndices[idxB]) continue;
+      //   const nameB = namesB[idxB];
+      //   if (nameB.toUpperCase() === nameA.toUpperCase()) {
+      //     usedIndices[idxB] = true;
+      //     continue;
+      //   }
+      // }
+      let nameMatchIdx = namesB.findIndex((nameB, idx) => (
+        !usedIndices[idx] &&
+        nameB.toUpperCase() === nameA.toUpperCase()
+      ));
 
-    if (nameMatchIdx > -1) {
-      usedIndices[nameMatchIdx] = true;
-      continue;
+      if (nameMatchIdx > -1) {
+        usedIndices[nameMatchIdx] = true;
+        continue;
+      }
+
+      nameMatchIdx = namesB.findIndex((nameB, idx) => (
+        !usedIndices[idx] &&
+        (nameA[1] === '.' || nameB[1] === '.') &&
+        (nameB[0].toUpperCase() === nameA[0].toUpperCase())
+      ));
+
+      if (nameMatchIdx > -1) {
+        usedIndices[nameMatchIdx] = true;
+        continue;
+      }
+
+      return false;
     }
-
-    nameMatchIdx = namesB.findIndex((nameB, idx) => (
-      !usedIndices[idx] &&
-      (nameA[1] === '.' || nameB[1] === '.') &&
-      (nameB[0].toUpperCase() === nameA[0].toUpperCase())
-    ));
-
-    if (nameMatchIdx > -1) {
-      usedIndices[nameMatchIdx] = true;
-      continue;
-    }
-
+    return true;
+  } catch (e) {
     return false;
   }
-  return true;
 };
 
 analysis.scrabbleScore = (word) => {

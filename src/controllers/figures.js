@@ -3,7 +3,7 @@ const { alea } = require('seedrandom');
 const { randomBinomial } = require("d3-random");
 const { linear } = require('regression');
 
-const { promiseQuery, answerFrequencies, answerYears, answerTokensAndTypes } = require('../util/query');
+const { promiseQuery, answerFrequencies, answerDates, answerTokensAndTypes } = require('../util/query');
 const analysis = require('../util/analysis');
 const { cleanSearchText, cleanOptionText, cleanNumber, cleanBoolean } = require('../util/url');
 const { DEFAULT_HISTOGRAM_2D, DEFAULT_HEATMAP, DEFAULT_HEATMAP_LAYOUT, axisLabels } = require('../util/figure');
@@ -275,7 +275,7 @@ figures.relativeFrequencyDifference = (req, res, next) => {
 
     const xwTotal = analysis.sumBy(data.rows, 'frequency');
     const enTotal = WIKI_CORPUS.totalTokens;
-    for (row of data.rows) {
+    for (let row of data.rows) {
       row.xwFrequency = +row.frequency;
       row.enFrequency = WIKI_CORPUS.data.get(row.answer) || 0;
       row.xwRelativeFrequency = row.xwFrequency / xwTotal;
@@ -308,7 +308,7 @@ figures.keyness = (req, res, next) => {
 
     const xwTotal = data.rows.reduce((total, row) => (total + +row.frequency), 0);
     const enTotal = WIKI_CORPUS.totalTokens;
-    for (row of data.rows) {
+    for (let row of data.rows) {
       const xwFrequency = +row.frequency;
       const enFrequency = WIKI_CORPUS.data.get(row.answer) || 1e-15;
       const combinedFrequency = xwFrequency + enFrequency;
@@ -864,7 +864,6 @@ figures.vowelsGrid = (req, res, next) => {
 SELECT
   solution
 FROM puzzles
-WHERE date BETWEEN '1000-01-01' AND '3000-01-01'
 AND width = ${PUZZLE_DIMENSION}
 AND height = ${PUZZLE_DIMENSION};
 `, (err, data) => {
@@ -985,6 +984,75 @@ ORDER BY month_introduced;
   });
 };
 
+figures.herdanByAuthor = (req, res, next) => {
+  db.query(`
+SELECT
+  answer,
+  p.author as author,
+  COUNT(*) AS count
+FROM clues
+INNER JOIN puzzles p ON puzzle_id = p.id
+GROUP BY answer, author;
+`, (err, data) => {
+    if (err) throw err;
+
+    const statsByAuthor = {};
+    const authorCache = {};
+    const distinctAuthors = [];
+
+    for (let row of data.rows) {
+      if (row.author.length < 1) console.log(row);
+      const existingAuthor = authorCache[row.author] || distinctAuthors.find(author => analysis.isProbablyTheSameAuthor(author, row.author));
+      if (existingAuthor) {
+        authorCache[row.author] = existingAuthor;
+        const stats = statsByAuthor[existingAuthor];
+        stats.tokens += +row.count;
+        if (!stats.answers[row.answer]) {
+          stats.answers[row.answer] = true;
+          stats.types++;
+        }
+      } else {
+        authorCache[row.author] = row.author;
+        statsByAuthor[row.author] = {
+          tokens: +row.count,
+          types: 1,
+          answers: { [row.answer]: true }
+        };
+        distinctAuthors.push(row.author);
+      }
+    }
+
+    const logData = [];
+    for (const author in statsByAuthor) {
+      const stats = statsByAuthor[author];
+      logData.push([Math.log(stats.tokens), Math.log(stats.types)]);
+    }
+    const fit = linear(logData, { precision: 12 });
+
+    const authors = Object.keys(statsByAuthor);
+    authors.sort((a, b) => (statsByAuthor[b].tokens - statsByAuthor[a].tokens))
+
+    res.json({
+      data: [{
+        x: authors.map(author => statsByAuthor[author].tokens),
+        y: authors.map(author => Math.round(Math.exp(fit.predict(Math.log(statsByAuthor[author].tokens))[1]))),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'fit'
+      }, {
+        x: authors.map(author => statsByAuthor[author].tokens),
+        y: authors.map(author => statsByAuthor[author].types),
+        text: authors,
+        type: 'scatter',
+        mode: 'markers',
+        name: 'data'
+      }],
+      layout: axisLabels('unique answers by author', 'total answers by author')
+    });
+
+  });
+};
+
 figures.countBirthsDeathsOverTime = (req, res, next) => {
   const usageThreshold = cleanNumber(req.query.thresh, 1);
   const timeBin = cleanOptionText(req.query.timescale, ['year', 'month', 'day'], 'month');
@@ -1007,23 +1075,23 @@ FROM (
 GROUP BY time_bin
 ORDER BY time_bin;
 `),
-    promiseQuery(`
-SELECT
-  time_bin_died as time_bin,
-  COUNT(*) as births_deaths
-FROM (
-  SELECT
-    answer,
-    MAX(DATE_TRUNC('${timeBin}', p.date)) AS time_bin_died
-  FROM clues
-  INNER JOIN puzzles p ON puzzle_id = p.id
-  WHERE p.date BETWEEN '${START_YEAR + 1}-01-01' AND '${END_YEAR - 1}-12-31'
-  GROUP BY answer
-  HAVING COUNT(*) >= ${usageThreshold}
-) answers_by_month_introduced
-GROUP BY time_bin
-ORDER BY time_bin;
-`),
+//     promiseQuery(`
+// SELECT
+//   time_bin_died as time_bin,
+//   COUNT(*) as births_deaths
+// FROM (
+//   SELECT
+//     answer,
+//     MAX(DATE_TRUNC('${timeBin}', p.date)) AS time_bin_died
+//   FROM clues
+//   INNER JOIN puzzles p ON puzzle_id = p.id
+//   WHERE p.date BETWEEN '${START_YEAR + 1}-01-01' AND '${END_YEAR - 1}-12-31'
+//   GROUP BY answer
+//   HAVING COUNT(*) >= ${usageThreshold}
+// ) answers_by_month_introduced
+// GROUP BY time_bin
+// ORDER BY time_bin;
+// `),
   ];
   Promise.all(queries).then(results => {
 
@@ -1031,13 +1099,13 @@ ORDER BY time_bin;
       x: rows.map(row => row.time_bin),
       y: rows.map(row => +row.births_deaths),
       type: 'scatter',
-      mode: 'lines',
+      mode: `lines${timeBin === 'year' ? '+markers' : ''}`,
       name: idx === 0 ? 'births' : 'deaths'
     }));
 
     res.json({
       data: traces,
-      layout: axisLabels('date', 'answers')
+      layout: axisLabels('date', 'answer births')
     });
   });
 };
@@ -1045,13 +1113,22 @@ ORDER BY time_bin;
 figures.mostRecentNewWords = (req, res, next) => {
   const countThresh = cleanNumber(req.query.thresh, 3);
 
-  db.query(answerYears({ func: 'MIN', countThresh, limit: 100 }), (err, data) => {
+  db.query(answerDates({
+    trunc: 'year',
+    minCount: countThresh,
+    orderBy: 'MIN(p.date) DESC',
+    limit: 100
+  }), (err, data) => {
     if (err) return next(err);
 
-    data.rows.forEach(row => { row.year = row.year.getFullYear(); });
+    const rows = data.rows.map(row => ({
+      year: row.first_date.getFullYear(),
+      answer: row.answer,
+      occurrences: row.occurrences
+    }));
 
     res.json({
-      rows: data.rows,
+      rows: rows,
       columns: [
         { label: 'year introduced', key: 'year'},
         { label: 'answer', key: 'answer'},
@@ -1064,34 +1141,43 @@ figures.mostRecentNewWords = (req, res, next) => {
 figures.oldestDeadWords = (req, res, next) => {
   const countThresh = cleanNumber(req.query.thresh, 3);
 
-  db.query(answerYears({ func: 'MAX', countThresh, limit: 100 }), (err, data) => {
+  db.query(answerDates({
+    trunc: 'year',
+    minCount: countThresh,
+    orderBy: 'MAX(p.date) ASC',
+    limit: 100
+  }), (err, data) => {
     if (err) return next(err);
 
-    data.rows.forEach(row => { row.year = row.year.getFullYear(); });
+    data.rows.forEach(row => {
+      row.last_date = row.last_date.getFullYear();
+      row.first_date = row.first_date.getFullYear();
+    });
 
     res.json({
       rows: data.rows,
       columns: [
-        { label: 'date died', key: 'year'},
+        { label: 'year disappeared', key: 'last_date'},
         { label: 'answer', key: 'answer'},
         { label: 'occurrences', key: 'occurrences'},
+        { label: 'year introduced', key: 'first_date'},
       ],
     });
   });
 };
 
 figures.topNewWordsByYear = (req, res, next) => {
-  const countThresh = 4; //cleanNumber(req.query.thresh, 2);
+  const minCount = 3; //cleanNumber(req.query.thresh, 2);
   const MAX_WORDS_PER_YEAR = 10;
 
-  db.query(answerYears({
-    func: 'MIN',
-    countThresh,
-    orderBy: 'year DESC, occurrences DESC, MIN(p.date) DESC'
+  db.query(answerDates({
+    trunc: 'year',
+    minCount,
+    orderBy: 'first_date DESC, occurrences DESC, MIN(p.date) DESC'
   }), (err, data) => {
     if (err) return next(err);
 
-    data.rows.forEach(row => { row.year = row.year.getFullYear(); });
+    data.rows.forEach(row => { row.year = row.first_date.getFullYear(); });
 
     const wordsByYear = analysis.groupRowsBy(data.rows, 'year');
     for (const year in wordsByYear) {
@@ -1105,7 +1191,7 @@ figures.topNewWordsByYear = (req, res, next) => {
     res.json({
       rows: rows,
       columns: [
-        { label: 'year', key: 'year'},
+        { label: 'year introduced', key: 'year'},
         { label: 'answer', key: 'answer'},
         { label: 'occurrences', key: 'occurrences'},
       ],
@@ -1114,30 +1200,47 @@ figures.topNewWordsByYear = (req, res, next) => {
 };
 
 figures.wordLongevity = (req, res, next) => {
-  const usageThreshold = cleanNumber(req.query.thresh, 1);
+  const minCount = cleanNumber(req.query.minCount, 1);
+  const maxCount = cleanNumber(req.query.maxCount, 1000);
 
-  db.query(`
-SELECT
-  answer,
-  (DATE_PART('year', MAX(p.date)) - DATE_PART('year', MIN(p.date))) * 12 + (DATE_PART('month', MAX(p.date)) - DATE_PART('month', MIN(p.date))) AS lifespan_months
-FROM clues
-INNER JOIN puzzles p ON puzzle_id = p.id
-WHERE p.date BETWEEN '1000-01-01' AND '3020-01-01'
-GROUP BY answer
-HAVING COUNT(*) >= ${usageThreshold}
-ORDER BY lifespan_months DESC;
-`, (err, data) => {
+  db.query(answerDates({ trunc: 'year', minCount, maxCount }), (err, data) => {
     if (err) return next(err);
 
     res.json({
       data: [{
-        x: data.rows.map(row => (+row.lifespan_months / 12)),
-        type: 'histogram',
-        xbins: {
-          size: 0.5
-        }
+        x: data.rows.map(row => (row.first_date.getFullYear())),
+        y: data.rows.map(row => (row.last_date.getFullYear())),
+        ...DEFAULT_HISTOGRAM_2D
       }],
-      layout: axisLabels('lifespan (years)', 'number answers')
+      layout: axisLabels('year introduced', 'year disappeared')
+    });
+  });
+};
+
+figures.wordLongevityByYear = (req, res, next) => {
+  const minCount = cleanNumber(req.query.minCount, 1);
+  const maxCount = cleanNumber(req.query.maxCount, 1000);
+  const showOutliers = cleanBoolean(req.query.outliers);
+
+  db.query(answerDates({ trunc: 'day', minCount, maxCount }), (err, data) => {
+    if (err) return next(err);
+
+    data.rows.forEach(row => {
+      row.lifespan = (row.last_date - row.first_date) / 31536000000;
+      row.startYear = row.first_date.getFullYear();
+    });
+    const rowsByStartYear = analysis.groupRowsBy(data.rows, 'startYear');
+
+    res.json({
+      data: Object.entries(rowsByStartYear).map(([startYear, rows]) => ({
+        y: rows.map(row => row.lifespan),
+        text: showOutliers ? rows.map(row => row.answer) : [],
+        type: 'box',
+        name: startYear,
+        boxpoints: showOutliers ? 'outliers' : false,
+        showlegend: false
+      })),
+      layout: axisLabels('year introduced', 'lifespan')
     });
   });
 };

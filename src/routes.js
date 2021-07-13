@@ -44,12 +44,14 @@ function routes(app) {
   app.get('/api/figures/topLeftAnswers', figures.topLeftAnswers);
   app.get('/api/figures/dictionarySizeOverTime', figures.dictionarySizeOverTime);
   app.get('/api/figures/uniqueAnswersOverTime', figures.uniqueAnswersOverTime);
+  app.get('/api/figures/herdanByAuthor', figures.herdanByAuthor);
   app.get('/api/figures/countBirthsDeathsOverTime', figures.countBirthsDeathsOverTime);
   app.get('/api/figures/mostRecentNewWords', figures.mostRecentNewWords);
   app.get('/api/figures/oldestDeadWords', figures.oldestDeadWords);
   app.get('/api/figures/topNewWordsByYear', figures.topNewWordsByYear);
   app.get('/api/figures/frequencyOverTime', figures.frequencyOverTime);
   app.get('/api/figures/wordLongevity', figures.wordLongevity);
+  app.get('/api/figures/wordLongevityByYear', figures.wordLongevityByYear);
   app.get('/api/figures/usageStats', figures.usageStats);
 
   app.get('/', (req, res, next) => res.render('index', { articles }));

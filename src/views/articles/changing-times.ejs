@@ -1,8 +1,33 @@
-<p>This post is all about how the puzzle's vocabulary changes over time. We'll look at how often new answers appear and what those new answers are, plus some old answers that aren't used as much anymore.</p>
+<p>This post is all about how vocabulary can change over the years. Does the crossword puzzle have more variety than it used to? How often do new answers appear? Which answers are gaining popularity and which ones haven't been used for decades?</p>
+
+<h3>Words come and go</h3>
+
+<p>When new words are minted and enter the language, there are a handful of common ways it can happen, including:</p>
+
+<ul>
+  <li>abbreviations and acronyms (metro, taxi, curio, tribeca, asap)</li>
+  <li>analogies or compounding (spyware, beatnik, climategate)</li>
+  <li>borrowings from other languages (boba, tycoon, and word-for-word translations like brainwash)</li>
+  <li>part of speech changes by derivation or back-formation (pepper as a verb, sleaze derived from sleazy)</li>
+  <li>portmanteaus or blends (smog, motel, transistor)</li>
+</ul>
+
+<p>Some words arise from a combination or sequence of transformations. If you take the greek word for something that gets imitated, "mimēma", then rework it to evoke the evolutionary implications of a "gene", you get a "meme". Or think about the word "tase". It's a back-formed verb derived from "taser", ostensibly a loose acronym for "Tom Swift and His Electric Rifle" plus a phonetic analogy for "laser".</p>
+
+<p>Word death is a litte more nuanced. Some words fade into complete obsolescence -- a modern reader probably wouldn't recognize "ludibrious" as a bygone synonym for "ridiculous". Other words, however, when they fall out of fashion, hang around in our cultural memory. We may not use "forswear" or "jerkin" on a day-to-day basis, but we know what they mean. They're still part of the world we at least occasionally interact with, and in that sense remain in the periphery of our language. These merely archaic words are the realm of trivia, and they show up all over crossword puzzles. Think about answers like <a-xw>ERE</a-xw> or <a-xw>ANON</a-xw>. Is it fair to assume solvers will still be familiar with them? In that sense, word death is a somewhat more editorial process than word birth. But we can be on the lookout for a few things:</p>
+
+<ul>
+  <li>decline of cultural referent (aerodromes are rapidly being forgotten)</li>
+  <li>eclipse by more popular synonym (hash over pound sign)</li>
+  <li>change in spelling (amok vs. amuck)</li>
+  <li>avoiding insensitivity and taboo (eraser over rubber to avoid the implication of condoms)</li>
+</ul>
+
+<p>Crossword puzzles experience language change too. There are a few extra reasons why one answer might edge out another, and the whole language is highly curated, which is a little unusual. But we can find examples of almost all these same mechanims of word birth and death over our 30 years of NYT crosswords.</p>
 
 <h3>Answer births</h3>
 
-<p>As new words and phrases enter the language, some catch on and eventually find their way into your crossword puzzles. Here are some of the most recent answers to appear in the crossword.</p>
+<p>Many new words and phrases fade away before ever seeing regular usage. A selection, however, take root and eventually enter the language. Here are some of the most recent popular answers to have made their debut in the crossword.</p>
 
 <table-loader data-id="mostRecentNewWords" data-src="api/figures/mostRecentNewWords">
   <form is="query-param-form">
@@ -10,11 +35,25 @@
   </form>
 </table-loader>
 
-<p>Or you can use hindsight to pick out popular answers and ask "when was this introduced?". Here are the "top answers" from each year.</p>
+<p>These are the 100 most recent answer "births", showing for each answer: what year it was first clued ("year introduced") and how many times it has ever appeared in an NYT puzzle ("occurrences"). When looking at births, we only care about answers that have actually caught on. One-offs can't really be said to have "entered the language", so we ignore them and focus on answers that have shown up at least a few times. Increasing the "minimum occurrences" will raise this requirement, imposing a stricter definition of what it means to be part of the language.</p>
+
+<p>Here's another way to look at the same data. This table picks out, for each year, the ten answers introduced that year that would go on to have the highest all-time occurrences (filtering out answers that have appeared less than three times total). Kind of like a list of the "top ten best-selling albums released in 1959".</p>
 
 <table-loader data-id="topNewWordsByYear" data-src="api/figures/topNewWordsByYear"></table-loader>
 
-<p>Almost all of the ususal word birth patterns are represented. There are neologisms (DADBOD, BAE, SELFIE), loanwords (NIHAO, BENTO, ASANAS), acronyms (EGOT, RBG, IPAS), abbreviations (MICS, OLINE, APBIO), and portmanteaus/affixes (MATHLETE, ENEWS, BREXIT). Find your favorites!</p>
+<p>If you're wondering about <a-xw>EMPTYEMPTYEMPTY</a-xw>, there was a puzzle in 2020 whose theme answers were supposed to be left blank. In the actual file for the puzzle, each blank square contained a rebus reading "EMPTY".</p>
+
+<p>Anyway, remember that list of ways words get invented? They're all here:</p>
+
+<ul>
+  <li>abbreviations and acronyms: <a-xw>BAE</a-xw>, <a-xw>MICS</a-xw>, <a-xw>OLINE</a-xw>, <a-xw>EGOT</a-xw>, <a-xw>YOLO</a-xw></li>
+  <li>analogies: <a-xw>ENEWS</a-xw>, <a-xw>EWASTE</a-xw>, <a-xw>EREADER</a-xw>, <a-xw>ECIG</a-xw></li>
+  <li>borrowings: <a-xw>NIHAO</a-xw>, <a-xw>BENTO</a-xw>, <a-xw>ASANAS</a-xw></li>
+  <li>part of speech: <a-xw>BEERME</a-xw>, <a-xw>MEETCUTE</a-xw>, <a-xw>ADULTING</a-xw>, <a-xw>TEXTED</a-xw></li>
+  <li>portmanteaus: <a-xw>MATHLETE</a-xw>, <a-xw>BREXIT</a-xw>, <a-xw>TWITTERATI</a-xw></li>
+</ul>
+
+<p>One things missing from the list is famous names. It seems like names make up a big part of new crossword answers, but as we'll see they have a tendency to <a-xw>AGEOUT</a-xw> of the puzzle too.</p>
 
 <h3>Answer deaths</h3>
 
@@ -22,48 +61,84 @@
 
 <table-loader data-id="oldestDeadWords" data-src="api/figures/oldestDeadWords">
   <form is="query-param-form">
-    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="10"></label>
+    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="2" value="6"></label>
   </form>
 </table-loader>
 
-<p>There are a few age-outs. Evidently ZASU Pitt, SHANA Alexander, ILKA Chase, and Virna LISI aren't as famous as they once were. Some changes are probably editorial decisions: MASSA and KKK haven't been used for fill since 2002. But many dead answers are simply obscure trivia like BAUD, SARTO, and CEBU.</p>
+<p>These are the 100 answers to be retired from the puzzle longest ago. They have to have been used a "minimum occurences" number of times and then never again. The "year disappeared" shows the last time each answer was used in the puzzle, while "year introduced" shows the first.</p>
 
-<p>A look at dying answers begs the question: how long do answers usually live for?</p>
+<p>Let's look back at our list of ways words can become obsolete. Most of them are very slow processes that won't really be visible on the mere decades timescale of our data. Still, we can find a few examples!</p>
+
+<ul>
+  <li>synonym: for some reason <a href="/answer-stats?search=spake,spoke">SPAKE didn't give way to SPOKE</a> in the puzzle until 2003</li>
+  <li>spelling: <a href="/answer-stats?search=amebas,amoebas">AMEBAS is now almost always AMOEBAS</a></li>
+  <li>insensitivity: <a-xw>MASSA</a-xw> and <a-xw>KKK</a-xw> both have five appearances, all of them before 2003</li>
+  <li>cultural decline: see below</li>
+</ul>
+
+<p>Cultural decline in the form of obscure trivia makes up big part of answer death. Obsolescing words like <a-xw>AERODROME</a-xw> can actually stick around for a long time in the puzzle because esoteric knowledge is part of its appeal. The truly arcane, though, are forgotten by constructors or perhaps discouraged by editors. We haven't seen the pope's <a-xw>ORALE</a-xw> vestment, the <a-xw>MEUSE</a-xw> river, <a-xw>RIVA</a-xw> Ridge the racehorse, young eels called <a-xw>ELVERS</a-xw>, or the <a-xw>BRANT</a-xw> goose in a good long while. Famous names probably disappear for the same reason. Evidently Virna <a-xw>LISI</a-xw>, <a-xw>PERLE</a-xw> Mesta, and the <a-xw>SNEADS</a-xw> (golfers Sam and J.C.) aren't as well-known as they used to be.</p>
+
+<p>One extra category of answer death mirrors a similar mechanism of answer birth: word derivation. It's often tempting when constructing a puzzle to use a normal word with an irregular prefix or suffix tacked on to help fit an awkward section of grid. This practice certainly hasn't gone away, and in fact helps explain some of the <a href="/check-the-answer-key">keywords</a> that differentiate crossword answers from normal english. But mercifully, it seems like there's also an effort to phase out certain offenders. We haven't had to deal with <a href="/answer-stats?search=toter,smiler,resay">TOTER, SMILER, or RESAY</a> since 2006.</p>
+
+<p>Try increasing the "minimum occurrences" to check answers that used to be even more popular. Many of them should fall into these categories!</p>
+
+<h3>Lifespans</h3>
+
+<p>We can compare an answer's birth and death to get its lifespan, the amount of time it saw active use. Here's a 2d histogram that counts (on a log scale) how many answers appeared in year X and disappeared in year Y.</p>
 
 <graph-loader data-id="wordLongevity" data-src="api/figures/wordLongevity">
   <form is="query-param-form">
-    <label>minimum occurrences <input is="query-param-input" data-query-param="thresh" type="number" min="1" value="1"></label>
+    <label>minimum occurrences <input is="query-param-input" data-query-param="minCount" type="number" min="1" value="1"></label><br />
+    <label>maximum occurrences <input is="query-param-input" data-query-param="maxCount" type="number" min="1" value="1000"></label><br />
   </form>
 </graph-loader>
 
-<p>Of course many answers have only ever been used once, but a surprising number stick around!</p>
+<p>The left-most column represents answers from the first year of the corpus, 1993. Going up the column, the box next to for example y=2010 shows how many answers first seen in 1993 were last seen in 2010. One thing to note: if that first column looks a little different than the rest, it's because we only have data from part of that year, so the totals for the whole column are a little low.</p>
+
+<p>The straight line of high values running diagonally across the graph marks the overwhelming number of answers that have only ever appeared once -- they were born and died in the same year. If you increase the "minimum occurrences" to two, filtering out one-off answers, this line should darken significantly. On the other end of the spectrum, the bright spot in the top left indicates a lexicon of useful answers that have been a steady presence in the crossword corpus since its earliest days. You can decrease the "maximum occurrences" to remove some of these most common answers.</p>
+
+<p>Unfortunately, the rest is a little hard to read. To get a better look, we can visualize their lifespan statistics.</p>
+
+<graph-loader data-id="wordLongevityByYear" data-src="api/figures/wordLongevityByYear">
+  <form is="query-param-form">
+    <label>minimum occurrences <input is="query-param-input" data-query-param="minCount" type="number" min="1" value="2"></label><br />
+    <label>maximum occurrences <input is="query-param-input" data-query-param="maxCount" type="number" min="1" value="1000"></label><br />
+    <label>show outliers <input is="query-param-input" data-query-param="outliers" type="checkbox"></label><br />
+  </form>
+</graph-loader>
+
+<p>These are box and whisker plots that roughly represent the distribution of lifespans for answers introduced each year. The "minimum occurrences" is already set to two, so the one-off answers are filtered out. We can use this plot to get a general sense of, for example, which years produced short- and long-lived words. If you increase the "minimum occurrences" to 10 and turn on outliers, you can see some "flash in the pan" answers that have been used many times, but in a shorter lifespan than normal. <a-xw>RIAA</a-xw> has appeared 12 times in the years from 2011 to 2018, but not since.</p>
 
 <h3>The dictionary</h3>
 
-<p>The dictionary of "all answers ever used since the beginning of time" is constantly growing.</p>
+<p>Of course, even seemingly short-lived or obscure answers may still make a comeback. New answers are regularly introduced, but constructors can also dredge up any answer from the past, so in a way solvers need to keep an ever-increasing list of possible answers in mind. This "crossword dictionary" is constantly growing.</p>
 
 <graph-loader data-id="uniqueAnswersOverTime" data-src="api/figures/uniqueAnswersOverTime">
   <graph-log-axis-checkbox></graph-log-axis-checkbox>
 </graph-loader>
 
-<p>This curve is a little remeniscent of Herdan's (or Heaps') law. In a 1960 book, Gustav Herdan noticed a pattern in type-token distributions. Remember that a handful of answers appear in the puzzle very often, while a large number of words only appear once or twice. As you go through the corpus puzzle by puzzle, keeping track of which answers you've seen, you'd expect to come across a lot of the high-frequency answers pretty quickly, but it'll take longer to find all the low-frequency answers. That's essentially what Herdan's law is getting at. Qualitativley it says you'll find new answers very quickly at first, and then more slowly and steadily later. Quantitatively, it says:</p>
+<p>This curve is a little remeniscent of Herdan's (or Heaps') law. In a 1960 book, Gustav Herdan described a common pattern that appears when analyzing corpora. Imagine going through our crossword puzzles one by one in chronological order. As you solve one puzzle, then the next, then the next, the number of unique answers you've seen -- the size of the "crossword dictionary" -- goes up. But as you keep solving puzzles, it's more and more likely that you'll come across repeat answers, so the dictionary starts growing more and more slowly. Quantitatively, it says:</p>
 
 <p><em>V = kN<sup>h</sup></em></p>
 
-<p>where <em>V</em> is the size of the vocabulary, the number of unique answers you've come across, <em>N</em> is the size of the corpus, the total number of answers in all the puzzles you've looked at, and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1. It's worth noting that in theory Herdan's law applies to any subdivision of a corpus <a href="#ref1">[1]</a>. So for example if you had a corpus of encyclopedia articles, you could look at unique words vs. total words <em>for each article separately</em>, rather than accumulating across articles. But subdividing over time works too!</p>
+<p>where <em>V</em> is the size of the vocabulary (the number of unique answers in the dictionary), <em>N</em> is the size of the corpus (the total number of answers you've solved), and <em>k</em> and <em>h</em> are experimental constants, where <em>h</em> is usually less than 1.</p>
 
-<p>So if the dictionary of possible answers is steadily increasing, has the variety of answers gone up with it? The NYT crossword is a daily publication with regular sizing and a maximum number of answers in any given puzzle, so its vocabulary shouldn't vary too wildly. Here are unique answers used in each day/month/year.</p>
+<p>What this tells us is that the dictionary of all crossword answers is growing at a slower and steadier rate as time goes by, but growing nonetheless. So if the number of possible answers is always increasing, has the variety of answers gone up with it? The NYT crossword is a daily publication with regular sizing and a maximum number of answers in any given puzzle, so its vocabulary shouldn't vary too wildly. Here's a graph showing the total number of unique answers used in each individual day/month/year.</p>
 
 <graph-loader data-id="dictionarySizeOverTime" data-src="api/figures/dictionarySizeOverTime">
   <form is="query-param-form">
     <span>timescale:</span><br />
-    <span>&emsp;</span><label>years<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year"></label><br />
-    <span>&emsp;</span><label>months<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month" checked></label><br />
+    <span>&emsp;</span><label>years<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="year" checked></label><br />
+    <span>&emsp;</span><label>months<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="month"></label><br />
     <span>&emsp;</span><label>days<input is="query-param-input" data-query-param="timescale" type="radio" name="timescale" value="day"></label><br />
   </form>
 </graph-loader>
 
-<p>If you zoom in on the days, you'll see a spike every Sunday when the grid is bigger. Overall it seems like there was a bit more variety in puzzle vocabulary around 2012-13, but it's gone back down again since then. Partly that's because, just as answers are "born", they also "die out". Here are answer births and deaths over time.</p>
+<p>The first thing to be aware of here is the y-axis scale. These values aren't <em>too</em> different from one another, so it's a little hard to tell how statistically significant the results are. That said, there really does seem to be a nonrandom correlation in dictionary size year-to-year -- it seems like puzzles from the early 2010s genuinely had a bit more variety. I'm not quite sure how to explain this. It could definitely be a result of which constructors happened to be most active during that era, or perhaps some behind-the-scenes editorial decision. Or there might be external reasons. Studies show that natural languages respond to social, technological, and cultural factors -- they change faster during wartime, for example <a href="#ref2">[2]</a> <a href="#ref3">[3]</a>.</p>
+
+<p>One fun crossword artifact: if you look at the "days" time scale and zoom in, you can make out a spike every Sunday when the grid is bigger!</p>
+
+<p>Why do we care about any of this? Well for one thing, we can find out how often brand new answers crop up in the puzzle. This is a graph of how many answers first appeared each day/month/year.</p>
 
 <graph-loader data-id="countBirthsDeathsOverTime" data-src="api/figures/countBirthsDeathsOverTime">
   <graph-log-axis-checkbox data-axes="y"></graph-log-axis-checkbox>
@@ -76,19 +151,21 @@
   </form>
 </graph-loader>
 
-<p>This graph is a little hard to read because of Herdan's law -- births happen very quickly as you first start looking at puzzles, and deaths happen quickly for the same reason later on. It's hard to tell if birth and death rates have changed over time. One way to see through the steep curve is with random shufflings <a href="#ref1">[1]</a>. If you were to shuffle up the puzzles, pretending they were published in a different order than they really were, you'd get a slightly different graph of answer births over time. If you averaged the birth rates of every possible shuffling, you'd get a statistically expected birth curve. Then you could compare your <em>actual</em> curve to the expected one. I haven't done this analysis myself, but if you're interested, you can read more <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">here</a>!</p>
-
-<p>One reason we care about birth and death rates is that they tell us about our society. Language change happens faster during wartime and correlates to social and technological trends, local cultural factors, etc. <a href="#ref2">[2]</a> <a href="#ref3">[3]</a>.</p>
-
-<p>Another reason we care about the birth rate is that it tells us how often we see brand new answers cropping up in the puzzle! Turns out it's a lot, easily 5-10 new answers a day. Let's thank our constructors once again for their endless creativity!</p>
+<p>Turns out easily 5-10 answers make their NYT puzzle debut each day! If you increase the "minimum occurrences", you can even see that a couple of those will go on to be used again later on.</p>
 
 <h3>Caveats</h3>
 
-<p>I wanted to mention that the relationship between frequency distribution and Herdan's law is pretty complicated, and the mathematical form of Herdan's law is itself contested <a href="#ref1">[1]</a> <a href="#ref5">[5]</a>. I may have oversimplified a bit.</p>
+<p>A note about that last graph, answer births over time. It's a little hard to read because of Herdan's law -- births happen very quickly as you first start looking at puzzles, and then slower as repeats become more common. If we wanted to see past the steep curve and really look at how the birth rate has changed over time, we could use a technique called random shufflings <a href="#ref1">[1]</a>. If we were to shuffle up the puzzles, pretending they were published in a different order than they really were, we'd get a slightly different graph of answer births over time. We could compare our actual curve to the average shuffled curve to see which years really had more or fewer births. If you're interested, you can read more about this analysis <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.200008">here</a>!</p>
 
-<p>Also, there's plenty of other good reading out there about language change. One issue with the crossword corpus is its relatively short time scale. One paper discusses how to look at patterns of language change within/among young, highly volatile online communities <a href="#ref4">[4]</a>. For the complete opposite -- a consideration of massive amounts of data over extremely long timescales, a bunch of researchers got together and published a great paper when Google Books was first released <a href="#ref6">[6]</a>.</p>
+<p>Also, a couple notes about Herdan's law. First, you might think that the power law growth curve of tokens vs. types reflects the power law in Zipf's observation about word frequencies and ranks. In fact the relationship between frequency distribution and Herdan's law is pretty complicated, and the mathematical form of Herdan's law is itself contested <a href="#ref1">[1]</a> <a href="#ref5">[5]</a>, so I may have oversimplified a bit here.</p>
 
-<p>That's all!</p>
+<p>Second, it's worth noting that Herdan's law should apply to any subdivision of a corpus <a href="#ref1">[1]</a>. So for example if you grouped puzzles by constructor and graphed each constructor's total tokens vs. types, you should still get a Herdan-like curve.</p>
+
+<graph-loader data-id="herdanByAuthor" data-src="api/figures/herdanByAuthor">
+  <graph-log-axis-checkbox data-checked="true"></graph-log-axis-checkbox>
+</graph-loader>
+
+<p>In general, there's plenty of other good reading out there about language change. One issue with the crossword corpus is its relatively short time scale. However some papers are using volatile communities like online forums to explore just such condensed dynamics <a href="#ref4">[4]</a>. For the complete opposite -- a consideration of massive amounts of data over extremely long time scales, take a look at this paper a bunch of researchers put together when Google Books was first released <a href="#ref6">[6]</a>!</p>
 
 <h3>References</h3>
 
