@@ -32,7 +32,7 @@
   <% if (articles && articles.length > 0) { %>
     <ul>
       <% articles.forEach((article) => { %>
-        <li><a href="/<%= article.filename %>"><%= article.title %></a></li>
+        <li><a href="/<%= article.route %>"><%= article.index %></a></li>
       <% }); %>
     </ul>
   <% } %>

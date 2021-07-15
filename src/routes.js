@@ -7,12 +7,12 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const articles = fs.readdirSync(path.join(__dirname, 'views/articles'))
                     .map(filename => path.basename(filename, '.ejs'))
-                    .filter(filename => (
-                      !path.extname(filename) &&
-                      !(IS_PRODUCTION && filename.match(/^unpublished-/)))
-                    )
+                    .filter(filename => (!path.extname(filename)))
+                    .sort()
                     .map(filename => ({
-                      title: dashCaseToWords(filename),
+                      title: dashCaseToWords(filename.replace(/^\d\-/, '')),
+                      route: filename.replace(/^\d\-/, ''),
+                      index: dashCaseToWords(filename.replace(/^(\d)/, '$1.')),
                       filename
                     }));
 
@@ -57,7 +57,7 @@ function routes(app) {
   app.get('/', (req, res, next) => res.render('index', { articles }));
 
   articles.forEach(article => {
-    app.get(`/${article.filename}`, forceHttps, (req, res, next) => res.render('article-template', article));
+    app.get(`/${article.route}`, forceHttps, (req, res, next) => res.render('article-template', article));
   });
 
   app.get('/answer-stats', forceHttps, (req, res, next) => res.render('answer-stats'));
