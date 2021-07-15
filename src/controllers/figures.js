@@ -1004,69 +1004,38 @@ ORDER BY month_introduced;
 figures.herdanByAuthor = (req, res, next) => {
   db.query(`
 SELECT
-  answer,
   p.author as author,
-  COUNT(*) AS count
+  COUNT(*) AS tokens,
+  COUNT(DISTINCT answer) AS types
 FROM clues
 INNER JOIN puzzles p ON puzzle_id = p.id
-GROUP BY answer, author;
+GROUP BY author;
 `, (err, data) => {
     if (err) throw err;
 
-    const statsByAuthor = {};
-    const authorCache = {};
-    const distinctAuthors = [];
-
-    for (let row of data.rows) {
-      if (row.author.length < 1) console.log(row);
-      const existingAuthor = authorCache[row.author] || distinctAuthors.find(author => analysis.isProbablyTheSameAuthor(author, row.author));
-      if (existingAuthor) {
-        authorCache[row.author] = existingAuthor;
-        const stats = statsByAuthor[existingAuthor];
-        stats.tokens += +row.count;
-        if (!stats.answers[row.answer]) {
-          stats.answers[row.answer] = true;
-          stats.types++;
-        }
-      } else {
-        authorCache[row.author] = row.author;
-        statsByAuthor[row.author] = {
-          tokens: +row.count,
-          types: 1,
-          answers: { [row.answer]: true }
-        };
-        distinctAuthors.push(row.author);
-      }
-    }
-
-    const logData = [];
-    for (const author in statsByAuthor) {
-      const stats = statsByAuthor[author];
-      logData.push([Math.log(stats.tokens), Math.log(stats.types)]);
-    }
+    data.rows.sort(numSortBy('tokens'))
+    const logData = data.rows.map(row => ([ Math.log(row.tokens), Math.log(row.types) ]));
     const fit = linear(logData, { precision: 12 });
 
-    const authors = Object.keys(statsByAuthor);
-    authors.sort((a, b) => (statsByAuthor[b].tokens - statsByAuthor[a].tokens))
+    const tokens = data.rows.map(row => row.tokens);
 
     res.json({
       data: [{
-        x: authors.map(author => statsByAuthor[author].tokens),
-        y: authors.map(author => Math.round(Math.exp(fit.predict(Math.log(statsByAuthor[author].tokens))[1]))),
+        x: tokens,
+        y: data.rows.map(row => Math.round(Math.exp(fit.predict(Math.log(row.tokens))[1]))),
         type: 'scatter',
         mode: 'lines',
-        name: 'fit'
+        name: `fit r2=${fit.r2.toFixed(4)}`
       }, {
-        x: authors.map(author => statsByAuthor[author].tokens),
-        y: authors.map(author => statsByAuthor[author].types),
-        text: authors,
+        x: tokens,
+        y: data.rows.map(row => row.types),
+        text: data.rows.map(row => row.author),
         type: 'scatter',
         mode: 'markers',
         name: 'data'
       }],
       layout: axisLabels('unique answers by author', 'total answers by author')
     });
-
   });
 };
 
