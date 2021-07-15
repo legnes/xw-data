@@ -454,23 +454,28 @@ GROUP BY answer, year;
       const combinedTotal = yearTotal + allTimeTotal;
       const yearNormalizedFrequency = yearFrequency / yearTotal;
       const allTimeNormalizedFrequency = allTimeFrequency/ allTimeTotal;
-
-      const logRatio = Math.log2(yearNormalizedFrequency / allTimeNormalizedFrequency);
-      const differenceCoefficient = (yearNormalizedFrequency - allTimeNormalizedFrequency) / (yearNormalizedFrequency + allTimeNormalizedFrequency);
       const yearExpectedValue = yearTotal * combinedFrequency / combinedTotal;
       const allTimeExpectedValue = allTimeTotal * combinedFrequency / combinedTotal;
-      const logLikelihoodG2 = 2 * (yearFrequency * Math.log(yearFrequency / yearExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
-      const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+
+      // Extra info
       row.allTimeFrequency = allTimeFrequency;
-      row.logRatio = logRatio.toFixed(2);
-      row.differenceCoefficient = differenceCoefficient.toFixed(2);
-      row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
-      row.bayesFactor = bayesFactor.toFixed(2);
+
+      // Statistical metrics
+      const logLikelihoodG2 = 2 * (yearFrequency * Math.log(yearFrequency / yearExpectedValue) + allTimeFrequency * Math.log(allTimeFrequency / allTimeExpectedValue));
+      row.bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+
+      // Effect size metrics
+      row.logRatio = Math.log2(yearNormalizedFrequency / allTimeNormalizedFrequency);
     }
 
     const rows = data.rows.filter((row) => row.bayesFactor > 2)
                           .sort(numSortBy('logRatio', true))
-                          .sort(numSortBy('year', false));
+                          .sort(numSortBy('year', true));
+
+    rows.forEach(row => {
+      row.logRatio = row.logRatio.toFixed(2);
+      row.bayesFactor = row.bayesFactor.toFixed(2);
+    })
 
     res.json({
       rows,
@@ -480,8 +485,6 @@ GROUP BY answer, year;
         { label: 'frequency', key: 'frequency'},
         { label: 'all time frequency', key: 'allTimeFrequency'},
         { label: 'log ratio', key: 'logRatio'},
-        { label: 'difference coefficient', key: 'differenceCoefficient'},
-        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
         { label: 'bayes factor', key: 'bayesFactor'}
       ],
     });

@@ -1,4 +1,4 @@
-<p>In this post, we'll be using keyness to differentiate crosswordese from bad fill. For more information on keyness, check out Costas Gabrielatos's <a href="https://core.ac.uk/download/pdf/227092349.pdf">phenomenal chapter</a> <a href="#ref1">[1]</a> in <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">Corpus Approaches to Discourse</a> <a href="#ref2">[2]</a>, edited by Charlotte Taylor and Anna Marchi. I owe pretty much everything in this post to Gabrielatos's explanation. The implementation is my own. If you're looking to do something similar, I got a lot of help from <a href="http://ucrel.lancs.ac.uk/llwizard.html">this log-likelihood wizard</a> put out by Paul Rayson and UCREL at Lancaster University, as well as <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">this chapter</a> from Alvin Chen's National Taiwan Normal University course on corpus linguistics.</p>
+<p>In this post, we'll be using keyness to differentiate crosswordese from bad fill. For more information on keyness, check out Costas Gabrielatos's <a href="https://core.ac.uk/download/pdf/227092349.pdf">phenomenal chapter</a> <a href="#ref1">[1]</a> in <a href="https://books.google.com/books/about/Corpus_Approaches_to_Discourse.html?id=-M1JDwAAQBAJ">Corpus Approaches to Discourse</a> <a href="#ref2">[2]</a>, edited by Charlotte Taylor and Anna Marchi. I also got a lot of help from <a href="http://ucrel.lancs.ac.uk/llwizard.html">this log-likelihood wizard</a> put out by Paul Rayson and UCREL at Lancaster University, as well as <a href="https://alvinntnu.github.io/NTNU_ENC2036_LECTURES/keyword-analysis.html">this chapter</a> from Alvin Chen's National Taiwan Normal University course on corpus linguistics.</p>
 
 <h3>Relative frequency</h3>
 
@@ -16,7 +16,7 @@
 
 <p>These are grammatically useful words like articles, conjunctions, and prepositions. Makes sense. They're words that show up all over the place in normal english, but don't make very good crossword answers. Crosswords don't usually use linking words the same way english does, and anyway a lot of these would be really hard to clue.</p>
 
-<p>To find crosswordese, what we care about are words that have a <em>positive</em> difference, which you can see by checking the "only positive values" box and reloading the data. A group of likely crosswordese suspects pops right up: <a href="/answer-stats?search=ere,ore,erie,aloe">ERE, ORE, ERIE, ALOE</a>...Three-to-four-letters, vowel-heavy. If you regularly do the NYT crossword, you'll have seen these answers every week.</p>
+<p>To find crosswordese, what we care about are words that have a <em>positive</em> difference, which you can see by checking the "only positive values" box and reloading the data. A group of likely crosswordese suspects pops right up: <a href="/answer-stats?search=ere,ore,erie,aloe">ERE, ORE, ERIE, ALOE</a>...three-to-four-letters, vowel-heavy. If you regularly do the NYT crossword, you'll have seen these answers every week.</p>
 
 <p>(A note about the reference corpus: I'm using a frequency list of <a href="https://github.com/IlyaSemenov/wikipedia-word-frequency">english words from wikipedia articles</a> scraped in 2019. It'll produce different results than, say, a corpus of newspaper articles or of science fiction novels.)</p>
 
@@ -113,9 +113,9 @@
 
 <p>Notice that the statistical metrics are a lot lower, which makes sense because the sample sizes are a lot smaller. So it's not exactly a statistical fact that <a-xw>ANAGRAMS</a-xw> were super trendy in 2014 or that 2016 got really into <a-xw>ROMCOM</a-xw>s. But it's a fun way to look at cultural trends and to track the spread of neologisms. For more, check out the <a href="/changing-times">post on language change!</a></p>
 
-<h3>Why it happens</h3>
+<h3>The culprit</h3>
 
-<p>At this point you might be wondering why we have to put up with repetitive crosswordese and disappointing bad fill. It turns out that the way answers <em>interlock</em> on the grid makes certain letters and words particularly valuable for construction. That's why many crosswordese answers start and end with vowels. It's also where those weirdly prefixed bad fill answers like <a-xw>ANEAR</a-xw> come from. For more, check out the post on <a href="/letter-boxes">letter distributions</a>!</p>
+<p>At this point you might be wondering why we have to put up with repetitive crosswordese and disappointing bad fill. It turns out that the way answers <em>interlock</em> on the grid makes certain letters and words extra valuable for construction. That's why many crosswordese answers start and end with vowels. It's also where those weirdly prefixed bad fill answers like <a-xw>ANEAR</a-xw> come from. For more, check out the post on <a href="/letter-boxes">letter distributions</a>!</p>
 
 <h3>Caveats</h3>
 
