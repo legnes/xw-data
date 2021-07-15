@@ -5,6 +5,11 @@ base.dashCaseToWords = (text) => {
   return text.replace(/(^\w|-\w)/g, (match) => match.replace(/-/, ' ').toUpperCase());
 };
 
+// https://stackoverflow.com/questions/7225407/convert-camelcasetext-to-sentence-case-text
+base.camelCaseToWords = (text) => {
+  return text.replace(/([A-Z])/g, " $1").split(' ').map(word => (`${word.charAt(0).toLowerCase()}${word.slice(1)}`)).join(' ');
+};
+
 base.addInto = (outObj, key, val) => {
   outObj[key] = (outObj[key] || 0) + val;
   return outObj;

@@ -7,7 +7,7 @@ const { promiseQuery, answerFrequencies, answerDates, answerTokensAndTypes } = r
 const analysis = require('../util/analysis');
 const { cleanSearchText, cleanOptionText, cleanNumber, cleanBoolean } = require('../util/url');
 const { DEFAULT_HISTOGRAM_2D, DEFAULT_HEATMAP, DEFAULT_HEATMAP_LAYOUT, axisLabels } = require('../util/figure');
-const { addInto, numSortBy, sortBy } = require('../util/base');
+const { camelCaseToWords, addInto, numSortBy, sortBy,  } = require('../util/base');
 
 const { english, scrabble } = require('../constants/language');
 const { START_YEAR, END_YEAR, DAYS_OF_WEEK } = require('../constants/data');
@@ -280,11 +280,14 @@ figures.relativeFrequencyDifference = (req, res, next) => {
       row.enFrequency = WIKI_CORPUS.data.get(row.answer) || 0;
       row.xwRelativeFrequency = row.xwFrequency / xwTotal;
       row.enRelativeFrequency = row.enFrequency / enTotal;
-      row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency).toFixed(5);
+      row.frequencyDiff = (row.xwRelativeFrequency - row.enRelativeFrequency);
       row.absFrequencyDiff = Math.abs(row.frequencyDiff);
     }
     data.rows.sort(numSortBy(sortyByAbsDiff ? 'absFrequencyDiff' : 'frequencyDiff', true));
     data.rows.length = 100;
+    data.rows.forEach(row => {
+      row.frequencyDiff = row.frequencyDiff.toFixed(5);
+    });
 
     res.json({
       rows: data.rows,
@@ -302,6 +305,8 @@ figures.keyness = (req, res, next) => {
   const enFreqThresh = cleanNumber(req.query.enFreqThresh, 0);
   const lengthThresh = cleanNumber(req.query.lengthThresh, 0);
   const sortSameness = cleanBoolean(req.query.sameness);
+  // const effectSizeMetric = cleanOptionText(req.query.effectSizeMetric, ['nfcDiff', 'ratio', 'oddsRatio', 'logRatio', 'percentDiff', 'diffCoeff'], 'nfcDiff');
+  const effectSizeMetric = cleanOptionText(req.query.effectSizeMetric, ['relFreqDiff', 'logRatio'], 'relFreqDiff');
 
   db.query(answerFrequencies(), (err, data) => {
     if (err) return next(err);
@@ -315,28 +320,41 @@ figures.keyness = (req, res, next) => {
       const combinedTotal = xwTotal + enTotal;
       const xwNormalizedFrequency = xwFrequency / xwTotal;
       const enNormalizedFrequency = enFrequency/ enTotal;
-
-      const logRatio = Math.log2(xwNormalizedFrequency / enNormalizedFrequency);
-      const differenceCoefficient = (xwNormalizedFrequency - enNormalizedFrequency) / (xwNormalizedFrequency + enNormalizedFrequency);
       const xwExpectedValue = xwTotal * combinedFrequency / combinedTotal;
       const enExpectedValue = enTotal * combinedFrequency / combinedTotal;
-      const logLikelihoodG2 = 2 * (xwFrequency * Math.log(xwFrequency / xwExpectedValue) + enFrequency * Math.log(enFrequency / enExpectedValue));
-      const bayesFactor = logLikelihoodG2 - Math.log(combinedTotal);
+
+      // Extra info
       row.enFrequency = enFrequency == 1e-15 ? 0 : enFrequency;
-      row.logRatio = logRatio.toFixed(2);
-      row.differenceCoefficient = differenceCoefficient.toFixed(6);
-      row.logLikelihoodG2 = logLikelihoodG2.toFixed(2);
-      row.bayesFactor = bayesFactor.toFixed(2);
+
+      // Statistical metrics
+      row.logLikelihoodG2 = 2 * (xwFrequency * Math.log(xwFrequency / xwExpectedValue) + enFrequency * Math.log(enFrequency / enExpectedValue));
+      row.bayesFactor = row.logLikelihoodG2 - Math.log(combinedTotal);
+
+      // Effect size metrics
+      const stats = {};
+      stats.relFreqDiff = xwNormalizedFrequency - enNormalizedFrequency;
+      stats.relativeFrequencyRatio = xwNormalizedFrequency / enNormalizedFrequency;
+      stats.oddsRatio = (xwFrequency / (xwTotal - xwFrequency)) / (enFrequency / (enTotal - enFrequency));
+      stats.logRatio = Math.log2(stats.relativeFrequencyRatio);
+      stats.percentDiff = stats.relFreqDiff * 100 / enNormalizedFrequency;
+      stats.diffCoeff = stats.relFreqDiff / (xwNormalizedFrequency + enNormalizedFrequency);
+      row.effectSize = stats[effectSizeMetric];
     }
 
     const rows = data.rows.filter(row => (
       row.bayesFactor > 2 &&
-      row.enFrequency >= enFreqThresh &&
-      +row.length > lengthThresh
-    )).sort((a, b) => (
-      (sortSameness ? -1 : 1) * (Math.abs(b.logRatio) - Math.abs(a.logRatio))
-    ));
+      row.enFrequency >= enFreqThresh
+      // +row.length > lengthThresh
+    )).sort((a, b) => {
+      return b.effectSize - a.effectSize
+      // (sortSameness ? -1 : 1) * (Math.abs(b.logRatio) - Math.abs(a.logRatio))
+    });
     rows.length = 200;
+    rows.forEach(row => {
+      row.effectSize = row.effectSize.toFixed(6);
+      row.bayesFactor = row.bayesFactor.toFixed(0);
+      row.logLikelihoodG2 = row.logLikelihoodG2.toFixed(0);
+    });
 
     res.json({
       rows,
@@ -344,10 +362,9 @@ figures.keyness = (req, res, next) => {
         { label: 'answer', key: 'answer'},
         { label: 'frequency', key: 'frequency'},
         { label: 'english corpus frequency', key: 'enFrequency'},
-        { label: 'log ratio', key: 'logRatio'},
-        { label: 'difference coefficient', key: 'differenceCoefficient'},
-        { label: 'log likelihood G2', key: 'logLikelihoodG2'},
-        { label: 'bayes factor', key: 'bayesFactor'}
+        { label: camelCaseToWords(effectSizeMetric), key: 'effectSize'},
+        { label: 'bayes factor', key: 'bayesFactor'},
+        { label: 'log likelihood G2', key: 'logLikelihoodG2'}
       ],
     });
   });
