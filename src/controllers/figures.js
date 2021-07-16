@@ -884,7 +884,7 @@ figures.vowelsGrid = (req, res, next) => {
 SELECT
   solution
 FROM puzzles
-AND width = ${PUZZLE_DIMENSION}
+WHERE width = ${PUZZLE_DIMENSION}
 AND height = ${PUZZLE_DIMENSION};
 `, (err, data) => {
     if (err) return next(err);
